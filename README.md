@@ -5,7 +5,11 @@ Simple program to control addressable rgb strip based off of what's visible on s
 
 ## Usage
 1. Disable audio on your raspberry pi:
+
 ![Disable audio](enableraspberryaudio.JPG)
-3. Run rasb.py on raspberry pi with led-strip connected like this:
+
+2. Run rasb.py on raspberry pi with led-strip connected like this:
+
 ![Connections](https://tutorials-raspberrypi.de/wp-content/uploads/Raspberry-Pi-WS2812-Steckplatine-600x361.png)
+
 3. Run pc.py on your computer 
