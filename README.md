@@ -3,6 +3,9 @@
 ## Description
 Simple program to control addressable rgb strip based off of what's visible on screen. Values in the code most likely require some tweaking before this works (amount of leds, screenshot area, ip address...). Also, in the code there are two versions of screenshotting function and the function that analyses the screenshots. The "shitpc"-variants should be used on lower end pc's to keep "framerate" high and delay low enough.
 
+## Demo
+Demo video of this running with some music videos here: https://youtu.be/UZCBObS5qF0
+
 ## Usage
 1. Disable audio on your raspberry pi:
 
