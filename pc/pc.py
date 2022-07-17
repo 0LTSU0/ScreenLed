@@ -19,8 +19,8 @@ resy = 1080
 
 arrays = open("arrays.txt", "w")
 #caputure and do processing
-def mainpc(addr=None, port=None, epreview=None):
-    if addr and port:
+def mainpc(addr=None, port=None, epreview=None, slow_pc_mode=None):
+    if addr and port and epreview != None and slow_pc_mode != None:
         global HOST, PORT
         HOST = addr
         PORT = port
@@ -39,9 +39,11 @@ def mainpc(addr=None, port=None, epreview=None):
         #image = pyautogui.screenshot()
         sss = time.perf_counter()
         
-        #image = ss()
-        image = shitpcss()
-
+        if slow_pc_mode:
+            image = shitpcss()
+        else:
+            image = ss()
+        
         image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
         sse = time.perf_counter()
         if epreview:
@@ -51,8 +53,11 @@ def mainpc(addr=None, port=None, epreview=None):
                 break
 
         ans = time.perf_counter()
-        #analysis = analyseimg(image) #do analysis
-        analysis = shitpcanalyseimg(image)
+        if slow_pc_mode:
+            analysis = shitpcanalyseimg(image)
+        else:
+            analysis = analyseimg(image) #do analysis
+        analysis.reverse()
         ane = time.perf_counter()
 
         # print((analysis[i]))
@@ -165,5 +170,6 @@ if __name__ == "__main__":
         addr = conf["address"]
         port = conf["port"]
         preview = conf["enable_preview"]
+        slow_pc = conf["enable_shitpc"]
     
-    mainpc(addr=addr, port=port, epreview=preview)
+    mainpc(addr=addr, port=port, epreview=preview, slow_pc_mode=slow_pc)

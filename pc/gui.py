@@ -1,4 +1,5 @@
 
+from turtle import width
 import kivy
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -39,13 +40,14 @@ class screenLed_gui(App):
             conf["resolution"] = self.main_reso_btn.text
             conf["enable_preview"] = self.preview.active
             conf["enable_shitpc"] = self.shitpcmode.active
+            conf["python"] = self.python_path.text
 
             with open("conf.json", "w") as f:
                 json.dump(conf, f)
 
             if run:
                 self.ssbutton.text = "Stop"
-                self.subproc = run_pcpy()
+                self.subproc = run_pcpy(python_interpeter=self.python_path.text)
                 self.subproc.start()
         
         else:
@@ -53,8 +55,6 @@ class screenLed_gui(App):
             self.ssbutton.text = "Save config and start"
             self.subproc.stop()
         
-
-
 
     def build(self):
         self.mainwindow = BoxLayout(orientation='vertical')
@@ -75,7 +75,7 @@ class screenLed_gui(App):
         #ip
         self.ip_text = Label(text="Host IP", font_size=16)
         self.settingsview.add_widget(self.ip_text)
-        self.ip = TextInput(text="192.168.1.6", multiline=False)
+        self.ip = TextInput(text="192.168.1.69", multiline=False)
         self.settingsview.add_widget(self.ip)
         
 
@@ -84,6 +84,13 @@ class screenLed_gui(App):
         self.settingsview.add_widget(self.port_text)
         self.port = TextInput(text="65432", multiline=False)
         self.settingsview.add_widget(self.port)
+
+
+        #python cmd
+        self.python_text = Label(text="Python in path", font_size=16)
+        self.settingsview.add_widget(self.python_text)
+        self.python_path = TextInput(text="python", multiline=False)
+        self.settingsview.add_widget(self.python_path)
 
 
         #resolution
@@ -123,6 +130,8 @@ class screenLed_gui(App):
 
 
         #startstop button
+        #self.statusmsg = Label(text="Status:", font_size=16)
+        #self.mainbtnview.add_widget(self.statusmsg)
         self.ssbutton = Button(text="Save config and start", font_size=32)
         self.ssbutton.bind(on_press=self.ssfunc)
         self.mainbtnview.add_widget(self.ssbutton)
@@ -132,19 +141,25 @@ class screenLed_gui(App):
         self.mainwindow.add_widget(self.toplabelview)
         self.mainwindow.add_widget(self.settingsview)
         self.mainwindow.add_widget(self.mainbtnview)
+
+        #Update status msg
+        #Clock.schedule_interval(self.update_status, 0.5)
+
         return self.mainwindow
 
 
 class run_pcpy():
-    def __init__(self):
+    def __init__(self, python_interpeter="python"):
         self.proc = None
+        self.python = python_interpeter
     
     def start(self):
-        self.proc = subprocess.Popen(["python", "pc.py"])
+        self.proc = subprocess.Popen([self.python, "pc.py"])
 
     def stop(self):
         self.proc.kill()
         self.proc.wait()
+
 
 if __name__ == '__main__':
     if "pc" in os.listdir():
