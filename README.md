@@ -15,4 +15,4 @@ Demo video of this running with some music videos here: https://youtu.be/UZCBObS
 
 ![Connections](https://tutorials-raspberrypi.de/wp-content/uploads/Raspberry-Pi-WS2812-Steckplatine-600x361.png)
 
-3. Run pc.py on your computer 
+3. Run pc/gui.py on your computer 
