@@ -1,4 +1,3 @@
-import pyautogui
 import time
 import numpy as np
 import cv2 as cv
@@ -165,6 +164,7 @@ def shitpcss():
     return img
 
 if __name__ == "__main__":
+    print("Running single threaded")
     with open("conf.json", "r") as f:
         conf = json.load(f)
         addr = conf["address"]

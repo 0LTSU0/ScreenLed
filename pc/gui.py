@@ -12,6 +12,7 @@ from kivy.uix.checkbox import CheckBox
 from kivy.clock import Clock
 from kivy.base import runTouchApp
 import json
+import sys
 
 import os
 import subprocess
@@ -41,6 +42,7 @@ class screenLed_gui(App):
             conf["enable_preview"] = self.preview.active
             conf["enable_shitpc"] = self.shitpcmode.active
             conf["python"] = self.python_path.text
+            conf["target_fps"] = self.target_fps.text
 
             with open("conf.json", "w") as f:
                 json.dump(conf, f)
@@ -84,6 +86,13 @@ class screenLed_gui(App):
         self.settingsview.add_widget(self.port_text)
         self.port = TextInput(text="65432", multiline=False)
         self.settingsview.add_widget(self.port)
+
+
+        #targetFPS (multithreading only)
+        self.target_fps_text = Label(text="Target FPS (multithreaded only)", font_size=16)
+        self.settingsview.add_widget(self.target_fps_text)
+        self.target_fps = TextInput(text="60", multiline=False)
+        self.settingsview.add_widget(self.target_fps)
 
 
         #python cmd
@@ -154,7 +163,13 @@ class run_pcpy():
         self.python = python_interpeter
     
     def start(self):
-        self.proc = subprocess.Popen([self.python, "pc.py"])
+        try:
+            if sys.argv[1] == "multith":
+                self.proc = subprocess.Popen([self.python, "pc_multithread.py"])
+            else:
+                self.proc = subprocess.Popen([self.python, "pc.py"])
+        except IndexError:
+            self.proc = subprocess.Popen([self.python, "pc.py"])
 
     def stop(self):
         self.proc.kill()
@@ -162,6 +177,7 @@ class run_pcpy():
 
 
 if __name__ == '__main__':
+    print(sys.argv)
     if "pc" in os.listdir():
         print("Changing CWD to correct folder")
         try:
