@@ -5,6 +5,7 @@ import cv2 as cv
 import pickle
 import numpy as np
 import time
+import pathlib
 
 
 def preprocess_video(filepath):
@@ -18,7 +19,7 @@ def preprocess_video(filepath):
         
         if (frame % 10) == 0:
             print("current analysing time:", int(timestamp), "/ frame:", frame)
-        
+        img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
         img = image[...,:3] #alphamap dump
         h_s = int(image.shape[0] / 3)
         h_e = int((image.shape[0] / 3) * 2)
@@ -36,5 +37,8 @@ def preprocess_video(filepath):
     return analysis
 
 if __name__ == "__main__":
-    anal = preprocess_video(r"D:\Tiedostot\Live music\babymetal\SPREADSHEET_RIP\budokan10 9_10.mp4")
-    pickle.dump(anal, open("testi.ppv", "wb"))
+    video_file = pathlib.Path(r"D:\Tiedostot\Live music\babymetal\BABYMETAL -「Elevator Girl (Japanese Ver.)」[Live Compilation] [字幕 _ SUBTITLED] [HQ].mp4")
+    video_file = pathlib.Path(r"D:\Tiedostot\ledtestvid.mp4")
+    output_file = video_file.parent.joinpath(video_file.stem + ".ppv")
+    anal = preprocess_video(str(video_file.absolute()))
+    pickle.dump(anal, open(output_file, "wb"))
