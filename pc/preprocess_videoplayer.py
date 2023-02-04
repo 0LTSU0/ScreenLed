@@ -66,6 +66,7 @@ class ctrlWindow(tk.Tk):
         elif connect and not conf:
             print("Missing config for connection!")
 
+        self.file = file
         self.rgbdata = self.load_rgb_data(file)
         self.current_rgb_data_timestamp = int(next(iter(self.rgbdata)))
         self.previous_rgb_data_ts = self.current_rgb_data_timestamp
@@ -103,6 +104,11 @@ class ctrlWindow(tk.Tk):
 
     def set_video_time(self, *args, **kwargs):
         new_time = self.timebar.get()
+        #reload all rgbdata if skipped back
+        if new_time < self.calc_timestamp:
+            self.rgbdata = self.load_rgb_data(self.file)
+            self.current_rgb_data_timestamp = int(next(iter(self.rgbdata)))
+            self.previous_rgb_data_ts = self.current_rgb_data_timestamp
         vlcplayer.set_media_time(new_time)
         self.calc_timestamp = new_time
 
@@ -149,7 +155,7 @@ class ctrlWindow(tk.Tk):
 
 if __name__ == "__main__":
     video_path = pathlib.Path(r"D:\Tiedostot\Live music\babymetal\BABYMETAL -「Elevator Girl (Japanese Ver.)」[Live Compilation] [字幕 _ SUBTITLED] [HQ].mp4")
-    video_path = pathlib.Path(r"D:\Tiedostot\ledtestvid.mp4")
+    #video_path = pathlib.Path(r"D:\Tiedostot\ledtestvid.mp4")
     
     vlcplayer = videoPlayer()
     vlcplayer.set_file(video_path)
