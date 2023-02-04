@@ -20,7 +20,6 @@ def update_window():
     
     for i in range(NUM_SEGS)[::-1]:
         color = "#" + hex(int(CURRENT_COLORS[i][0]))[2:].zfill(2) + hex(int(CURRENT_COLORS[i][1]))[2:].zfill(2) + hex(int(CURRENT_COLORS[i][2]))[2:].zfill(2)
-        #color = "#" + "%06x" % random.randint(0, 0xFFFFFF)
         label = tk.Label(text="", fg="white", bg=color, width=12, height=5)
         label.grid(row = 0, column = i)
     #window.after(100, update_window) # Limit fps very slow or windows will throw a tantrum
