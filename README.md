@@ -1,12 +1,14 @@
 # ScreenLed
 
-## Description
-Simple program to control addressable rgb strip based off of what's visible on screen. Values in the code most likely require some tweaking before this works (amount of leds, screenshot area, ip address...). Also, in the code there are two versions of screenshotting function and the function that analyses the screenshots. The "shitpc"-variants should be used on lower end pc's to keep "framerate" high and delay low enough.
+## Live Mode
 
-## Demo
+### Description
+Simple program to control addressable rgb strip based off of what's visible on screen. Values in the raspberry pi code (raspb.py) most likely require some tweaking before this works (amount of leds...). Relevant settings for pc side should be configurable through the gui.
+
+### Demo
 Demo video of this running with some music videos here: https://youtu.be/UZCBObS5qF0
 
-## Usage
+### Usage
 1. Disable audio on your raspberry pi:
 
 ![Disable audio](enableraspberryaudio.JPG)
@@ -18,3 +20,14 @@ Demo video of this running with some music videos here: https://youtu.be/UZCBObS
 3. Run pc/gui.py on your computer
     - single threaded: "python gui.py"
     - multi threaded: "python gui.py multith"
+    
+    
+## Preprocess Mode
+
+### Description
+Taking screenshots for analysis is rather slow on python so there is also another option to preprosess a video and play it through the script. This has greatly better performance on slow computers!
+
+### Usage
+1. Process a video file with pc/preprocess_video.py (this will create a python pickle dump of the led information to a file in the same folder as source with the same filename)
+2. Run raspb.py
+3. Play processed video with pc/preprocess_videoplayer.py (the pickle dump is attempted to be found in the same folder as video file)
