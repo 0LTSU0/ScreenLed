@@ -23,7 +23,7 @@ def update_window():
         #color = "#" + "%06x" % random.randint(0, 0xFFFFFF)
         label = tk.Label(text="", fg="white", bg=color, width=12, height=5)
         label.grid(row = 0, column = i)
-    window.after(100, update_window) # Limit fps very slow or windows will throw a tantrum
+    #window.after(100, update_window) # Limit fps very slow or windows will throw a tantrum
 
 
 def main(led_segs):
@@ -68,7 +68,7 @@ class recvThread(threading.Thread):
                         global CURRENT_COLORS
                         CURRENT_COLORS = decoded
                         rcv_data_timestamp = time.time()
-                        #print(decoded)
+                        print(decoded)
         except Exception as e:
             print("[recvThread] Error:", e)
             print("Starting again after 1s")
