@@ -143,7 +143,7 @@ int main() {
     //socket
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);
-    //socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(RASPI_IP), RASI_PORT));
+    socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(RASPI_IP), RASI_PORT));
     boost::system::error_code error;
 
     auto prev_ts = std::chrono::system_clock::now();
