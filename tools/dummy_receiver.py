@@ -1,44 +1,16 @@
-import socket
-import tkinter as tk
-import sys
-import random
-import time
-import threading
 
+import socket
+import threading
+import sys
+import time
+import pygame
+import random
 
 HOST = '127.0.0.1'
 PORT = 65432
 NUM_SEGS = 0
 CURRENT_COLORS = []
-
-
-def update_window():
-    #print("update_window()")
-    if len(CURRENT_COLORS) != NUM_SEGS:
-        print("Length of incoming data does not match to amount of segments!")
-        return
-    
-    for i in range(NUM_SEGS)[::-1]:
-        color = "#" + hex(int(CURRENT_COLORS[i][0]))[2:].zfill(2) + hex(int(CURRENT_COLORS[i][1]))[2:].zfill(2) + hex(int(CURRENT_COLORS[i][2]))[2:].zfill(2)
-        label = tk.Label(text="", fg="white", bg=color, width=12, height=5)
-        label.grid(row = 0, column = i)
-    #window.after(100, update_window) # Limit fps very slow or windows will throw a tantrum
-
-
-def main(led_segs):
-    window.title("DummyReceiver")
-    for i in range(led_segs):
-        color = "#" + "%06x" % random.randint(0, 0xFFFFFF)
-        label = tk.Label(text="", fg="white", bg=color, width=12, height=5)
-        label.grid(row = 0, column = i)
-    window.after(100, update_window)
-    window.mainloop()
-
-
-# TODO: Figure out how to kill the thread since it will be ether in while True or waiting connections
-def on_close():
-    #recv_thread.stop()
-    sys.exit()
+LOCK = threading.Lock()
 
 class recvThread(threading.Thread):
     def __init__(self):
@@ -61,13 +33,17 @@ class recvThread(threading.Thread):
                     sock.listen()
                     data = conn.recv(1024)
                     if data:
-                        decoded = self.decode(data)
-                        decoded = [decoded[i:i+3] for i in range(0,len(decoded),3)]
+                        try:
+                            decoded = self.decode(data)
+                        except IndexError:
+                            pass
+                        
                         #if time.time() - rcv_data_timestamp > 0.016: #Dont always update the variable to not make this blocking
                         global CURRENT_COLORS
-                        CURRENT_COLORS = decoded
+                        with LOCK:
+                            CURRENT_COLORS = decoded
                         rcv_data_timestamp = time.time()
-                        print(decoded)
+                        #print(decoded)
         except Exception as e:
             print("[recvThread] Error:", e)
             print("Starting again after 1s")
@@ -78,9 +54,17 @@ class recvThread(threading.Thread):
                 
     def decode(self, data):
         res = []
-        for d in data:
-            res.append(d)
-        return(res)
+        data = data.decode().split(",;")
+        for i in range(NUM_SEGS):
+            d = data[i].split(",")
+            c = 0
+            for item in d:
+                if not item:
+                    d[c] = "0"
+                c += 1
+            res.append((d[0], d[1], d[2]))
+        return res
+        
 
     def run(self):
         self.mainrcv()
@@ -88,17 +72,53 @@ class recvThread(threading.Thread):
     def stop(self):
         sys.exit()
 
-    
+class visTrehad(threading.Thread):
+    def __init__(self):
+        super(visTrehad,self).__init__()
+        self.running = False
+        self.screen = None
+        self.clock = None
+        self.sizescale = 80
+        
+    def setup(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.sizescale * NUM_SEGS, self.sizescale))
+        self.clock = pygame.time.Clock()
+        self.running = True
 
-recv_thread = recvThread()
-window = tk.Tk()
-window.protocol("WM_DELETE_WINDOW", on_close)
+    def visualize(self):
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+
+            for i in range(NUM_SEGS):
+                #color = "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+                try:
+                    with LOCK:
+                        color = pygame.Color(int(CURRENT_COLORS[i][0]), int(CURRENT_COLORS[i][1]), int(CURRENT_COLORS[i][2]))
+                    pygame.draw.rect(self.screen, color, pygame.Rect((i*self.sizescale), 0, self.sizescale, self.sizescale))
+                except IndexError:
+                    pass
+            pygame.display.flip()
+
+            self.clock.tick(144)  # limits FPS to 144
+        
+        sys.exit()
+
+    def run(self):
+        self.setup()
+        self.visualize()
+
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        print("Usage: python dummy_receiver.py [n led segments]")
-    else:
-        NUM_SEGS = int(sys.argv[1])
-        CURRENT_COLORS = [["0", "0", "0"]] * NUM_SEGS
-        print("init colors:", CURRENT_COLORS)
-        recv_thread.start()
-        main(NUM_SEGS)
+    #if len(sys.argv) == 1:
+    #    print("Usage: python dummy_receiver.py [n led segments]")
+    #else:
+    recv_thread = recvThread()
+    vis_thread = visTrehad()
+    #NUM_SEGS = int(sys.argv[1])
+    NUM_SEGS = 20
+    CURRENT_COLORS = [["0", "0", "0"]] * NUM_SEGS
+    print("init colors:", CURRENT_COLORS)
+    recv_thread.start()
+    vis_thread.start()
