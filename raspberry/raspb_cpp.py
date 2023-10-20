@@ -10,6 +10,7 @@ LED_DMA = 10
 LED_BRIGHTNESS = 255
 LED_INVERT = False
 LED_CHANNEL = 0
+LED_SEGMENTS = 20
 
 HOST = '192.168.1.69'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
@@ -38,9 +39,10 @@ def func():
                             ledifo.append(int(it))
                             #ledifo.append((int(sp[0]),int(sp[1]),int(sp[2])))
                         #print("using ledinfo", ledifo)
-                    LED(ledifo)
+                    if len(ledifo) == LED_SEGMENTS * 3:
+                        LED(ledifo)
             except Exception as e:
-                print(e)
+                print(e, ledifo)
 
     
 def LED(data):
