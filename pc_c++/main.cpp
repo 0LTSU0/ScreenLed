@@ -2,6 +2,7 @@
 #include <iostream>
 #include <Windows.h>
 #include <chrono>
+#include "configurator.h"
 
 using namespace std::chrono;
 using namespace boost::asio;
@@ -11,10 +12,11 @@ using ip::tcp;
 #define RES_X 1920
 #define RES_Y 1080
 #define LED_SEGMENTS 20
-#define KEEP_SS_ON_CLIPBOARD false
-#define RASPI_IP "192.168.1.69"
-//#define RASPI_IP "127.0.0.1"
-#define RASI_PORT 65432
+
+// These defaults should not matter and they should be set again later
+bool KEEP_SS_ON_CLIPBOARD = false;
+int KEEP_SS_INTERVAL = 10;
+int KEEP_SS_CTR = 0;
 
 
 void takeScreenShot(DWORD* pixelData, int y) {
@@ -26,12 +28,17 @@ void takeScreenShot(DWORD* pixelData, int y) {
     hBitmap = static_cast<HBITMAP>(SelectObject(hMemoryDC, hOldBitmap));
 
     //Enable to get the screenshots to clipboard for debugging
-#if KEEP_SS_ON_CLIPBOARD
-    OpenClipboard(NULL);
-    EmptyClipboard();
-    SetClipboardData(CF_BITMAP, hBitmap);
-    CloseClipboard();
-#endif
+    if (KEEP_SS_ON_CLIPBOARD)
+    {
+        if (KEEP_SS_CTR == KEEP_SS_INTERVAL) {
+            OpenClipboard(NULL);
+            EmptyClipboard();
+            SetClipboardData(CF_BITMAP, hBitmap);
+            CloseClipboard();
+            KEEP_SS_CTR = 0;
+        }
+        KEEP_SS_CTR++;
+    }
 
     // Put pixel data to pixelData
     BITMAPINFO bmi;
@@ -128,6 +135,12 @@ std::string generateMessage(int** result) {
 int main() {
     std::cout << "Starting" << std::endl;
 
+    // read general config
+    gConfig generalConf;
+    generalConf.readConfig();
+    KEEP_SS_INTERVAL = generalConf.getDebugSSInterval();
+    KEEP_SS_ON_CLIPBOARD = generalConf.getKeepDebugSS();
+
     // y = RES_Y -> fullscreen, y = RES_Y/3 -> middle third
     const int y = RES_Y / 3;
 
@@ -143,7 +156,7 @@ int main() {
     //socket
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);
-    socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(RASPI_IP), RASI_PORT));
+    socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(generalConf.getRaspiIp()), generalConf.getRaspiPort()));
     boost::system::error_code error;
 
     auto prev_ts = std::chrono::system_clock::now();
