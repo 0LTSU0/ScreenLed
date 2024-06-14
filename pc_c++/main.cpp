@@ -5,6 +5,12 @@
 #include "configurator.h"
 #include "analyzer.h"
 
+#ifdef _WIN32
+#define EXPORT_FUNCTION __declspec(dllexport)
+#else
+#define EXPORT_FUNCTION
+#endif
+
 using namespace std::chrono;
 using namespace boost::asio;
 using ip::tcp;
@@ -133,7 +139,7 @@ std::string generateMessage(int** result) {
 }
 
 
-int main() {
+static int mainLoop() {
     std::cout << "Starting" << std::endl;
 
     // read general config
@@ -198,4 +204,15 @@ int main() {
 
     delete[] pixelData;
     return 0;
+}
+
+int main()
+{
+    std::cout << "ScreenLed main() called" << std::endl;
+    mainLoop();
+}
+
+extern "C" EXPORT_FUNCTION void libStartFunction() {
+    std::cout << "ScreenLed libStartFunction() called" << std::endl;
+    mainLoop();
 }
