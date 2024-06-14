@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <chrono>
 #include "configurator.h"
+#include "analyzer.h"
 
 using namespace std::chrono;
 using namespace boost::asio;
@@ -137,9 +138,19 @@ int main() {
 
     // read general config
     gConfig generalConf;
-    generalConf.readConfig();
+    generalConf.readConfig("C:/Users/lauri/Desktop/ScreenLed/ScreenLed/pc_c++/gConfig.json");
     KEEP_SS_INTERVAL = generalConf.getDebugSSInterval();
     KEEP_SS_ON_CLIPBOARD = generalConf.getKeepDebugSS();
+
+    // read configs common to all led instances
+    instanceConfCommon instanceCommonConf;
+    instanceCommonConf.loadInstanceConfCommon("C:/Users/lauri/Desktop/ScreenLed/ScreenLed/pc_c++/iConfig.json"); //Todo get as argument or smth
+
+
+    //TEMPTEST
+    analysisWorker worker;
+    worker.setCommonConfigs(instanceCommonConf);
+
 
     // y = RES_Y -> fullscreen, y = RES_Y/3 -> middle third
     const int y = RES_Y / 3;

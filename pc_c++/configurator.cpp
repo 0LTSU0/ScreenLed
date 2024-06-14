@@ -6,13 +6,13 @@
 
 using json = nlohmann::json;
 
-void gConfig::readConfig()
+void gConfig::readConfig(const char* path)
 {
 	// Read general configs from gConfig.json and check that all expected fields are present
 	// TODO: should probably use chema to also verify data formats
-	std::ifstream ifs("gConfig.json");
+	std::ifstream ifs(path);
 	json conf = json::parse(ifs);
-	if (!(conf.contains("raspiPort") && conf.contains("raspiIp") && conf.contains("keepDebugSS") && conf.contains("debugSSInterval"))) {
+	if ( !(conf.contains("raspiPort") && conf.contains("raspiIp") && conf.contains("keepDebugSS") && conf.contains("debugSSInterval")) ) {
 		std::cout << "Cannot start application: gConfig.json is malformed!" << std::endl;
 		exit(1);
 	}
@@ -46,4 +46,20 @@ bool gConfig::getKeepDebugSS()
 int gConfig::getDebugSSInterval()
 {
 	return this->debugSSInterval;
+}
+
+
+void instanceConfCommon::loadInstanceConfCommon(const char* path)
+{
+	// Read configs that are common for all led workers
+	std::ifstream ifs(path);
+	json conf = json::parse(ifs);
+	if ( !(conf.contains("resolutionX") && conf.contains("resolutionY") && conf.contains("useCenterThird")) ) {
+		std::cout << "Cannot start application: iConfig.json is malformed!" << std::endl;
+		exit(1);
+	}
+
+	this->res_x = conf["resolutionX"].get<int>();
+	this->res_y = conf["resolutionY"].get<int>();
+	this->centerThird = conf["useCenterThird"].get<bool>();
 }
