@@ -44,9 +44,10 @@ endif()
 
 target_link_libraries(ScreenLedGUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-# Add ScreenLed library
+# Add ScreenLed library and json header
 add_subdirectory(../pc_c++ ${CMAKE_CURRENT_BINARY_DIR}/lib)
 target_link_libraries(ScreenLedLib)
+target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../pc_c++/include)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
