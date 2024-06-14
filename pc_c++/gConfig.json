@@ -1,5 +1,5 @@
 {
-	"raspiIp": "127.0.0.1",
+	"raspiIp": "192.168.1.69",
 	"raspiPort": 65432,
 	"keepDebugSS": false,
 	"debugSSInterval": 10
