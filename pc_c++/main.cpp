@@ -25,6 +25,7 @@ bool KEEP_SS_ON_CLIPBOARD = false;
 int KEEP_SS_INTERVAL = 10;
 int KEEP_SS_CTR = 0;
 
+bool isRunning = true; //when using gui, this is set to false when its time to quit the workloop
 
 void takeScreenShot(DWORD* pixelData, int y) {
     HDC hScreenDC = GetDC(nullptr);
@@ -178,7 +179,7 @@ static int mainLoop() {
 
     auto prev_ts = std::chrono::system_clock::now();
     int ctr = 0;
-    while (true) {
+    while (isRunning) {
         takeScreenShot(pixelData, y);
         analyze(pixelData, y, result);
         ctr++;
@@ -214,5 +215,11 @@ int main()
 
 extern "C" EXPORT_FUNCTION void libStartFunction() {
     std::cout << "ScreenLed libStartFunction() called" << std::endl;
+    isRunning = true;
     mainLoop();
+}
+
+extern "C" EXPORT_FUNCTION void libStopFunction() {
+    std::cout << "ScreenLed libStopFunction() called" << std::endl;
+    isRunning = false;
 }
