@@ -44,6 +44,8 @@ class recvThread(threading.Thread):
                             CURRENT_COLORS = decoded
                         rcv_data_timestamp = time.time()
                         #print(decoded)
+                    else:
+                        raise Exception #break out
         except Exception as e:
             print("[recvThread] Error:", e)
             print("Starting again after 1s")
