@@ -2,6 +2,7 @@
 #include <iostream>
 #include <Windows.h>
 #include <chrono>
+#include <mutex>
 #include "configurator.h"
 #include "analyzer.h"
 
@@ -26,6 +27,8 @@ int KEEP_SS_INTERVAL = 10;
 int KEEP_SS_CTR = 0;
 
 bool isRunning = true; //when using gui, this is set to false when its time to quit the workloop
+float curFPS = 0; //The current fps value is updated every 20 frames and is read through TODO to show current fps in GUI
+std::mutex fpsMutex; //Used when reading/updating the curFPS value to prevent read and write at the same time
 
 void takeScreenShot(DWORD* pixelData, int y) {
     HDC hScreenDC = GetDC(nullptr);
@@ -196,14 +199,19 @@ static int mainLoop() {
         //fps
         std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - prev_ts;
         prev_ts = std::chrono::system_clock::now();
-        if (ctr == 10) {
-            std::cout << "\r" << "Current FPS:" << 1 / elapsed_seconds.count() << std::flush;
+        if (ctr == 50) {
+            fpsMutex.lock();
+            curFPS = 1 / elapsed_seconds.count();
+            fpsMutex.unlock();
+            //std::cout << "\r" << "Current FPS:" << 1 / elapsed_seconds.count() << std::flush;
             ctr = 0;
         }
 
     }
 
     delete[] pixelData;
+    socket.close();
+    curFPS = 0;
     return 0;
 }
 
@@ -222,4 +230,11 @@ extern "C" EXPORT_FUNCTION void libStartFunction() {
 extern "C" EXPORT_FUNCTION void libStopFunction() {
     std::cout << "ScreenLed libStopFunction() called" << std::endl;
     isRunning = false;
+}
+
+extern "C" EXPORT_FUNCTION float libGetCurrentFPS() {
+    fpsMutex.lock();
+    float res = curFPS;
+    fpsMutex.unlock();
+    return res;
 }
