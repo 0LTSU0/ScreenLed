@@ -10,6 +10,6 @@
 #endif
 
 constexpr int NUM_SEGMENTS = 20;
-constexpr int NUM_LEDS_PER_SEG = 10;
+constexpr int NUM_LEDS_PER_SEG = 14;
 
 #endif // DEFS_H

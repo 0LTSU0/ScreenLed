@@ -1,4 +1,5 @@
 #include "defs.h"
+#include "configurator.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <chrono>
@@ -23,7 +24,7 @@ ws2811_t ledstring =
         {
             .gpionum = 18,
             .invert = 0,
-            .count = 200,
+            .count = 280,
             .strip_type = WS2812_STRIP,
             .brightness = 255,
         },
@@ -98,8 +99,21 @@ void set_strip(std::vector<int>& arr)
 
 int main(int argc, char *argv[])
 {
-    std::cout << "starting" << std::endl;
+    std::cout << "starting..." << std::endl;
 
+    if (argc != 2) 
+    {
+        std::cout << "Startup failed: Please give path to configuration file as argument!" << std::endl;
+        return 1;
+    }
+
+    //Read config and create ledstrings based on that. The led library can handle only max two separate strips!
+    c_configurator conf;
+    if (!conf.readConfigJSON(argv[1]))
+    {
+        return 1; //configurator should print some kind of error message
+    }
+    
     static cv::VideoCapture cap(0);
 
     if (!cap.isOpened()) {
@@ -117,9 +131,9 @@ int main(int argc, char *argv[])
 #endif
 
     // Set camera properties
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
-    cap.set(cv::CAP_PROP_FPS, 60);
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, conf.configuration.camera_res_h);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, conf.configuration.camera_res_v);
+    cap.set(cv::CAP_PROP_FPS, conf.configuration.camera_target_fps);
 
     cv::Mat frame;
     std::vector<int> colorArray; //filled with r1,b1,g1,r2,b2,g2,r3,b3,...
