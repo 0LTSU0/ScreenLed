@@ -26,18 +26,19 @@ endif()
 
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/json)
 
 add_executable(VideoCapture2LED
   main.cpp
   defs.h
+  configurator.h
+  configurator.cpp
 )
 
 message(STATUS "OpenCV Libraries: ${OpenCV_LIBS}")
 target_link_libraries(VideoCapture2LED Qt${QT_VERSION_MAJOR}::Core)
 target_link_libraries(VideoCapture2LED ${OpenCV_LIBS})
 if(NOT WIN32)
-    #target_link_libraries(VideoCapture2LED ${libws2811_LIBS})
-    #include_directories(${libws2811_INCLUDE_DIRS})
     target_link_libraries(VideoCapture2LED ${WS2811_LIBRARIES})
 endif()
 

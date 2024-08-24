@@ -1,0 +1,19 @@
+{
+  "strip0": {
+    "gpio": 18,
+    "invert": false,
+    "num_leds": [ 280 ],
+    "brightness": 255,
+    "enabled": true
+  },
+  "strip1": {
+    "gpio": 13,
+    "invert": false,
+    "num_leds": [ 280, 250 ],
+    "brightness": 255,
+    "enabled": false
+  },
+  "capture_res_x": 1280,
+  "capture_res_y": 720,
+  "capture_target_fps":  60
+}
