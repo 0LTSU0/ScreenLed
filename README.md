@@ -1,5 +1,23 @@
 # ScreenLed
 
+## Messy collection of attemps to sync video/screen content to argb led strip
+1. [pc](pc)
+    - Original "live" python solution and preprocess mode implemented in python
+    - Live mode takes screenshots and sends results out through UDP (works ok on powerful hw, not so much on anything else)
+    - Preprocess mode works so that [tools/preprocess_video.py](tools/preprocess_video.py) is used to create pickle dump from a video and then [pc/preprocess_videoplayer.py](pc/preprocess_videoplayer.py) is used to play video in vlc. This script reads rgb information from the pickle dump and sends that instead of doing any realtime processing. Doesn't work very well because for long videos this uses a LOT of memory and due to python being slow everything tends to go out of sync etc.
+2. [pc_c++](pc_c++) and [ScreenLedGUI](ScreenLedGUI)
+    - Original "live" solution rewritten in c++ and gui to use it
+    - Way better performance (actually quite usable on any reasonably good hw). [pc_c++](pc_c++) has the actual original implementation rewritten in cpp but I'm not sure if the cli app included there works anymore. Instead you should use [ScreenLedGUI](ScreenLedGUI) which builds the [pc_c++](pc_c++) as library and uses it thorough simple gui made with QT
+3. [VideoCapture2LED](VideoCapture2LED)
+    - WIP (probably never to be finished) implementation where you connect e.g. hdmi capture card to same raspi to which you have led strip connected to and it does all processing. Works but there tends to be too much delay when reading the stream from capture card -> not very usable.
+4. [raspberry](raspberry)
+    - Extremely poorly made scripts to run on raspberry to capture data over UDP and show on the rgb strip
+    - [raspberry/raspb.py](raspberry/raspb.py) should be able to receive information from python live and preprocess implementations
+    - [raspberry/raspb_cpp.py](raspberry/raspb_cpp.py) should be able to receive data from live c++ implementation
+    - Both receivers are very crude implementations with hardcoded everything -> not very usable except in my specific setup :D
+
+----Everything below is outdated and instructions to be moved to correct folders-----
+
 ## Live Mode
 
 ### Description
