@@ -1,0 +1,1 @@
+Downloaded from https://artifacts.videolan.org/vlc/nightly-win64/20250327-0421/vlc-4.0.0-dev-win64-debug-6434ab75.7z
