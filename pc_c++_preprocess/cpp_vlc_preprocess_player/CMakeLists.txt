@@ -26,7 +26,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         #VLCWidget.h
         #VLCWidget.cpp
         vlcplayer.h vlcplayer.cpp
-        UIUpdateWorker.h
+        #UIUpdateWorker.h
+        udpworker.h udpworker.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET cpp_vlc_preprocess_player APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -47,16 +48,16 @@ else()
 endif()
 
 # Copy vlc dll and its dependencies from VLC_INSTALL_DIR to build dir and link
-set(VLC_INSTALL_DIR "C:/Program Files/VideoLAN/VLC" CACHE PATH "Path to VLC installation dir")
-set(VLC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vlc")
+set(VLC_VERSION CACHE STRING "v3.0.21")
+set(VLC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vlc-{}")
 include_directories(${VLC_DIR}/include)
 link_directories(${VLC_DIR})
 if(NOT EXISTS "${VLC_INSTALL_DIR}")
         message(FATAL_ERROR "VLC_INSTALL_DIR ${VLC_INSTALL_DIR} Does not exist")
 else()
-        file(COPY "${VLC_INSTALL_DIR}/libvlc.dll" DESTINATION "${CMAKE_BINARY_DIR}")
-        file(COPY "${VLC_INSTALL_DIR}/libvlccore.dll" DESTINATION "${CMAKE_BINARY_DIR}")
-        file(COPY "${VLC_INSTALL_DIR}/plugins" DESTINATION "${CMAKE_BINARY_DIR}")
+        file(COPY "${VLC_DIR}/libvlc.dll" DESTINATION "${CMAKE_BINARY_DIR}")
+        file(COPY "${VLC_DIR}/libvlccore.dll" DESTINATION "${CMAKE_BINARY_DIR}")
+        file(COPY "${VLC_DIR}/plugins" DESTINATION "${CMAKE_BINARY_DIR}")
 endif()
 
 target_link_libraries(cpp_vlc_preprocess_player PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${VLC_DIR}/lib/libvlc.lib)
