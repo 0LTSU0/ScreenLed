@@ -80,6 +80,15 @@ bool VLCPlayer::playVideo(const QString &path)
     return false;
 }
 
+void VLCPlayer::stopVideo()
+{
+    if (libvlc_media_player_get_state(m_mediaPlayer) == libvlc_Playing) {
+        qDebug() << "VLC stopping video";
+        libvlc_media_player_stop(m_mediaPlayer);
+    }
+    m_isVideoPlaybackStarted = false;
+}
+
 int VLCPlayer::getCurrentMediaLen()
 {
     return libvlc_media_get_duration(m_media);

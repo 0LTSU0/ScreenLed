@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include <QFileDialog>
+#include <QMessageBox>
 
 using namespace std::chrono;
 
@@ -38,6 +39,15 @@ void PreProcessPlayer::on_SelectVideoButton_clicked()
     filePath.replace("/", "\\\\");
     qDebug("Selected video: " + filePath.toLatin1());
     ui->SelectVideoPath->setText(filePath);
+}
+
+void PreProcessPlayer::on_SelectLedDataButton_pressed()
+{
+    qDebug("pressed SelectLedDataButton");
+    auto filePath = QFileDialog::getOpenFileName(this, "Select a File", QString(), "PPLD Files (*.ppld)");
+    filePath.replace("/", "\\\\");
+    qDebug("Selected PPLD: " + filePath.toLatin1());
+    ui->SelectLedDataPath->setText(filePath);
 }
 
 void PreProcessPlayer::updateSeekBar()
@@ -77,13 +87,22 @@ void PreProcessPlayer::on_playPauseButton_clicked()
     bool swapButText = false;
     if (!vlcPlayer->m_isVideoPlaybackStarted) // no video is currently being played by vlc -> start
     {
-        bool res = vlcPlayer->playVideo(ui->SelectVideoPath->text());
-        if (res)
+        bool resVLC = vlcPlayer->playVideo(ui->SelectVideoPath->text());
+        bool resPPLDLoad = m_udp_worker->loadLedData(ui->SelectLedDataPath->text());
+        if (resVLC && resPPLDLoad) // video playback started successfully AND led data load was successfull
         {
             adjustSeekBar();
             connect(m_UIUpdateTimer, &QTimer::timeout, this, &PreProcessPlayer::updateSeekBar);
             m_UIUpdateTimer->start(1000);
+
+            //temp test
+            //connect(m_testTimerTimer, &QTimer::timeout, this, &PreProcessPlayer::printCurrentVideoTS);
+            //m_testTimerTimer->start(static_cast<int>((1 / 60) * 1000));
+
             swapButText = true;
+        } else if (resVLC && !resPPLDLoad) { // video playback started successfully but led data was not loaded successfully
+            QMessageBox::critical(this, "Error", "Failed to load LED data! Click OK to stop media playback.");
+            vlcPlayer->stopVideo();
         }
     } else { // video is loaded to play on vlc -> pause
         vlcPlayer->togglePause();
@@ -115,4 +134,11 @@ void PreProcessPlayer::on_VideoTimeSlider_sliderReleased()
     m_timeSliderIsDragging = false;
     vlcPlayer->setMediaTime(ui->VideoTimeSlider->value());
 }
+
+void PreProcessPlayer::printCurrentVideoTS()
+{
+    qDebug() << "Current media time" << vlcPlayer->getCurrentMediaTime();
+}
+
+
 

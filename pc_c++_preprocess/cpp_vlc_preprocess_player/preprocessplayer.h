@@ -2,9 +2,9 @@
 #define PREPROCESSPLAYER_H
 
 #include <QMainWindow>
-//#include "VLCWidget.h"
 #include "qthread.h"
 #include "vlcplayer.h"
+#include "udpworker.h"
 #include "qtimer.h"
 
 QT_BEGIN_NAMESPACE
@@ -35,6 +35,8 @@ private slots:
 
     void on_VideoTimeSlider_sliderReleased();
 
+    void on_SelectLedDataButton_pressed();
+
 private:
     bool m_timeSliderIsDragging = false;
 
@@ -42,8 +44,13 @@ private:
     VLCPlayer *vlcPlayer;
 
     QTimer *m_UIUpdateTimer = new QTimer(this);
+    QTimer *m_testTimerTimer = new QTimer(this);
+
+    UDPWorker *m_udp_worker = new UDPWorker();
+    QThread *m_udp_thread = new QThread(this);
 
     void updateSeekBar();
     void adjustSeekBar();
+    void printCurrentVideoTS();
 };
 #endif // PREPROCESSPLAYER_H

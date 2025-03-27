@@ -20,7 +20,7 @@
       <item>
        <widget class="QLineEdit" name="SelectVideoPath">
         <property name="text">
-         <string>D:\\Tiedostot\\Ouluzippailua part 2.mp4</string>
+         <string>D:\\Tiedostot\\Live music\\babymetal\\test.mp4</string>
         </property>
         <property name="placeholderText">
          <string>Path to video file</string>
@@ -43,6 +43,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QLineEdit" name="SelectLedDataPath">
+        <property name="text">
+         <string>D:\\Tiedostot\\Live music\\babymetal\\test.ppld</string>
+        </property>
         <property name="placeholderText">
          <string>Path to led data</string>
         </property>

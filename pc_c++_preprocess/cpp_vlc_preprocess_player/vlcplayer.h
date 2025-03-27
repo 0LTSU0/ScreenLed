@@ -16,6 +16,7 @@ public:
     ~VLCPlayer();
 
     bool playVideo(const QString &filepath);
+    void stopVideo();
     void togglePause();
     bool is_init_success() { return m_is_init_success; }
     int getCurrentMediaLen();

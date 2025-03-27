@@ -18,6 +18,7 @@ public slots:
             qDebug() << "Worker running in thread:" << QThread::currentThread();
             QThread::sleep(1);  // Simulate work
         }
+        qDebug() << "Broke out of infinite UDP loop";
     }
 
     void stop() {
