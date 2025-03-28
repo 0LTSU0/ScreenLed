@@ -27,7 +27,7 @@ VLCPlayer::~VLCPlayer()
 {
     // Shutdown any possibly runnign vlc stuff
     if (m_mediaPlayer) {
-        libvlc_media_player_stop(m_mediaPlayer);
+        stopVideo();
         libvlc_media_player_release(m_mediaPlayer);
     }
     if (m_vlcInstance) {
@@ -47,7 +47,7 @@ bool VLCPlayer::playVideo(const QString &path)
         return false;
     }
 
-    m_media = libvlc_media_new_path(m_vlcInstance, path.toStdString().c_str());
+    m_media = libvlc_media_new_path(path.toStdString().c_str());
     if (!m_media) {
         QMessageBox::critical(this, "Error", "Failed to open selected media!");
         return false;
@@ -70,7 +70,7 @@ bool VLCPlayer::playVideo(const QString &path)
             m_isVideoPlaybackStarted = true;
             return true;
         }
-        else if (vlc_state == libvlc_Error || vlc_state == libvlc_Stopped || vlc_state == libvlc_Ended) {
+        else if (vlc_state == libvlc_Error) {
             m_isVideoPlaybackStarted = false;
             return false;
         }
@@ -84,7 +84,13 @@ void VLCPlayer::stopVideo()
 {
     if (libvlc_media_player_get_state(m_mediaPlayer) == libvlc_Playing) {
         qDebug() << "VLC stopping video";
-        libvlc_media_player_stop(m_mediaPlayer);
+        libvlc_media_player_stop_async(m_mediaPlayer);
+        while (libvlc_media_player_get_state(m_mediaPlayer) == libvlc_Stopping)
+        {
+            qDebug() << "Waiting for vlc media playback to syop";
+            QThread::msleep(5);
+        }
+        //libvlc_media_player_stop(m_mediaPlayer); for api before vlc4
     }
     m_isVideoPlaybackStarted = false;
 }
@@ -109,6 +115,6 @@ void VLCPlayer::setMediaTime(int time)
     if (!m_isVideoPlaybackStarted) {
         return;
     }
-    libvlc_media_player_set_time(m_mediaPlayer, time);
+    libvlc_media_player_set_time(m_mediaPlayer, time, true);
 }
 
