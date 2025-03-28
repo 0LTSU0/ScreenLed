@@ -60,7 +60,7 @@ bool VLCPlayer::playVideo(const QString &path)
         return false;
     }
 
-    const int max_wait_time = 30000;
+    const int max_wait_time = 10000;
     int elapsed_wait_time = 0;
     while (elapsed_wait_time < max_wait_time)
     {
@@ -115,6 +115,6 @@ void VLCPlayer::setMediaTime(int time)
     if (!m_isVideoPlaybackStarted) {
         return;
     }
-    libvlc_media_player_set_time(m_mediaPlayer, time, true);
+    libvlc_media_player_set_time(m_mediaPlayer, time, false);
 }
 

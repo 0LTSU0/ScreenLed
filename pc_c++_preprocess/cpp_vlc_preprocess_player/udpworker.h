@@ -10,6 +10,8 @@ struct RGBData {
     int r, g, b;
 };
 
+typedef std::vector<RGBData> frame;
+
 class UDPWorker : public QObject
 {
     Q_OBJECT
@@ -25,7 +27,7 @@ public:
 private:
     volatile bool udpLoopShouldStop = false;
     int m_numSegements = 0;
-    std::vector<std::vector<RGBData>> m_ledData; // vector with vector for each frame. The inner vector has rgb datas for for that frame
+    std::vector<frame> m_rgb_data; // vector with vector for each frame
 };
 
 #endif // UDPWORKER_H
