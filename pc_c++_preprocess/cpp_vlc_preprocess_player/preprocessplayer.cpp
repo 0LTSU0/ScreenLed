@@ -99,6 +99,7 @@ void PreProcessPlayer::on_playPauseButton_clicked()
             //connect(m_testTimerTimer, &QTimer::timeout, this, &PreProcessPlayer::printCurrentVideoTS);
             //m_testTimerTimer->start(static_cast<int>((1 / 60) * 1000));
 
+            ui->stopVideoButton->setEnabled(true);
             swapButText = true;
         } else if (resVLC && !resPPLDLoad) { // video playback started successfully but led data was not loaded successfully
             QMessageBox::critical(this, "Error", "Failed to load LED data! Click OK to stop media playback.");
@@ -140,5 +141,12 @@ void PreProcessPlayer::printCurrentVideoTS()
     qDebug() << "Current media time" << vlcPlayer->getCurrentMediaTime();
 }
 
-
+void PreProcessPlayer::on_stopVideoButton_clicked()
+{
+    qDebug() << "stopVideoButton Clicked";
+    vlcPlayer->stopVideo();
+    ui->stopVideoButton->setEnabled(false);
+    ui->playPauseButton->setText("Play");
+    m_UIUpdateTimer->stop();
+}
 

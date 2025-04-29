@@ -37,6 +37,8 @@ private slots:
 
     void on_SelectLedDataButton_pressed();
 
+    void on_stopVideoButton_clicked();
+
 private:
     bool m_timeSliderIsDragging = false;
 

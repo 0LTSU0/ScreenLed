@@ -114,6 +114,16 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="stopVideoButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Stop Video</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
