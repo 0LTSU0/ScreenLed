@@ -2,13 +2,15 @@
 #include <fstream>
 #include <iostream>
 
-UDPWorker::UDPWorker() {}
+UDPWorker::UDPWorker(QObject *parent) {}
 
 void UDPWorker::udpLoop() {
-    while (!udpLoopShouldStop) {
+    while (!QThread::currentThread()->isInterruptionRequested()) {
         qDebug() << "udpLoop() running:" << QThread::currentThread();
         QThread::sleep(1);
     }
+    qDebug() << "udpLoop exiting becausae Interruption was requested";
+    QThread::currentThread()->exit();
 }
 
 void UDPWorker::stop() {
@@ -19,17 +21,17 @@ bool readFrame(int num_segments, std::vector<RGBData> &frame, std::ifstream &fil
 {
     int bit_counter = 0;
     int cc = 0;
-    int bits_per_frame = num_segments * 3;
+    int bytes_per_frame = num_segments * 3;
     unsigned char byte;
     RGBData rgbval;
     while(file.get(reinterpret_cast<char&>(byte)))
     {
-        if (bit_counter == bits_per_frame)
+        if (bit_counter == bytes_per_frame)
         {
             file.unget(); // because of the loop we have read one too maby bytes this iteration -> put the last one back to the stream
             return true;
         }
-        if (cc == 3) // every three bits we have completed one rgb value
+        if (cc == 3) // every three bytes we have completed one rgb value
         {
             cc = 0;
         }

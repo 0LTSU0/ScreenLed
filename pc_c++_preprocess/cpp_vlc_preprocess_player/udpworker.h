@@ -20,7 +20,7 @@ public slots:
     void udpLoop();
 
 public:
-    UDPWorker();
+    UDPWorker(QObject *parent = nullptr);
     void stop(); // can be called from outside for setting udpLoopShouldStop=true
     bool loadLedData(const QString &path);
 

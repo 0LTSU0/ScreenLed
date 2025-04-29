@@ -99,6 +99,13 @@ void PreProcessPlayer::on_playPauseButton_clicked()
             //connect(m_testTimerTimer, &QTimer::timeout, this, &PreProcessPlayer::printCurrentVideoTS);
             //m_testTimerTimer->start(static_cast<int>((1 / 60) * 1000));
 
+            //Move the UDP worker to new thread
+            m_udp_worker->moveToThread(m_udp_thread);
+            connect(m_udp_thread, &QThread::started, m_udp_worker, &UDPWorker::udpLoop);
+            connect(m_udp_worker, &UDPWorker::destroyed, m_udp_thread, &QThread::quit);
+            connect(m_udp_thread, &QThread::finished, m_udp_thread, &QObject::deleteLater);
+            m_udp_thread->start();
+
             ui->stopVideoButton->setEnabled(true);
             swapButText = true;
         } else if (resVLC && !resPPLDLoad) { // video playback started successfully but led data was not loaded successfully
@@ -148,5 +155,10 @@ void PreProcessPlayer::on_stopVideoButton_clicked()
     ui->stopVideoButton->setEnabled(false);
     ui->playPauseButton->setText("Play");
     m_UIUpdateTimer->stop();
+    m_udp_thread->requestInterruption();
+    m_udp_thread->wait();
+    qDebug() << "UDP Thread has exited reiniting m_udp_worker and m_udp_thread";
+    m_udp_worker = new UDPWorker();
+    m_udp_thread = new QThread();
 }
 

@@ -49,7 +49,7 @@ private:
     QTimer *m_testTimerTimer = new QTimer(this);
 
     UDPWorker *m_udp_worker = new UDPWorker();
-    QThread *m_udp_thread = new QThread(this);
+    QThread *m_udp_thread = new QThread();
 
     void updateSeekBar();
     void adjustSeekBar();
