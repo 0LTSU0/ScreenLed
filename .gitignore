@@ -2,3 +2,4 @@
 !*.ppv
 pc_c++/x64/
 pc_c++/.vs/
+!*.txt.user

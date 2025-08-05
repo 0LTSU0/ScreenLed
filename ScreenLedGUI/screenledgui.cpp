@@ -35,7 +35,7 @@ int ScreenLedGUI::fillConfigForm()
     std::ifstream ifs(m_gConfPath);
     if (ifs.fail())
     {
-        exit(1); // TODO should actually generate the config with default values instead of quitting
+        exit(1); // Should never be hit because screenledlib generates it if missing
     }
 
     json conf = json::parse(ifs);

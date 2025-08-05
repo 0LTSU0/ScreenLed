@@ -5,8 +5,8 @@ public:
     screenCaptureWorkerWindows(std::string configPath) {
         m_configPath = configPath;
 
-        if (!initScreenCaptureWorker()) {
-            throw std::runtime_error("Failed to initialize screenCapture wokrer");
+        if (!loadConfigs()) {
+            throw std::runtime_error("Failed to initialize screenCapture worker");
         }
     }
 
