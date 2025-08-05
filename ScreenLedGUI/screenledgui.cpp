@@ -17,17 +17,11 @@ ScreenLedGUI::ScreenLedGUI(QWidget *parent)
     statusUpdatetimer->start(1000);
 
     fillConfigForm();
-
-    QObject::connect(&screenLedTh, &QThread::started, [&]() {
-        qDebug() << "screenLedLibrary startup";
-        lib_startFunc();
-        qDebug() << "screenLedLibrary thread quit";
-    });
 }
 
 ScreenLedGUI::~ScreenLedGUI()
 {
-    if (libScreenledThreadIsRunning)
+    if (m_libScreenledThreadIsRunning)
     {
         // Fake click to startButton callback to make sure thread exists before application is quit
         on_startButton_clicked();
@@ -38,7 +32,7 @@ ScreenLedGUI::~ScreenLedGUI()
 
 int ScreenLedGUI::fillConfigForm()
 {
-    std::ifstream ifs(gConfPath);
+    std::ifstream ifs(m_gConfPath);
     if (ifs.fail())
     {
         exit(1); // TODO should actually generate the config with default values instead of quitting
@@ -81,14 +75,14 @@ void ScreenLedGUI::saveConfigForm()
     updatedConf["keepDebugSS"] = ui->debugSSVal->checkState() == Qt::Checked;
     updatedConf["showDebugPreview"] = ui->showPreviewVal->checkState() == Qt::Checked;
 
-    std::ofstream file(gConfPath);
+    std::ofstream file(m_gConfPath);
     file << updatedConf.dump(4);
     file.close();
 }
 
 void ScreenLedGUI::updateStatusLabel()
 {
-    float curFPS = lib_getFpsFunc();
+    float curFPS = 123.45;
     QString status;
     status = "FPS: " + QString::number(curFPS) +", Status: ";
     switch (currentRunStatus) {
@@ -107,21 +101,21 @@ void ScreenLedGUI::updateStatusLabel()
 
 void ScreenLedGUI::on_startButton_clicked()
 {
-    if (!libScreenledThreadIsRunning)
+    if (!m_libScreenledThreadIsRunning)
     {
         saveConfigForm();
-        screenLedTh.start();
-        libScreenledThreadIsRunning = true;
+        //screenLedTh.start();
+        m_libScreenledThreadIsRunning = true;
         ui->startButton->setText("Stop");
         currentRunStatus = runStatus::RUNNING;
     }
     else
     {
-        lib_endFunc();
-        screenLedTh.quit();
-        screenLedTh.wait();
+        //lib_endFunc();
+        //screenLedTh.quit();
+        //screenLedTh.wait();
         ui->startButton->setText("Start");
-        libScreenledThreadIsRunning = false;
+        m_libScreenledThreadIsRunning = false;
         currentRunStatus = runStatus::IDLE;
     }
 }

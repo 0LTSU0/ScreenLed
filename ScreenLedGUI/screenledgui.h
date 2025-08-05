@@ -6,9 +6,11 @@
 #include <QTimer>
 
 #include "consts.h"
-
-typedef void (*MyPrototype)();
-typedef float (*MyFloatPrototype)();
+#if defined(WIN32)
+#include "ScreenCapWindows.h"
+#else
+#include "ScreenCapLinux.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -24,11 +26,6 @@ public:
     ScreenLedGUI(QWidget *parent = nullptr);
     ~ScreenLedGUI();
 
-    // Function for interacting with screenled lib
-    MyPrototype lib_startFunc;
-    MyPrototype lib_endFunc;
-    MyFloatPrototype lib_getFpsFunc;
-
 private slots:
     void on_startButton_clicked();
 
@@ -41,14 +38,18 @@ private:
     void updateStatusLabel();
 
     //class variables
-    Ui::ScreenLedGUI *ui;
-    QThread screenLedTh;
-    bool libScreenledThreadIsRunning = false;
-    runStatus currentRunStatus = runStatus::IDLE;
-    QTimer *statusUpdatetimer;  // Timer to schedule status label updates
+    std::string m_gConfPath = "screenLedConfig.json";
+#if defined(WIN32)
+    screenCaptureWorkerWindows screenCapWorker = screenCaptureWorkerWindows(m_gConfPath);
+#else
+    screenCaptureWorkerLinux screenCapWorker = screenCaptureWorkerLinux();
+#endif
 
-    // TODO the config should probably be in some specific folder and be generated if it doesn't exist instead of hardocded path
-    std::string gConfPath = "../pc_c++/gConfig.json";
+    bool m_libScreenledThreadIsRunning = false;
+    runStatus currentRunStatus = runStatus::IDLE;
+
+    QTimer *statusUpdatetimer;  // Timer to schedule status label updates
+    Ui::ScreenLedGUI *ui;
 
 };
 #endif // SCREENLEDGUI_H
