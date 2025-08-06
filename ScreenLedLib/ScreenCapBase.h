@@ -3,6 +3,10 @@
 #include <iostream>
 #include <atomic>
 #include <QObject>
+#include <vector>
+
+#define UDP_PACKET_SIZE 1024
+#define NUM_LED_SEGMENTS 20 // TODO: make this adjustable
 
 // config struct for ScreenLedLib (NOTE: screenCaptureWorkerBase::createConfigFile() uses this definition for default values)
 struct ScreenCapConfig {
@@ -15,22 +19,29 @@ struct ScreenCapConfig {
     int c_screenResY = 1080;
 };
 
+struct rgbValue {
+    int r = 0;
+    int g = 0;
+    int b = 0;
+};
+
 // Base class for taking screenshots and analyzing RGB data from them. This class implements
 // everything cross-platform and screenCaptureWorkerLinux/screenCaptureWorkerWindows
 // implement platform specific functionality (aka virtual stuffs)
 class screenCaptureWorkerBase : public QObject{
     Q_OBJECT
 public:
-    virtual void screenshotBitMap() = 0;
+    virtual void initScreenShotting() = 0;
+    virtual void takeScreenShot() = 0;
     virtual bool openUDPPort() = 0;
     virtual bool closeUDPPort() = 0;
+    virtual void analyzeColors() = 0;
     //virtual void sendRGBData() = 0;
 
     bool loadConfigs();
     ScreenCapConfig& getCurrentConfig();
     void updateCurrentConfig(ScreenCapConfig newConf);
     bool createConfigFile();
-    bool analyzeColors();
 
 public slots:
     void run();
@@ -41,4 +52,6 @@ public:
     std::string m_configPath;
     ScreenCapConfig m_conf;
     std::atomic_bool m_isRunning{false};
+    std::vector<rgbValue> m_rgbData;
+    int m_keepClipboardSSCtr = 0;
 };

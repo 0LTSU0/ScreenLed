@@ -2,9 +2,9 @@
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
 #include <Windows.h>
+#include <memory>
 
 #pragma comment(lib, "ws2_32.lib")
-#define PACKET_SIZE 1024
 
 class screenCaptureWorkerWindows : public screenCaptureWorkerBase {
 public:
@@ -19,7 +19,9 @@ public:
         closeUDPPort();
     }
 
-    void screenshotBitMap();
+    void initScreenShotting();
+    void takeScreenShot();
+    void analyzeColors();
     bool openUDPPort();
     bool closeUDPPort();
 
@@ -27,5 +29,5 @@ private:
     SOCKET m_sock;
     sockaddr_in m_destAddr;
     bool m_sockOpen = false;
-    //DWORD* pixelData = new DWORD[]
+    std::unique_ptr<DWORD[]> m_pixelData;
 };

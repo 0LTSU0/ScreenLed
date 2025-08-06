@@ -12,8 +12,11 @@ void screenCaptureWorkerBase::run() {
         std::cerr << "screenCaptureWorkerBase::run() FAILED TO OPEN UDP SOCKET!!!!" << std::endl;
         return;
     }
+    initScreenShotting();
     while(m_isRunning) {
-        screenshotBitMap();
+        takeScreenShot();
+        analyzeColors();
+        QThread::msleep(100);
     }
 }
 
