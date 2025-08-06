@@ -1,5 +1,9 @@
 project(ScreenLedLib)
 
+# needed so that we can have the class as QObject for easy threading
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+
 if (WIN32)
 	set(OS_SPECIFIC_SOURCES ScreenCapWindows.h ScreenCapWindows.cpp)
 else()
@@ -12,5 +16,7 @@ add_library(ScreenLedLib
 	${OS_SPECIFIC_SOURCES}
 )
 
-target_include_directories(ScreenLedLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_link_libraries(ScreenLedLib PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+target_include_directories(ScreenLedLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty)
 target_include_directories(ScreenLedLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

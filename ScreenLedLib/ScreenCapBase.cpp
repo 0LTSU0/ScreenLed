@@ -2,8 +2,25 @@
 #include <iostream>
 #include <fstream>
 #include "json.hpp"
+#include <QThread>
 
 using json = nlohmann::json;
+
+void screenCaptureWorkerBase::run() {
+    m_isRunning = true;
+    if (!openUDPPort()){
+        std::cerr << "screenCaptureWorkerBase::run() FAILED TO OPEN UDP SOCKET!!!!" << std::endl;
+        return;
+    }
+    while(m_isRunning) {
+        screenshotBitMap();
+    }
+}
+
+void screenCaptureWorkerBase::stop() {
+    m_isRunning = false;
+    closeUDPPort();
+}
 
 bool screenCaptureWorkerBase::loadConfigs(){
     std::cout << "screenCaptureWorkerBase::loadConfigs() using " << m_configPath << std::endl;
@@ -27,6 +44,8 @@ bool screenCaptureWorkerBase::loadConfigs(){
     m_conf.c_raspiIp = conf["raspiIp"].get<std::string>();
     m_conf.c_raspiPort = conf["raspiPort"].get<int>();
     m_conf.c_showDebugPreview = conf["showDebugPreview"].get<bool>();
+    m_conf.c_screenResX = conf["screenResX"].get<int>();
+    m_conf.c_screenResY = conf["screenResY"].get<int>();
 
     return true;
 }
@@ -39,6 +58,8 @@ bool screenCaptureWorkerBase::createConfigFile(){
     jconf["raspiIp"] = defaultConfig.c_raspiIp;
     jconf["raspiPort"] = defaultConfig.c_raspiPort;
     jconf["showDebugPreview"] = defaultConfig.c_showDebugPreview;
+    jconf["screenResX"] = defaultConfig.c_screenResX;
+    jconf["screenResY"] = defaultConfig.c_screenResY;
 
     std::ofstream file(m_configPath);
     if (!file) {
@@ -62,6 +83,8 @@ void screenCaptureWorkerBase::updateCurrentConfig(ScreenCapConfig newConf) {
     jconf["raspiIp"] = m_conf.c_raspiIp;
     jconf["raspiPort"] = m_conf.c_raspiPort;
     jconf["showDebugPreview"] = m_conf.c_showDebugPreview;
+    jconf["screenResX"] = m_conf.c_screenResX;
+    jconf["screenResY"] = m_conf.c_screenResY;
     std::ofstream file(m_configPath);
     if (!file) {
         std::cerr << "screenCaptureWorkerBase::updateCurrentConfig() Failed to open config json for writing. The set values will be used during this session but changes won't be saved to disk" << std::endl;

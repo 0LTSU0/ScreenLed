@@ -18,19 +18,45 @@ class recvThread(threading.Thread):
         self.connected = False
 
     def mainrcv(self):
-        print("Starting UDP listening")
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        print("Waiting for connections")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((HOST, PORT))
+        sock.listen()
+        conn, addr = sock.accept()
         
-        while True:
-            msg, addr = sock.recvfrom(1024)
-            print(f"Received from {addr}: {msg}")
-            with LOCK:
-                CURRENT_COLORS = self.decode(msg)
+        rcv_data_timestamp = 0
+        try:
+            with conn:
+                print('Connected by', addr)
+                self.connected = True
+                while True:
+                    sock.listen()
+                    data = conn.recv(1024)
+                    if data:
+                        try:
+                            decoded = self.decode(data)
+                        except IndexError:
+                            pass
+                        
+                        #if time.time() - rcv_data_timestamp > 0.016: #Dont always update the variable to not make this blocking
+                        global CURRENT_COLORS
+                        with LOCK:
+                            CURRENT_COLORS = decoded
+                        rcv_data_timestamp = time.time()
+                        #print(decoded)
+                    else:
+                        raise Exception #break out
+        except Exception as e:
+            print("[recvThread] Error:", e)
+            print("Starting again after 1s")
+            self.connected = False
+            sock.close()
+            time.sleep(1)
+            self.mainrcv()
                 
     def decode(self, data):
         res = []
-        data = data.decode().split(";")
+        data = data.decode().split(",;")
         for i in range(NUM_SEGS):
             d = data[i].split(",")
             c = 0
@@ -78,7 +104,7 @@ class visTrehad(threading.Thread):
                     pass
             pygame.display.flip()
 
-            self.clock.tick(120)  # limits FPS to 120
+            self.clock.tick(144)  # limits FPS to 144
         
         sys.exit()
 
