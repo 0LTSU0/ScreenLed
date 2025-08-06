@@ -1,6 +1,6 @@
 #include "ScreenCapBase.h"
 
-class screenCaptureWorkerWindows : screenCaptureWorkerBase {
+class screenCaptureWorkerWindows : public screenCaptureWorkerBase {
 public:
     screenCaptureWorkerWindows(std::string configPath) {
         m_configPath = configPath;

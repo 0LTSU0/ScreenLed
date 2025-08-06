@@ -33,7 +33,7 @@ bool screenCaptureWorkerBase::loadConfigs(){
 
 bool screenCaptureWorkerBase::createConfigFile(){
     json jconf;
-    config defaultConfig;
+    ScreenCapConfig defaultConfig;
     jconf["debugSSInterval"] = defaultConfig.c_debugSSInterval;
     jconf["keepDebugSSOnClipboard"] = defaultConfig.c_keepDebugSSOnClipboard;
     jconf["raspiIp"] = defaultConfig.c_raspiIp;
@@ -48,4 +48,25 @@ bool screenCaptureWorkerBase::createConfigFile(){
     file << jconf.dump(4);
     file.close();
     return true;
+}
+
+ScreenCapConfig& screenCaptureWorkerBase::getCurrentConfig() {
+    return m_conf;
+}
+
+void screenCaptureWorkerBase::updateCurrentConfig(ScreenCapConfig newConf) {
+    m_conf = newConf;
+    json jconf;
+    jconf["debugSSInterval"] = m_conf.c_debugSSInterval;
+    jconf["keepDebugSSOnClipboard"] = m_conf.c_keepDebugSSOnClipboard;
+    jconf["raspiIp"] = m_conf.c_raspiIp;
+    jconf["raspiPort"] = m_conf.c_raspiPort;
+    jconf["showDebugPreview"] = m_conf.c_showDebugPreview;
+    std::ofstream file(m_configPath);
+    if (!file) {
+        std::cerr << "screenCaptureWorkerBase::updateCurrentConfig() Failed to open config json for writing. The set values will be used during this session but changes won't be saved to disk" << std::endl;
+        return;
+    }
+    file << jconf.dump(4);
+    file.close();
 }

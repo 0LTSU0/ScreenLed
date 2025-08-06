@@ -32,52 +32,41 @@ ScreenLedGUI::~ScreenLedGUI()
 
 int ScreenLedGUI::fillConfigForm()
 {
-    std::ifstream ifs(m_gConfPath);
-    if (ifs.fail())
-    {
-        exit(1); // Should never be hit because screenledlib generates it if missing
-    }
-
-    json conf = json::parse(ifs);
-    if ( !(conf.contains("raspiPort") && conf.contains("raspiIp") && conf.contains("keepDebugSS") && conf.contains("debugSSInterval") && conf.contains("showDebugPreview")) ) {
-        std::cout << "Cannot start application: gConfig.json is malformed!" << std::endl;
-        exit(1); // TODO should should actually fix the file instead of quitting
-    }
+    auto currentConfig = m_screenCapWorker.getCurrentConfig();
 
     // config file was found and it has expected keys -> try filling UI
-    ui->debugSSVal->setCheckState(conf["keepDebugSS"].get<bool>() ? Qt::Checked : Qt::Unchecked);
-    ui->debugSsIntervalVal->setText(QString::number(conf["debugSSInterval"].get<int>()));
-    ui->raspiPortVal->setText(QString::number(conf["raspiPort"].get<int>()));
-    ui->raspiIpVal->setText(QString(conf["raspiIp"].get<std::string>().c_str()));
-    ui->showPreviewVal->setCheckState(conf["showDebugPreview"].get<bool>() ? Qt::Checked : Qt::Unchecked);
+    ui->debugSSVal->setCheckState(currentConfig.c_keepDebugSSOnClipboard ? Qt::Checked : Qt::Unchecked);
+    ui->debugSsIntervalVal->setText(QString::number(currentConfig.c_debugSSInterval));
+    ui->raspiPortVal->setText(QString::number(currentConfig.c_raspiPort));
+    ui->raspiIpVal->setText(QString(currentConfig.c_raspiIp.c_str()));
+    ui->showPreviewVal->setCheckState(currentConfig.c_showDebugPreview ? Qt::Checked : Qt::Unchecked);
 
-    ifs.close();
     return 0;
 }
 
 void ScreenLedGUI::saveConfigForm()
 {
-    json updatedConf;
+    ScreenCapConfig newConf;
     bool convOk = true;
-    updatedConf["raspiIp"] = ui->raspiIpVal->text().toStdString();
+
+    newConf.c_raspiIp = ui->raspiIpVal->text().toStdString();
     int raspiPort = ui->raspiPortVal->text().toInt(&convOk);
-    if (!convOk)
-    {
-        return; //TODO: Show Error
+    if (!convOk) {
+        ui->raspiPortVal->clear(); // Todo show error message instead of just clearing it
+        return;
     }
-    updatedConf["raspiPort"] = raspiPort;
+    newConf.c_raspiPort = raspiPort;
     int debugSsInterval = ui->debugSsIntervalVal->text().toInt(&convOk);
     if (!convOk)
     {
-        return; //TODO: Show Error
+        ui->debugSsInterval->clear(); // Todo show error message instead of just clearing it
+        return;
     }
-    updatedConf["debugSSInterval"] = debugSsInterval;
-    updatedConf["keepDebugSS"] = ui->debugSSVal->checkState() == Qt::Checked;
-    updatedConf["showDebugPreview"] = ui->showPreviewVal->checkState() == Qt::Checked;
+    newConf.c_debugSSInterval = debugSsInterval;
+    newConf.c_keepDebugSSOnClipboard = ui->debugSSVal->checkState() == Qt::Checked;
+    newConf.c_showDebugPreview = ui->showPreviewVal->checkState() == Qt::Checked;
 
-    std::ofstream file(m_gConfPath);
-    file << updatedConf.dump(4);
-    file.close();
+    m_screenCapWorker.updateCurrentConfig(newConf);
 }
 
 void ScreenLedGUI::updateStatusLabel()
