@@ -1,7 +1,0 @@
-{
-    "debugSSInterval": 10,
-    "keepDebugSS": false,
-    "raspiIp": "127.0.0.1",
-    "raspiPort": 65432,
-    "showDebugPreview": true
-}

@@ -6,7 +6,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
@@ -17,13 +17,13 @@ set(PROJECT_SOURCES
         screenledgui.cpp
         screenledgui.h
         screenledgui.ui
+		consts.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenLedGUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        consts.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ScreenLedGUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -46,9 +46,10 @@ endif()
 target_link_libraries(ScreenLedGUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 # Add ScreenLed library and json header
-add_subdirectory(../pc_c++ ${CMAKE_CURRENT_BINARY_DIR}/lib)
-target_link_libraries(ScreenLedLib)
-target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../pc_c++/include)
+add_subdirectory(../ScreenLedLib ${CMAKE_CURRENT_BINARY_DIR}/lib)
+target_link_libraries(ScreenLedGUI PRIVATE ScreenLedLib)
+target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty)
+target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ScreenLedLib)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

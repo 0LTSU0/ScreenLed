@@ -16,18 +16,14 @@ ScreenLedGUI::ScreenLedGUI(QWidget *parent)
     connect(statusUpdatetimer, &QTimer::timeout, this, &ScreenLedGUI::updateStatusLabel);
     statusUpdatetimer->start(1000);
 
+    m_screenCapWorker->moveToThread(m_screenLibTh);
+    QObject::connect(m_screenLibTh, &QThread::started, m_screenCapWorker, &screenCaptureWorkerWindows::run);
     fillConfigForm();
-
-    QObject::connect(&screenLedTh, &QThread::started, [&]() {
-        qDebug() << "screenLedLibrary startup";
-        lib_startFunc();
-        qDebug() << "screenLedLibrary thread quit";
-    });
 }
 
 ScreenLedGUI::~ScreenLedGUI()
 {
-    if (libScreenledThreadIsRunning)
+    if (m_libScreenledThreadIsRunning)
     {
         // Fake click to startButton callback to make sure thread exists before application is quit
         on_startButton_clicked();
@@ -38,57 +34,50 @@ ScreenLedGUI::~ScreenLedGUI()
 
 int ScreenLedGUI::fillConfigForm()
 {
-    std::ifstream ifs(gConfPath);
-    if (ifs.fail())
-    {
-        exit(1); // TODO should actually generate the config with default values instead of quitting
-    }
-
-    json conf = json::parse(ifs);
-    if ( !(conf.contains("raspiPort") && conf.contains("raspiIp") && conf.contains("keepDebugSS") && conf.contains("debugSSInterval") && conf.contains("showDebugPreview")) ) {
-        std::cout << "Cannot start application: gConfig.json is malformed!" << std::endl;
-        exit(1); // TODO should should actually fix the file instead of quitting
-    }
+    auto currentConfig = m_screenCapWorker->getCurrentConfig();
 
     // config file was found and it has expected keys -> try filling UI
-    ui->debugSSVal->setCheckState(conf["keepDebugSS"].get<bool>() ? Qt::Checked : Qt::Unchecked);
-    ui->debugSsIntervalVal->setText(QString::number(conf["debugSSInterval"].get<int>()));
-    ui->raspiPortVal->setText(QString::number(conf["raspiPort"].get<int>()));
-    ui->raspiIpVal->setText(QString(conf["raspiIp"].get<std::string>().c_str()));
-    ui->showPreviewVal->setCheckState(conf["showDebugPreview"].get<bool>() ? Qt::Checked : Qt::Unchecked);
+    ui->debugSSVal->setCheckState(currentConfig.c_keepDebugSSOnClipboard ? Qt::Checked : Qt::Unchecked);
+    ui->debugSsIntervalVal->setText(QString::number(currentConfig.c_debugSSInterval));
+    ui->raspiPortVal->setText(QString::number(currentConfig.c_raspiPort));
+    ui->raspiIpVal->setText(QString(currentConfig.c_raspiIp.c_str()));
+    ui->showPreviewVal->setCheckState(currentConfig.c_showDebugPreview ? Qt::Checked : Qt::Unchecked);
+    ui->screenResXval->setValue(currentConfig.c_screenResX);
+    ui->screenResYval->setValue(currentConfig.c_screenResY);
 
-    ifs.close();
     return 0;
 }
 
 void ScreenLedGUI::saveConfigForm()
 {
-    json updatedConf;
+    ScreenCapConfig newConf;
     bool convOk = true;
-    updatedConf["raspiIp"] = ui->raspiIpVal->text().toStdString();
+
+    newConf.c_raspiIp = ui->raspiIpVal->text().toStdString();
     int raspiPort = ui->raspiPortVal->text().toInt(&convOk);
-    if (!convOk)
-    {
-        return; //TODO: Show Error
+    if (!convOk) {
+        ui->raspiPortVal->clear(); // Todo show error message instead of just clearing it
+        return;
     }
-    updatedConf["raspiPort"] = raspiPort;
+    newConf.c_raspiPort = raspiPort;
     int debugSsInterval = ui->debugSsIntervalVal->text().toInt(&convOk);
     if (!convOk)
     {
-        return; //TODO: Show Error
+        ui->debugSsInterval->clear(); // Todo show error message instead of just clearing it
+        return;
     }
-    updatedConf["debugSSInterval"] = debugSsInterval;
-    updatedConf["keepDebugSS"] = ui->debugSSVal->checkState() == Qt::Checked;
-    updatedConf["showDebugPreview"] = ui->showPreviewVal->checkState() == Qt::Checked;
+    newConf.c_debugSSInterval = debugSsInterval;
+    newConf.c_keepDebugSSOnClipboard = ui->debugSSVal->checkState() == Qt::Checked;
+    newConf.c_showDebugPreview = ui->showPreviewVal->checkState() == Qt::Checked;
+    newConf.c_screenResX = ui->screenResXval->value();
+    newConf.c_screenResY = ui->screenResYval->value();
 
-    std::ofstream file(gConfPath);
-    file << updatedConf.dump(4);
-    file.close();
+    m_screenCapWorker->updateCurrentConfig(newConf);
 }
 
 void ScreenLedGUI::updateStatusLabel()
 {
-    float curFPS = lib_getFpsFunc();
+    double curFPS = m_screenCapWorker->m_fps;
     QString status;
     status = "FPS: " + QString::number(curFPS) +", Status: ";
     switch (currentRunStatus) {
@@ -107,21 +96,21 @@ void ScreenLedGUI::updateStatusLabel()
 
 void ScreenLedGUI::on_startButton_clicked()
 {
-    if (!libScreenledThreadIsRunning)
+    if (!m_libScreenledThreadIsRunning)
     {
         saveConfigForm();
-        screenLedTh.start();
-        libScreenledThreadIsRunning = true;
+        m_screenLibTh->start();
+        m_libScreenledThreadIsRunning = true;
         ui->startButton->setText("Stop");
         currentRunStatus = runStatus::RUNNING;
     }
     else
     {
-        lib_endFunc();
-        screenLedTh.quit();
-        screenLedTh.wait();
+        m_screenCapWorker->stop();
+        m_screenLibTh->quit();
+        m_screenLibTh->wait();
         ui->startButton->setText("Start");
-        libScreenledThreadIsRunning = false;
+        m_libScreenledThreadIsRunning = false;
         currentRunStatus = runStatus::IDLE;
     }
 }
