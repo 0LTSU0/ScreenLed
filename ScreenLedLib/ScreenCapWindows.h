@@ -20,8 +20,10 @@ public:
     }
 
     void initScreenShotting();
+    void deinitScreenShotting();
     void takeScreenShot();
     void analyzeColors();
+    void sendRGBData(const char* buffer);
     bool openUDPPort();
     bool closeUDPPort();
 
@@ -30,4 +32,8 @@ private:
     sockaddr_in m_destAddr;
     bool m_sockOpen = false;
     std::unique_ptr<DWORD[]> m_pixelData;
+
+    HDC m_screenDC = nullptr;
+    HDC m_memoryDC = nullptr;
+    HBITMAP m_bitmap = nullptr;
 };

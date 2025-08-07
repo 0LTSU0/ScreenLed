@@ -1,6 +1,8 @@
 #include "ScreenCapBase.h"
 #include <iostream>
 #include <fstream>
+#include <format>
+#include <chrono>
 #include "json.hpp"
 #include <QThread>
 
@@ -13,16 +15,36 @@ void screenCaptureWorkerBase::run() {
         return;
     }
     initScreenShotting();
+    int perfCtr = 0;
+    auto measureStartTime = std::chrono::high_resolution_clock::now();
     while(m_isRunning) {
         takeScreenShot();
         analyzeColors();
-        QThread::msleep(100);
+        sendRGBData(createRGBDataString().c_str());
+        if (perfCtr == 10) {
+            std::chrono::duration<double> timePer10Frames = std::chrono::high_resolution_clock::now() - measureStartTime;
+            double avgTimePerFrame = timePer10Frames.count() / 10.0;
+            m_fps = 1 / avgTimePerFrame;
+            perfCtr = 0;
+            measureStartTime = std::chrono::high_resolution_clock::now();
+        }
+        perfCtr++;
     }
 }
 
 void screenCaptureWorkerBase::stop() {
     m_isRunning = false;
+    m_fps = 0.0;
     closeUDPPort();
+    deinitScreenShotting();
+}
+
+const std::string screenCaptureWorkerBase::createRGBDataString() {
+    std::string packet = "";
+    for (const auto& val : m_rgbData) {
+        packet.append(std::format("{},{},{};", val.r, val.g, val.b));
+    }
+    return packet;
 }
 
 bool screenCaptureWorkerBase::loadConfigs(){

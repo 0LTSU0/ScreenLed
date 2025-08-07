@@ -4,18 +4,15 @@ void screenCaptureWorkerWindows::takeScreenShot() {
     int res_x = m_conf.c_screenResX;
     int res_y_third = m_conf.c_screenResY / 3;
 
-    HDC hScreenDC = GetDC(nullptr);
-    HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
-    HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, res_x, res_y_third);
-    HBITMAP hOldBitmap = static_cast<HBITMAP>(SelectObject(hMemoryDC, hBitmap));
-    BitBlt(hMemoryDC, 0, 0, res_x, res_y_third, hScreenDC, 0, res_y_third, SRCCOPY);
-    hBitmap = static_cast<HBITMAP>(SelectObject(hMemoryDC, hOldBitmap));
+    HBITMAP hOldBitmap = static_cast<HBITMAP>(SelectObject(m_memoryDC, m_bitmap));
+    BitBlt(m_memoryDC, 0, 0, res_x, res_y_third, m_screenDC, 0, res_y_third, SRCCOPY);
+    m_bitmap = static_cast<HBITMAP>(SelectObject(m_memoryDC, hOldBitmap));
 
     if (m_conf.c_keepDebugSSOnClipboard) {
         if (m_keepClipboardSSCtr == m_conf.c_debugSSInterval) {
             OpenClipboard(NULL);
             EmptyClipboard();
-            SetClipboardData(CF_BITMAP, hBitmap);
+            SetClipboardData(CF_BITMAP, m_bitmap);
             CloseClipboard();
             m_keepClipboardSSCtr = 0;
         } else {
@@ -30,24 +27,27 @@ void screenCaptureWorkerWindows::takeScreenShot() {
     bmi.bmiHeader.biHeight = res_y_third;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32; // Assuming 32-bit color depth
-    GetDIBits(hMemoryDC, hBitmap, 0, res_y_third, m_pixelData.get(), &bmi, DIB_RGB_COLORS);
-
-    if (hBitmap)
-        DeleteObject(hBitmap);
-    DeleteDC(hMemoryDC);
-    ReleaseDC(nullptr, hScreenDC);
+    GetDIBits(m_memoryDC, m_bitmap, 0, res_y_third, m_pixelData.get(), &bmi, DIB_RGB_COLORS);
 }
 
 void screenCaptureWorkerWindows::initScreenShotting() {
+    int res_x = m_conf.c_screenResX;
     int centerThirdY = m_conf.c_screenResY / 3;
     m_pixelData = std::make_unique<DWORD[]>(m_conf.c_screenResX * centerThirdY);
+    m_screenDC  = GetDC(nullptr);
+    m_memoryDC  = CreateCompatibleDC(m_screenDC);
+    m_bitmap  = CreateCompatibleBitmap(m_screenDC, res_x, centerThirdY);
+}
+
+void screenCaptureWorkerWindows::deinitScreenShotting() {
+    DeleteObject(m_bitmap);
+    DeleteDC(m_memoryDC);
+    ReleaseDC(nullptr, m_screenDC);
 }
 
 void screenCaptureWorkerWindows::analyzeColors() {
     m_rgbData.clear();
-    for (int i=0; i<NUM_LED_SEGMENTS; i++) {
-        m_rgbData.push_back(rgbValue());
-    }
+    m_rgbData.assign(NUM_LED_SEGMENTS, rgbValue{});
     int res_x = m_conf.c_screenResX;
     int res_y = m_conf.c_screenResY / 3;
     int xPerSegment = res_x / NUM_LED_SEGMENTS;
@@ -73,17 +73,24 @@ void screenCaptureWorkerWindows::analyzeColors() {
             int green = static_cast<int>(GetGValue(pixelValue));
             int red = static_cast<int>(GetBValue(pixelValue));
 
-            m_rgbData.at(currentSegment).r += red;
-            m_rgbData.at(currentSegment).g += green;
-            m_rgbData.at(currentSegment).b += blue;
+            m_rgbData[currentSegment].r += red;
+            m_rgbData[currentSegment].g += green;
+            m_rgbData[currentSegment].b += blue;
         }
     }
 
     //get average based on how many values were used for calculating total
     for (int i=0; i<NUM_LED_SEGMENTS; i++) {
-        m_rgbData.at(i).r = m_rgbData.at(i).r / itemsPerCell;
-        m_rgbData.at(i).g = m_rgbData.at(i).g / itemsPerCell;
-        m_rgbData.at(i).b = m_rgbData.at(i).b / itemsPerCell;
+        m_rgbData[i].r /= itemsPerCell;
+        m_rgbData[i].g /= itemsPerCell;
+        m_rgbData[i].b /= itemsPerCell;
+    }
+}
+
+void screenCaptureWorkerWindows::sendRGBData(const char* buf) {
+    int res = sendto(m_sock, buf, (int)strlen(buf), 0, (sockaddr*)&m_destAddr, sizeof(m_destAddr));
+    if (res == SOCKET_ERROR) {
+        std::cerr << "sendto failed: " << WSAGetLastError() << std::endl;
     }
 }
 

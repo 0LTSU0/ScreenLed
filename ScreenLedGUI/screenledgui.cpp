@@ -77,7 +77,7 @@ void ScreenLedGUI::saveConfigForm()
 
 void ScreenLedGUI::updateStatusLabel()
 {
-    float curFPS = 123.45;
+    double curFPS = m_screenCapWorker->m_fps;
     QString status;
     status = "FPS: " + QString::number(curFPS) +", Status: ";
     switch (currentRunStatus) {

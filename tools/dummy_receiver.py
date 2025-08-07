@@ -21,7 +21,7 @@ class recvThread(threading.Thread):
         print("Starting UDP listening")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((HOST, PORT))
-        
+        global CURRENT_COLORS
         while True:
             msg, addr = sock.recvfrom(1024)
             print(f"Received from {addr}: {msg}")

@@ -32,16 +32,18 @@ class screenCaptureWorkerBase : public QObject{
     Q_OBJECT
 public:
     virtual void initScreenShotting() = 0;
+    virtual void deinitScreenShotting() = 0;
     virtual void takeScreenShot() = 0;
     virtual bool openUDPPort() = 0;
     virtual bool closeUDPPort() = 0;
     virtual void analyzeColors() = 0;
-    //virtual void sendRGBData() = 0;
+    virtual void sendRGBData(const char*) = 0;
 
     bool loadConfigs();
     ScreenCapConfig& getCurrentConfig();
     void updateCurrentConfig(ScreenCapConfig newConf);
     bool createConfigFile();
+    const std::string createRGBDataString();
 
 public slots:
     void run();
@@ -54,4 +56,5 @@ public:
     std::atomic_bool m_isRunning{false};
     std::vector<rgbValue> m_rgbData;
     int m_keepClipboardSSCtr = 0;
+    std::atomic<double> m_fps = 0.0;
 };
