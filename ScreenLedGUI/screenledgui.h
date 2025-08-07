@@ -43,7 +43,7 @@ private:
 #if defined(WIN32)
     screenCaptureWorkerWindows* m_screenCapWorker = new screenCaptureWorkerWindows(m_gConfPath);
 #else
-    screenCaptureWorkerLinux* m_screenCapWorker = new screenCaptureWorkerLinux();
+    screenCaptureWorkerLinux* m_screenCapWorker = new screenCaptureWorkerLinux(m_gConfPath);
 #endif
 
     bool m_libScreenledThreadIsRunning = false;

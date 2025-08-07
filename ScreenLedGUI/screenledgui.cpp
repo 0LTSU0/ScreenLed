@@ -17,7 +17,11 @@ ScreenLedGUI::ScreenLedGUI(QWidget *parent)
     statusUpdatetimer->start(1000);
 
     m_screenCapWorker->moveToThread(m_screenLibTh);
+#if defined(WIN32)
     QObject::connect(m_screenLibTh, &QThread::started, m_screenCapWorker, &screenCaptureWorkerWindows::run);
+#else
+    QObject::connect(m_screenLibTh, &QThread::started, m_screenCapWorker, &screenCaptureWorkerLinux::run);
+#endif
     fillConfigForm();
 }
 
