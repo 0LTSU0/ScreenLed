@@ -16,6 +16,12 @@ add_library(ScreenLedLib
 	${OS_SPECIFIC_SOURCES}
 )
 
+if (UNIX)
+	find_package(X11 REQUIRED)
+	target_include_directories(ScreenLedLib PRIVATE ${X11_INCLUDE_DIR})
+	target_link_libraries(ScreenLedLib PRIVATE ${X11_LIBRARIES})
+endif()
+
 target_link_libraries(ScreenLedLib PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 target_include_directories(ScreenLedLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty)
