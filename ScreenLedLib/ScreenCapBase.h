@@ -7,6 +7,7 @@
 
 #define UDP_PACKET_SIZE 1024
 #define NUM_LED_SEGMENTS 20 // TODO: make this adjustable
+#define MAX_FPS 60 // especially on Linux the performance is so good that we have to throttle down the rate or raspi cant keep up
 
 // config struct for ScreenLedLib (NOTE: screenCaptureWorkerBase::createConfigFile() uses this definition for default values)
 struct ScreenCapConfig {

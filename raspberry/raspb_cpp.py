@@ -18,46 +18,43 @@ class strip():
         self.RGB = RGB # TRUE == RGB, FALSE == BGR
         self.REVERSE = REVERSE
         
-strip_dense = strip(287, 18, 800000, 10, False, 255, 0, True, True)
-strip_old = strip(280, 13, 800000, 10, False, 255, 1, True, False)
+strip_dense = strip(287, 13, 800000, 10, False, 255, 0, True, True)
+#strip_old = strip(280, 13, 800000, 10, False, 255, 1, True, False)
 
-stripcfgs = [strip_dense, strip_old]
+stripcfgs = [strip_dense]
 strips = []
 
-HOST = '192.168.1.69'  # Standard loopback interface address (localhost)
+HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 
 def func():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((HOST, PORT))
-    sock.listen()
-    conn, addr = sock.accept()
-    with conn:
-        print('Connected by', addr)
-        while True:
-            sock.listen()
-            data = conn.recv(1024)
-            try:
-                if data:
-                    d = data.decode()
-                    ledifo = []
-                    d = d.split(",;")
-                    d.reverse()
-                    for item in d:
-                        if not item:
-                            continue
-                        sp = item.split(",")
-                        for it in sp:
-                            ledifo.append(int(it))
-                            #ledifo.append((int(sp[0]),int(sp[1]),int(sp[2])))
-                        #print("using ledinfo", ledifo)
-                    if len(ledifo) == LED_SEGMENTS * 3:
-                        i = 0
-                        for st in strips:
-                            LED(ledifo, st, stripcfgs[i])
-                            i += 1
-            except Exception as e:
-                print(e, ledifo)
+    while True:
+        sock.listen()
+        data, addr = sock.recvfrom(1024)
+        print(addr, "Received data:", data)
+        try:
+            if data:
+                d = data.decode()
+                ledifo = []
+                d = d.split(";")
+                d.reverse()
+                for item in d:
+                    if not item:
+                        continue
+                    sp = item.split(",")
+                    for it in sp:
+                        ledifo.append(int(it))
+                        #ledifo.append((int(sp[0]),int(sp[1]),int(sp[2])))
+                    #print("using ledinfo", ledifo)
+                if len(ledifo) == LED_SEGMENTS * 3:
+                    i = 0
+                    for st in strips:
+                        LED(ledifo, st, stripcfgs[i])
+                        i += 1
+        except Exception as e:
+            print(e, ledifo)
 
     
 def LED(data, strip, cfg):
