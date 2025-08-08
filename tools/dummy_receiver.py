@@ -6,8 +6,8 @@ import time
 import pygame
 import random
 
-HOST = '127.0.0.1'
-PORT = 65432
+HOST = '0.0.0.0'
+PORT = 12345
 NUM_SEGS = 0
 CURRENT_COLORS = []
 LOCK = threading.Lock()

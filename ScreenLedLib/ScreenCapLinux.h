@@ -1,4 +1,6 @@
 #include "ScreenCapBase.h"
+#include <arpa/inet.h>
+#include <unistd.h>
 
 class screenCaptureWorkerLinux : public screenCaptureWorkerBase {
 public:
@@ -30,4 +32,6 @@ private:
 
     int m_primaryDisplayOffsetX = 0;
     int m_primaryDisplayOffsetY = 0;
+    int m_sock = -1;
+    sockaddr_in m_outAddr {};
 };

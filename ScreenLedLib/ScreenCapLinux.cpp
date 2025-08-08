@@ -28,7 +28,7 @@ void screenCaptureWorkerLinux::initScreenShotting() {
         return;
     }
 
-    // ..so we need to find the primary display and find its position
+    // ..so we need to find the position of our primary display
     Window root = DefaultRootWindow(display);
     XRRScreenResources* screenResources = XRRGetScreenResources(display, root);
     bool foundPrimaryDisplay = false;
@@ -134,13 +134,26 @@ void screenCaptureWorkerLinux::analyzeColors() {
 }
 
 void screenCaptureWorkerLinux::sendRGBData(const char* buf) {
-    return;
+    ssize_t sent_bytes = sendto(m_sock, buf, strlen(buf), 0,
+                                (sockaddr*)&m_outAddr, sizeof(m_outAddr));
+    if (sent_bytes < 0) {
+        std::cerr << "sendto() failed!" << std::endl;
+    }
 }
 
 bool screenCaptureWorkerLinux::openUDPPort() {
+    m_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (m_sock < 0) {
+        perror("socket creation failed");
+        return false;
+    }
+    m_outAddr.sin_family = AF_INET;
+    m_outAddr.sin_port = htons(m_conf.c_raspiPort);
+    inet_pton(AF_INET, m_conf.c_raspiIp.c_str(), &m_outAddr.sin_addr);
     return true;
 }
 
 bool screenCaptureWorkerLinux::closeUDPPort() {
+    close(m_sock);
     return true;
 }
