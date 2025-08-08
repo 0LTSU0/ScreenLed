@@ -17,7 +17,9 @@ void screenCaptureWorkerBase::run() {
     initScreenShotting();
     int perfCtr = 0;
     auto measureStartTime = std::chrono::high_resolution_clock::now();
+    double targetTimePerLoopMS = (1.0 / MAX_FPS) * 1000;
     while(m_isRunning) {
+        auto loopStartTime = std::chrono::high_resolution_clock::now();
         takeScreenShot();
         analyzeColors();
         sendRGBData(createRGBDataString().c_str());
@@ -29,6 +31,10 @@ void screenCaptureWorkerBase::run() {
             measureStartTime = std::chrono::high_resolution_clock::now();
         }
         perfCtr++;
+        std::chrono::duration<double, std::milli> loopTime = std::chrono::high_resolution_clock::now() - loopStartTime;
+        if (loopTime.count() < targetTimePerLoopMS) {
+            QThread::msleep(targetTimePerLoopMS - loopTime.count());
+        }
     }
 }
 
