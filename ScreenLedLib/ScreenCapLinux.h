@@ -27,4 +27,7 @@ private:
     void* m_display = nullptr;      // actually Display*
     unsigned long m_rootWindow = 0; // actually Window
     void* m_image = nullptr;        // actually XImage*
+
+    int m_primaryDisplayOffsetX = 0;
+    int m_primaryDisplayOffsetY = 0;
 };

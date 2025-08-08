@@ -17,9 +17,14 @@ add_library(ScreenLedLib
 )
 
 if (UNIX)
+	# sudo apt install libx11-dev libxext-dev libxrandr-dev
+	# sudo apt install libopencv-dev
 	find_package(X11 REQUIRED)
 	target_include_directories(ScreenLedLib PRIVATE ${X11_INCLUDE_DIR})
-	target_link_libraries(ScreenLedLib PRIVATE ${X11_LIBRARIES})
+	target_link_libraries(ScreenLedLib PRIVATE ${X11_LIBRARIES} Xrandr)
+	find_package(OpenCV REQUIRED)
+	target_link_libraries(ScreenLedLib PRIVATE ${OpenCV_LIBS})
+	target_include_directories(ScreenLedLib PRIVATE ${OpenCV_INCLUDE_DIRS})
 endif()
 
 target_link_libraries(ScreenLedLib PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
