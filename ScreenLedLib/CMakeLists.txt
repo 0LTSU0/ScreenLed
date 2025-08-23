@@ -14,6 +14,8 @@ add_library(ScreenLedLib
 	ScreenCapBase.h
 	ScreenCapBase.cpp
 	${OS_SPECIFIC_SOURCES}
+        algomean.h algomean.cpp
+
 )
 
 if (UNIX)

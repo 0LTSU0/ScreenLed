@@ -4,10 +4,16 @@
 #include <atomic>
 #include <QObject>
 #include <vector>
+#include <map>
 
 #define UDP_PACKET_SIZE 1024
 #define NUM_LED_SEGMENTS 20 // TODO: make this adjustable
 #define MAX_FPS 60 // especially on Linux the performance is so good that we have to throttle down the rate or raspi cant keep up
+
+enum ScreenLedAlgorithm {
+    MEAN_DEFAULT,
+    MEDIAN
+};
 
 // config struct for ScreenLedLib (NOTE: screenCaptureWorkerBase::createConfigFile() uses this definition for default values)
 struct ScreenCapConfig {
@@ -18,6 +24,7 @@ struct ScreenCapConfig {
     bool c_showDebugPreview = false;
     int c_screenResX = 1920;
     int c_screenResY = 1080;
+    ScreenLedAlgorithm c_algo = ScreenLedAlgorithm::MEAN_DEFAULT;
 };
 
 struct rgbValue {
@@ -25,6 +32,9 @@ struct rgbValue {
     int g = 0;
     int b = 0;
 };
+
+inline std::map<std::string, ScreenLedAlgorithm> algoNameMap{{"Default: mean", ScreenLedAlgorithm::MEAN_DEFAULT},
+                                                             {"Median", ScreenLedAlgorithm::MEDIAN}};
 
 // Base class for taking screenshots and analyzing RGB data from them. This class implements
 // everything cross-platform and screenCaptureWorkerLinux/screenCaptureWorkerWindows
