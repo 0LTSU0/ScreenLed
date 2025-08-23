@@ -18,10 +18,10 @@ public:
     void initScreenShotting();
     void deinitScreenShotting();
     void takeScreenShot();
-    void analyzeColors();
     void sendRGBData(const char* buf);
     bool openUDPPort();
     bool closeUDPPort();
+    void runAnalFunc();
 
 private:
     // X11 and QT have some annoying macro conflicts and the only way I could get it to work is to

@@ -17,7 +17,11 @@ class AlgoMean
 {
 public:
     AlgoMean();
+#ifdef _WIN32
     void analyzeColors(std::vector<rgbValue>&, const ScreenCapConfig&, const std::shared_ptr<DWORD[]>&);
+#else
+    void analyzeColors(std::vector<rgbValue>&, const ScreenCapConfig&, void*);
+#endif
 };
 
 #endif // ALGOMEAN_H

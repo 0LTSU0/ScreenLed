@@ -93,46 +93,6 @@ void screenCaptureWorkerLinux::takeScreenShot() {
     }
 }
 
-void screenCaptureWorkerLinux::analyzeColors() {
-    XImage* image = static_cast<XImage*>(m_image);
-    if (!image || !image->data){
-        return;
-    }
-
-    m_rgbData.clear();
-    m_rgbData.assign(NUM_LED_SEGMENTS, rgbValue{});
-
-    int xPerSegment = m_conf.c_screenResX / NUM_LED_SEGMENTS;
-    int currentSegment = 0;
-    int itemsPerCell = 0;
-    for (int y = 0; y < image->height; y += 10) {
-        currentSegment = 0;
-        for (int x = 0; x < image->width; x += 4) {
-            if (x % xPerSegment == 0 && x != 0) {
-                currentSegment++;
-            }
-            if (currentSegment == 0) {
-                itemsPerCell++;
-            }
-
-            unsigned long pixel = XGetPixel(image, x, y);
-            int red   = (pixel & image->red_mask)   >> 16;
-            int green = (pixel & image->green_mask) >> 8;
-            int blue  = (pixel & image->blue_mask);
-
-            m_rgbData[currentSegment].r += red;
-            m_rgbData[currentSegment].g += green;
-            m_rgbData[currentSegment].b += blue;
-        }
-    }
-
-    for (int i = 0; i < NUM_LED_SEGMENTS; ++i) {
-        m_rgbData[i].r /= itemsPerCell;
-        m_rgbData[i].g /= itemsPerCell;
-        m_rgbData[i].b /= itemsPerCell;
-    }
-}
-
 void screenCaptureWorkerLinux::sendRGBData(const char* buf) {
     ssize_t sent_bytes = sendto(m_sock, buf, strlen(buf), 0,
                                 (sockaddr*)&m_outAddr, sizeof(m_outAddr));
@@ -156,4 +116,15 @@ bool screenCaptureWorkerLinux::openUDPPort() {
 bool screenCaptureWorkerLinux::closeUDPPort() {
     close(m_sock);
     return true;
+}
+
+void screenCaptureWorkerLinux::runAnalFunc() {
+    switch(m_conf.c_algo) {
+    case ScreenLedAlgorithm::MEAN_DEFAULT:
+        m_meanAlgo.analyzeColors(m_rgbData, m_conf, m_image);
+        break;
+    case ScreenLedAlgorithm::MEDIAN:
+        std::cout << "TODO" << std::endl;
+        break;
+    }
 }

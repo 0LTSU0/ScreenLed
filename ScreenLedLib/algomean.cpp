@@ -47,7 +47,48 @@ void AlgoMean::analyzeColors(std::vector<rgbValue>& res, const ScreenCapConfig& 
 }
 #else
 // Linux implementation for analyzeColors() of this algo
-void AlgoMean::analyzeColors(rgbValue& res) {
+extern "C" {
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/extensions/Xrandr.h>
+}
+void AlgoMean::analyzeColors(std::vector<rgbValue>& res, const ScreenCapConfig& conf, void* img) {
+    XImage* image = static_cast<XImage*>(img);
+    if (!image || !image->data){
+        return;
+    }
 
+    res.clear();
+    res.assign(NUM_LED_SEGMENTS, rgbValue{});
+
+    int xPerSegment = conf.c_screenResX / NUM_LED_SEGMENTS;
+    int currentSegment = 0;
+    int itemsPerCell = 0;
+    for (int y = 0; y < image->height; y += 10) {
+        currentSegment = 0;
+        for (int x = 0; x < image->width; x += 4) {
+            if (x % xPerSegment == 0 && x != 0) {
+                currentSegment++;
+            }
+            if (currentSegment == 0) {
+                itemsPerCell++;
+            }
+
+            unsigned long pixel = XGetPixel(image, x, y);
+            int red   = (pixel & image->red_mask)   >> 16;
+            int green = (pixel & image->green_mask) >> 8;
+            int blue  = (pixel & image->blue_mask);
+
+            res[currentSegment].r += red;
+            res[currentSegment].g += green;
+            res[currentSegment].b += blue;
+        }
+    }
+
+    for (int i = 0; i < NUM_LED_SEGMENTS; ++i) {
+        res[i].r /= itemsPerCell;
+        res[i].g /= itemsPerCell;
+        res[i].b /= itemsPerCell;
+    }
 }
 #endif
