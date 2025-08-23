@@ -22,16 +22,16 @@ public:
     void initScreenShotting();
     void deinitScreenShotting();
     void takeScreenShot();
-    void analyzeColors();
     void sendRGBData(const char* buffer);
     bool openUDPPort();
     bool closeUDPPort();
+    void runAnalFunc();
 
 private:
     SOCKET m_sock;
     sockaddr_in m_destAddr;
     bool m_sockOpen = false;
-    std::unique_ptr<DWORD[]> m_pixelData;
+    std::shared_ptr<DWORD[]> m_pixelData;
 
     HDC m_screenDC = nullptr;
     HDC m_memoryDC = nullptr;

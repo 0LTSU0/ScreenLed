@@ -21,7 +21,7 @@ void screenCaptureWorkerBase::run() {
     while(m_isRunning) {
         auto loopStartTime = std::chrono::high_resolution_clock::now();
         takeScreenShot();
-        analyzeColors();
+        runAnalFunc();
         sendRGBData(createRGBDataString().c_str());
         if (perfCtr == 10) {
             std::chrono::duration<double> timePer10Frames = std::chrono::high_resolution_clock::now() - measureStartTime;
