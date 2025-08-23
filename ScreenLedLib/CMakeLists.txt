@@ -16,6 +16,7 @@ add_library(ScreenLedLib
 	${OS_SPECIFIC_SOURCES}
         algomean.h algomean.cpp
         Commons.h
+        algomedian.h algomedian.cpp
 
 )
 
