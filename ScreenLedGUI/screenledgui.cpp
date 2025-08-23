@@ -141,6 +141,6 @@ void ScreenLedGUI::on_saveConfig_clicked()
 
 void ScreenLedGUI::on_algoSelectVal_currentTextChanged(const QString &arg1)
 {
-
+    m_screenCapWorker->m_conf.c_algo = algoNameMap[arg1.toStdString()]; //TODO: might be dangerous to change this while the application runs if its read at the same time
 }
 
