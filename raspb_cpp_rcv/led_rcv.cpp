@@ -111,8 +111,16 @@ int main() {
     while (true) {
         sockaddr_in sender{};
         socklen_t sender_len = sizeof(sender);
-        int n = recvfrom(sock, buffer, sizeof(buffer) - 1, 0, (struct sockaddr*)&sender, &sender_len);
-        if (n <= 0) continue;
+        int n;
+        std::string latest;
+        // Drain socket buffer, keep only newest packet (in case we're sending too much data)
+        while ( (n = recvfrom(sock, buffer, sizeof(buffer)-1, MSG_DONTWAIT,
+                (struct sockaddr*)&sender, &sender_len)) > 0 ) {
+            buffer[n] = '\0';
+            latest.assign(buffer, n);
+        }
+
+        if (latest.empty()) {continue;}
 
         buffer[n] = '\0';
         std::string received(buffer);
