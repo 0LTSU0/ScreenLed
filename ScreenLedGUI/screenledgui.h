@@ -31,6 +31,8 @@ private slots:
 
     void on_saveConfig_clicked();
 
+    void on_algoSelectVal_currentTextChanged(const QString &arg1);
+
 private:
     //functions
     int fillConfigForm();

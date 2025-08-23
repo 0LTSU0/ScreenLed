@@ -21,7 +21,7 @@ void screenCaptureWorkerBase::run() {
     while(m_isRunning) {
         auto loopStartTime = std::chrono::high_resolution_clock::now();
         takeScreenShot();
-        analyzeColors();
+        runAnalFunc();
         sendRGBData(createRGBDataString().c_str());
         if (perfCtr == 10) {
             std::chrono::duration<double> timePer10Frames = std::chrono::high_resolution_clock::now() - measureStartTime;
@@ -77,6 +77,7 @@ bool screenCaptureWorkerBase::loadConfigs(){
     m_conf.c_showDebugPreview = conf["showDebugPreview"].get<bool>();
     m_conf.c_screenResX = conf["screenResX"].get<int>();
     m_conf.c_screenResY = conf["screenResY"].get<int>();
+    m_conf.c_algo = conf["algo"].get<ScreenLedAlgorithm>();
 
     return true;
 }
@@ -91,6 +92,7 @@ bool screenCaptureWorkerBase::createConfigFile(){
     jconf["showDebugPreview"] = defaultConfig.c_showDebugPreview;
     jconf["screenResX"] = defaultConfig.c_screenResX;
     jconf["screenResY"] = defaultConfig.c_screenResY;
+    jconf["algo"] = defaultConfig.c_algo;
 
     std::ofstream file(m_configPath);
     if (!file) {
@@ -116,6 +118,7 @@ void screenCaptureWorkerBase::updateCurrentConfig(ScreenCapConfig newConf) {
     jconf["showDebugPreview"] = m_conf.c_showDebugPreview;
     jconf["screenResX"] = m_conf.c_screenResX;
     jconf["screenResY"] = m_conf.c_screenResY;
+    jconf["algo"] = m_conf.c_algo;
     std::ofstream file(m_configPath);
     if (!file) {
         std::cerr << "screenCaptureWorkerBase::updateCurrentConfig() Failed to open config json for writing. The set values will be used during this session but changes won't be saved to disk" << std::endl;

@@ -51,6 +51,17 @@ int ScreenLedGUI::fillConfigForm()
     ui->screenResXval->setValue(currentConfig.c_screenResX);
     ui->screenResYval->setValue(currentConfig.c_screenResY);
 
+    int activeIndex = 0;
+    int i = 0;
+    for (const auto& val : algoNameMap) {
+        ui->algoSelectVal->addItem(QString::fromStdString(val.first));
+        if (val.second == currentConfig.c_algo) {
+            activeIndex = i;
+        }
+        i++;
+    }
+    ui->algoSelectVal->setCurrentIndex(activeIndex);
+
     return 0;
 }
 
@@ -77,6 +88,7 @@ void ScreenLedGUI::saveConfigForm()
     newConf.c_showDebugPreview = ui->showPreviewVal->checkState() == Qt::Checked;
     newConf.c_screenResX = ui->screenResXval->value();
     newConf.c_screenResY = ui->screenResYval->value();
+    newConf.c_algo = algoNameMap[ui->algoSelectVal->currentText().toStdString()];
 
     m_screenCapWorker->updateCurrentConfig(newConf);
 }
@@ -124,5 +136,11 @@ void ScreenLedGUI::on_startButton_clicked()
 void ScreenLedGUI::on_saveConfig_clicked()
 {
     saveConfigForm();
+}
+
+
+void ScreenLedGUI::on_algoSelectVal_currentTextChanged(const QString &arg1)
+{
+    m_screenCapWorker->m_conf.c_algo = algoNameMap[arg1.toStdString()]; //TODO: might be dangerous to change this while the application runs if its read at the same time
 }
 
