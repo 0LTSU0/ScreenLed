@@ -15,7 +15,46 @@ auto medianOf = [](std::vector<int>& arr) -> int {
 };
 
 #ifdef _WIN32
-//TODO
+void AlgoMedian::analyzeColors(std::vector<rgbValue>& res, const ScreenCapConfig& conf, const std::shared_ptr<DWORD[]>& pixelData) {
+    res.clear();
+    res.assign(NUM_LED_SEGMENTS, rgbValue{});
+
+    std::vector<std::vector<int>> reds(NUM_LED_SEGMENTS);
+    std::vector<std::vector<int>> greens(NUM_LED_SEGMENTS);
+    std::vector<std::vector<int>> blues(NUM_LED_SEGMENTS);
+
+    int xPerSegment = conf.c_screenResX / NUM_LED_SEGMENTS;
+    int res_y = conf.c_screenResY / 3;
+    int currentSegment = 0;
+    DWORD pixelValue;
+    for (int yi = 0; yi < res_y; yi += 10) {
+        currentSegment = 0;
+        for (int x = 0; x < conf.c_screenResX; x += 4) {
+            if (x % xPerSegment == 0 && x != 0) {
+                currentSegment++;
+            }
+
+            // Get the pixel value at (x, yi)
+            pixelValue = pixelData[yi * conf.c_screenResX + x];
+
+            // Extract the red, green, and blue components
+            int blue = static_cast<int>(GetRValue(pixelValue));
+            int green = static_cast<int>(GetGValue(pixelValue));
+            int red = static_cast<int>(GetBValue(pixelValue));
+
+            reds[currentSegment].push_back(red);
+            greens[currentSegment].push_back(green);
+            blues[currentSegment].push_back(blue);
+        }
+    }
+
+    for (int i = 0; i < NUM_LED_SEGMENTS; ++i) {
+        res[i].r = medianOf(reds[i]);
+        res[i].g = medianOf(greens[i]);
+        res[i].b = medianOf(blues[i]);
+    }
+}
+
 #else
 // Linux implementation for analyzeColors() of this algo
 extern "C" {

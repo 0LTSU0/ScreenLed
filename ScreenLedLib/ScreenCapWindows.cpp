@@ -1,4 +1,5 @@
 #include "ScreenCapWindows.h"
+#include "QDebug"
 
 void screenCaptureWorkerWindows::takeScreenShot() {
     int res_x = m_conf.c_screenResX;
@@ -10,10 +11,32 @@ void screenCaptureWorkerWindows::takeScreenShot() {
 
     if (m_conf.c_keepDebugSSOnClipboard) {
         if (m_keepClipboardSSCtr == m_conf.c_debugSSInterval) {
-            OpenClipboard(NULL);
-            EmptyClipboard();
-            SetClipboardData(CF_BITMAP, m_bitmap);
-            CloseClipboard();
+            HDC hScreen = GetDC(NULL);
+            HDC hSrcDC  = CreateCompatibleDC(hScreen);
+            HDC hTempDC = CreateCompatibleDC(hScreen);
+            HBITMAP hOldSrc = static_cast<HBITMAP>(SelectObject(hSrcDC, m_bitmap));
+
+            // Create a proper DDB
+            HBITMAP hCopy = CreateCompatibleBitmap(hScreen, res_x, res_y_third);
+            HBITMAP hOldTemp = static_cast<HBITMAP>(SelectObject(hTempDC, hCopy));
+
+            // Copy pixels from your working DC
+            BitBlt(hTempDC, 0, 0, res_x, res_y_third, hSrcDC, 0, 0, SRCCOPY);
+
+            SelectObject(hSrcDC, hOldSrc);
+            SelectObject(hTempDC, hOldTemp);
+            DeleteDC(hSrcDC);
+            DeleteDC(hTempDC);
+            ReleaseDC(NULL, hScreen);
+
+            if (OpenClipboard(NULL)) {
+                EmptyClipboard();
+                if (!SetClipboardData(CF_BITMAP, hCopy)) {
+                    qDebug() << "Failed to set clipboard contents:" << GetLastError();
+                    DeleteObject(hCopy); // only delete if SetClipboardData failed
+                }
+                CloseClipboard();
+            }
             m_keepClipboardSSCtr = 0;
         } else {
             m_keepClipboardSSCtr++;
@@ -93,7 +116,7 @@ void screenCaptureWorkerWindows::runAnalFunc() {
         m_meanAlgo.analyzeColors(m_rgbData, m_conf, m_pixelData);
         break;
     case ScreenLedAlgorithm::MEDIAN:
-        std::cout << "TODO" << std::endl;
+        m_medianAlgo.analyzeColors(m_rgbData, m_conf, m_pixelData);
         break;
     }
 }
