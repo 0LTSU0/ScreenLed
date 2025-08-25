@@ -6,6 +6,7 @@
 #include <vector>
 #include "Commons.h"
 #include "algomean.h"
+#include "algomedian.h"
 
 #define UDP_PACKET_SIZE 1024
 #define MAX_FPS 60 // especially on Linux the performance is so good that we have to throttle down the rate or raspi cant keep up
@@ -45,4 +46,5 @@ public:
 
     // different algo classes
     AlgoMean m_meanAlgo = AlgoMean();
+    AlgoMedian m_medianAlgo = AlgoMedian();
 };

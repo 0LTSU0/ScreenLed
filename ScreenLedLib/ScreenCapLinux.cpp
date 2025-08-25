@@ -124,7 +124,7 @@ void screenCaptureWorkerLinux::runAnalFunc() {
         m_meanAlgo.analyzeColors(m_rgbData, m_conf, m_image);
         break;
     case ScreenLedAlgorithm::MEDIAN:
-        std::cout << "TODO" << std::endl;
+        m_medianAlgo.analyzeColors(m_rgbData, m_conf, m_image);
         break;
     }
 }
