@@ -20,8 +20,8 @@ public:
     virtual void initScreenShotting() = 0;
     virtual void deinitScreenShotting() = 0;
     virtual void takeScreenShot() = 0;
-    virtual bool openUDPPort() = 0;
-    virtual bool closeUDPPort() = 0;
+    virtual bool openUDPPort(const char* host, int port) = 0;
+    virtual bool closeUDPPorts() = 0;
     virtual void sendRGBData(const char*) = 0;
     virtual void runAnalFunc() = 0;
 

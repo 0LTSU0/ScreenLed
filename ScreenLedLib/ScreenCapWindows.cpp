@@ -69,13 +69,15 @@ void screenCaptureWorkerWindows::deinitScreenShotting() {
 }
 
 void screenCaptureWorkerWindows::sendRGBData(const char* buf) {
-    int res = sendto(m_sock, buf, (int)strlen(buf), 0, (sockaddr*)&m_destAddr, sizeof(m_destAddr));
-    if (res == SOCKET_ERROR) {
-        std::cerr << "sendto failed: " << WSAGetLastError() << std::endl;
+    for (const auto& c : m_clientSocks) {
+        int res = sendto(c.sock, buf, (int)strlen(buf), 0, (sockaddr*)&c.addr, sizeof(c.addr));
+        if (res == SOCKET_ERROR) {
+            std::cerr << "sendto failed: " << WSAGetLastError() << std::endl;
+        }
     }
 }
 
-bool screenCaptureWorkerWindows::openUDPPort() {
+bool screenCaptureWorkerWindows::openUDPPort(const char* host, int port) {
     std::cout << "Opening UDP Port (Windows)" << std::endl;
 
     int result = 0;
@@ -85,28 +87,33 @@ bool screenCaptureWorkerWindows::openUDPPort() {
         std::cerr << "WSAStartup failed: " << result << std::endl;
         return false;
     }
-    m_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (m_sock == INVALID_SOCKET) {
+    SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == INVALID_SOCKET) {
         std::cerr << "Socket creation failed reason: " << WSAGetLastError() << std::endl;
         WSACleanup();
         return false;
     }
 
-    m_destAddr.sin_family = AF_INET;
-    m_destAddr.sin_port = htons(m_conf.c_raspiPort);
-    inet_pton(AF_INET, m_conf.c_raspiIp.c_str(), &m_destAddr.sin_addr);
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    inet_pton(AF_INET, host, &addr.sin_addr);
 
-    m_sockOpen = true;
+    m_clientSocks.push_back({sock, addr});
+    m_socksOpen = true;
     return true;
 }
 
-bool screenCaptureWorkerWindows::closeUDPPort() {
-    if (m_sockOpen) {
-        std::cout << "Closing UDP Port (Windows)" << std::endl;
-        closesocket(m_sock);
-        WSACleanup();
+bool screenCaptureWorkerWindows::closeUDPPorts() {
+    if (m_socksOpen) {
+        for (const auto& c : m_clientSocks) {
+            std::cout << "Closing UDP Port (Windows): " << c.sock << std::endl;
+            closesocket(c.sock);
+            WSACleanup();
+        }
     }
-    m_sockOpen = false;
+    m_socksOpen = false;
+    m_clientSocks.clear();
     return true;
 }
 

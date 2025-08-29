@@ -7,20 +7,20 @@ import pygame
 import random
 
 HOST = '0.0.0.0'
-PORT = 65432
 NUM_SEGS = 0
 CURRENT_COLORS = []
 LOCK = threading.Lock()
 
 class recvThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, port):
         super(recvThread,self).__init__()
         self.connected = False
+        self.port = port
 
     def mainrcv(self):
-        print("Starting UDP listening")
+        print("Starting UDP listening on port", self.port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((HOST, PORT))
+        sock.bind((HOST, self.port))
         global CURRENT_COLORS
         while True:
             msg, addr = sock.recvfrom(1024)
@@ -87,10 +87,10 @@ class visTrehad(threading.Thread):
         self.visualize()
 
 if __name__ == "__main__":
-    #if len(sys.argv) == 1:
-    #    print("Usage: python dummy_receiver.py [n led segments]")
-    #else:
-    recv_thread = recvThread()
+    if len(sys.argv) == 1:
+        print("Usage: python dummy_receiver.py [port]")
+        sys.exit(-1)
+    recv_thread = recvThread(int(sys.argv[1]))
     vis_thread = visTrehad()
     #NUM_SEGS = int(sys.argv[1])
     NUM_SEGS = 20

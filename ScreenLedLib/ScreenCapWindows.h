@@ -6,6 +6,11 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
+struct sockclient {
+    SOCKET sock;
+    sockaddr_in addr;
+};
+
 class screenCaptureWorkerWindows : public screenCaptureWorkerBase {
 public:
     screenCaptureWorkerWindows(std::string configPath) {
@@ -16,21 +21,20 @@ public:
         }
     }
     ~screenCaptureWorkerWindows() {
-        closeUDPPort();
+        closeUDPPorts();
     }
 
     void initScreenShotting();
     void deinitScreenShotting();
     void takeScreenShot();
     void sendRGBData(const char* buffer);
-    bool openUDPPort();
-    bool closeUDPPort();
+    bool openUDPPort(const char* host, int port);
+    bool closeUDPPorts();
     void runAnalFunc();
 
 private:
-    SOCKET m_sock;
-    sockaddr_in m_destAddr;
-    bool m_sockOpen = false;
+    std::vector<sockclient> m_clientSocks;
+    bool m_socksOpen = false;
     std::shared_ptr<DWORD[]> m_pixelData;
 
     HDC m_screenDC = nullptr;
