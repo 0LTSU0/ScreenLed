@@ -10,8 +10,10 @@
 #include "ws2811/ws2811.h"
 
 #define HOST "0.0.0.0"
-#define PORT 65432
 #define LED_SEGMENTS 20
+#define L_FREQ 800000
+#define L_DMA 10
+#define L_GPIO 12
 
 struct Strip {
     int LED_COUNT;
@@ -24,16 +26,16 @@ struct Strip {
     bool REVERSE;  // Mirror order
 };
 
-Strip strip_dense = {287, 800000, 10, false, 255, 0, false, true};
-Strip strip_old   = {185, 800000, 10, false, 255, 0, false, false};
-std::vector<Strip> strips = {strip_dense, strip_old};
+//Strip strip_dense = {287, 800000, 10, false, 255, 0, false, true};
+//Strip strip_old   = {185, 800000, 10, false, 255, 0, false, false};
+//std::vector<Strip> strips = {strip_dense, strip_old};
 
 ws2811_t ledstring = {
     .freq = WS2811_TARGET_FREQ,
-    .dmanum = 10,
+    .dmanum = L_DMA,
     .channel = {
         [0] = {
-            .gpionum = 12,
+            .gpionum = L_GPIO,
             .invert = 0,
             .count = 0,  // filled later
             .strip_type = WS2811_STRIP_RGB,
@@ -44,7 +46,7 @@ ws2811_t ledstring = {
 };
 
 
-void LEDS(const std::vector<int> &data, const Strip &st, int strip_index) {
+void LEDS(const std::vector<int> &data, const Strip &st, int strip_index, const std::vector<Strip>& strips) {
     int j = st.REVERSE ? (data.size() - 3) : 0;
     int leds_per_segment = st.LED_COUNT / LED_SEGMENTS;
 
@@ -78,8 +80,63 @@ void LEDS(const std::vector<int> &data, const Strip &st, int strip_index) {
     }
 }
 
+std::vector<std::string> split(const std::string &s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delimiter)) {
+        tokens.push_back(item);
+    }
+    return tokens;
+}
 
-int main() {
+bool parseArgs(int argc, char* argv[], int &port, std::vector<Strip> &strips)  {
+    for (int i = 0; i < argc; i++) {
+        std::string arg = argv[i];
+        auto pos = arg.find('=');
+        if (pos == std::string::npos) {
+            std::cout << "Ignored argument: " << arg << std::endl;
+            continue;
+        }
+
+        std::string key = arg.substr(0, pos);
+        std::string value = arg.substr(pos + 1);
+
+        if (key == "port") {
+            std::cout << "Got port argument: " << value << std::endl;
+            port = std::stoi(value);
+        } 
+        else if (key == "strips") {
+            auto parts = split(value, ',');
+            for (const auto &leds : parts) {
+                int num_leds = std::stoi(leds);
+                bool reverse = false;
+                if (num_leds < 0) {
+                    reverse = true;
+                    num_leds = -1 * num_leds;
+                }
+                std::cout << "Adding strip <num_leds>, <reverse>: " << num_leds << ", " << reverse << std::endl;
+                Strip st_conf = {num_leds, L_FREQ, L_DMA, false, 255, 0, false, true};
+                strips.push_back(st_conf);
+            }
+        }
+    }
+
+    if (port != 0 && !strips.empty()) {
+        return true;
+    } else {
+        std::cout << "Didn't get port and/or at least one strip led amount as arguments. Usage ./led_server port=12345 strips=123,-234,456" << std::endl;
+    }
+}
+
+int main(int argc, char* argv[]) {
+
+    int port = 0;
+    std::vector<Strip> strips;
+    if (!parseArgs(argc, argv, port, strips)) {
+        return -1;
+    }
+
     int total_leds = 0;
     for (auto &st : strips) total_leds += st.LED_COUNT;
     ledstring.channel[0].count = total_leds;
@@ -98,7 +155,7 @@ int main() {
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(PORT);
+    addr.sin_port = htons(port);
     addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
@@ -113,14 +170,20 @@ int main() {
         socklen_t sender_len = sizeof(sender);
         int n;
         std::string latest;
+        int packets_read = 0;
         // Drain socket buffer, keep only newest packet (in case we're sending too much data)
         while ( (n = recvfrom(sock, buffer, sizeof(buffer)-1, MSG_DONTWAIT,
                 (struct sockaddr*)&sender, &sender_len)) > 0 ) {
             buffer[n] = '\0';
             latest.assign(buffer, n);
+            packets_read++;
         }
 
         if (latest.empty()) {continue;}
+
+        if (packets_read > 1) {
+            std::cout << "Skipped data packets: " << packets_read - 1 << std::endl;
+        }
 
         buffer[n] = '\0';
         std::string received(buffer);
@@ -145,7 +208,7 @@ int main() {
 
         if (ledifo.size() == LED_SEGMENTS * 3) {
             for (size_t i = 0; i < strips.size(); i++) {
-                LEDS(ledifo, strips[i], i);
+                LEDS(ledifo, strips[i], i, strips);
             }
             ws2811_render(&ledstring);
         }
