@@ -94,27 +94,36 @@ void screenCaptureWorkerLinux::takeScreenShot() {
 }
 
 void screenCaptureWorkerLinux::sendRGBData(const char* buf) {
-    ssize_t sent_bytes = sendto(m_sock, buf, strlen(buf), 0,
-                                (sockaddr*)&m_outAddr, sizeof(m_outAddr));
-    if (sent_bytes < 0) {
-        std::cerr << "sendto() failed!" << std::endl;
+    for (const auto& c : m_clientSocks) {
+        ssize_t sent_bytes = sendto(c.sock, buf, strlen(buf), 0,
+                                    (sockaddr*)&c.addr, sizeof(c.addr));
+        if (sent_bytes < 0) {
+            std::cerr << "sendto() failed!" << std::endl;
+        }
     }
 }
 
-bool screenCaptureWorkerLinux::openUDPPort() {
-    m_sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (m_sock < 0) {
+bool screenCaptureWorkerLinux::openUDPPort(const char* host, int port) {
+    auto sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
         perror("socket creation failed");
         return false;
     }
-    m_outAddr.sin_family = AF_INET;
-    m_outAddr.sin_port = htons(m_conf.c_raspiPort);
-    inet_pton(AF_INET, m_conf.c_raspiIp.c_str(), &m_outAddr.sin_addr);
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    inet_pton(AF_INET, host, &addr.sin_addr);
+    m_clientSocks.push_back({sock, addr});
     return true;
 }
 
-bool screenCaptureWorkerLinux::closeUDPPort() {
-    close(m_sock);
+bool screenCaptureWorkerLinux::closeUDPPorts() {
+    if (!m_clientSocks.empty()) {
+        for (const auto& c : m_clientSocks) {
+            close(c.sock);
+        }
+    }
+    m_clientSocks.clear();
     return true;
 }
 
