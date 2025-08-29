@@ -80,6 +80,7 @@ void ScreenLedGUI::saveConfigForm()
     
     if (m_extraClientIpInputs.size() != m_extraClientPortInputs.size()) {
         std::cerr << "m_extraClientIpInputs and m_extraClientPortInputs somehow have different sizes -> cannot save config!" << std::endl;
+        return;
     }
 
     newConf.c_clientInfos.clear(); // default value needs to be removed from the vector
