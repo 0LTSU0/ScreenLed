@@ -59,9 +59,9 @@ void LEDS(const std::vector<int> &data, const Strip &st, int strip_index, const 
         int r = data[j], g = data[j+1], b = data[j+2];
 
         // Dark cutoff & boost
-        r = (r > 160) ? r + 20 : r - 20;
-        g = (g > 160) ? g + 20 : g - 20;
-        b = (b > 160) ? b + 20 : b - 20;
+        r = (r > 160) ? r : r - 20;
+        g = (g > 160) ? g : g - 20;
+        b = (b > 160) ? b : b - 20;
 
         r = std::max(r, 0); g = std::max(g, 0); b = std::max(b, 0);
 
@@ -71,7 +71,7 @@ void LEDS(const std::vector<int> &data, const Strip &st, int strip_index, const 
             if (st.RGB)
                 color = ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
             else
-                color = ((uint32_t)g << 16) | ((uint32_t)b << 8) | r;
+                color = ((uint32_t)g << 16) | ((uint32_t)r << 8) | b;
 
             ledstring.channel[0].leds[index] = color;
         }
@@ -116,7 +116,7 @@ bool parseArgs(int argc, char* argv[], int &port, std::vector<Strip> &strips)  {
                     num_leds = -1 * num_leds;
                 }
                 std::cout << "Adding strip <num_leds>, <reverse>: " << num_leds << ", " << reverse << std::endl;
-                Strip st_conf = {num_leds, L_FREQ, L_DMA, false, 255, 0, false, true};
+                Strip st_conf = {num_leds, L_FREQ, L_DMA, false, 255, 0, false, reverse};
                 strips.push_back(st_conf);
             }
         }
