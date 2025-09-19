@@ -11,10 +11,13 @@
 3. [VideoCapture2LED](VideoCapture2LED)
     - WIP (probably never to be finished) implementation where you connect e.g. hdmi capture card to same raspi to which you have led strip connected to and it does all processing. Works but there tends to be too much delay when reading the stream from capture card -> not very usable.
 4. [raspberry](raspberry)
-    - Extremely poorly made scripts to run on raspberry to capture data over UDP and show on the rgb strip
+    - NOT MAINTAINED! Old python scripts for receiving rgb data and putting it to rgb strips
     - [raspberry/raspb.py](raspberry/raspb.py) should be able to receive information from python live and preprocess implementations
-    - [raspberry/raspb_cpp.py](raspberry/raspb_cpp.py) should be able to receive data from live c++ implementation
-    - Both receivers are very crude implementations with hardcoded everything -> not very usable except in my specific setup :D
+    - <del>[raspberry/raspb_cpp.py](raspberry/raspb_cpp.py) should be able to receive data from live c++ implementation</del>
+    - [raspberry/raspb_cpp_series.py](raspberry/raspb_cpp_series.py) should be able to receive data from live c++ implementation
+5. [raspb_cpp_rcv](raspb_cpp_rcv)
+    - USE THIS!
+    - WIP Raspberry pi control app written in C++
 
 ----Everything below is outdated and instructions to be moved to correct folders-----
 

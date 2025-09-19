@@ -2,6 +2,11 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+struct sockclient {
+    int sock;
+    sockaddr_in addr;
+};
+
 class screenCaptureWorkerLinux : public screenCaptureWorkerBase {
 public:
     screenCaptureWorkerLinux(std::string configPath) {
@@ -12,15 +17,15 @@ public:
         }
     }
     ~screenCaptureWorkerLinux() {
-        closeUDPPort();
+        closeUDPPorts();
     }
 
     void initScreenShotting();
     void deinitScreenShotting();
     void takeScreenShot();
     void sendRGBData(const char* buf);
-    bool openUDPPort();
-    bool closeUDPPort();
+    bool openUDPPort(const char* host, int port);
+    bool closeUDPPorts();
     void runAnalFunc();
 
 private:
@@ -32,6 +37,7 @@ private:
 
     int m_primaryDisplayOffsetX = 0;
     int m_primaryDisplayOffsetY = 0;
-    int m_sock = -1;
-    sockaddr_in m_outAddr {};
+    //int m_sock = -1;
+    //sockaddr_in m_outAddr {};
+    std::vector<sockclient> m_clientSocks;
 };

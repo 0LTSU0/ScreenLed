@@ -10,9 +10,11 @@ using json = nlohmann::json;
 
 void screenCaptureWorkerBase::run() {
     m_isRunning = true;
-    if (!openUDPPort()){
-        std::cerr << "screenCaptureWorkerBase::run() FAILED TO OPEN UDP SOCKET!!!!" << std::endl;
-        return;
+    for (const auto& c : m_conf.c_clientInfos) {
+        if (!openUDPPort(c.host.c_str(), c.port)){
+            std::cerr << "screenCaptureWorkerBase::run() FAILED TO OPEN UDP SOCKET TO: " << c.host << ":" << c.port << std::endl;
+            return;
+        }
     }
     initScreenShotting();
     int perfCtr = 0;
@@ -41,7 +43,7 @@ void screenCaptureWorkerBase::run() {
 void screenCaptureWorkerBase::stop() {
     m_isRunning = false;
     m_fps = 0.0;
-    closeUDPPort();
+    closeUDPPorts();
     deinitScreenShotting();
 }
 
@@ -72,12 +74,18 @@ bool screenCaptureWorkerBase::loadConfigs(){
 
     m_conf.c_debugSSInterval = conf["debugSSInterval"].get<int>();
     m_conf.c_keepDebugSSOnClipboard = conf["keepDebugSSOnClipboard"].get<bool>();
-    m_conf.c_raspiIp = conf["raspiIp"].get<std::string>();
-    m_conf.c_raspiPort = conf["raspiPort"].get<int>();
     m_conf.c_showDebugPreview = conf["showDebugPreview"].get<bool>();
     m_conf.c_screenResX = conf["screenResX"].get<int>();
     m_conf.c_screenResY = conf["screenResY"].get<int>();
     m_conf.c_algo = conf["algo"].get<ScreenLedAlgorithm>();
+
+    m_conf.c_clientInfos.clear();
+    for (const auto& item : conf["clients"]) {
+        clientInfo c;
+        c.host = item["addr"];
+        c.port = item["port"];
+        m_conf.c_clientInfos.push_back(c);
+    }
 
     return true;
 }
@@ -87,12 +95,17 @@ bool screenCaptureWorkerBase::createConfigFile(){
     ScreenCapConfig defaultConfig;
     jconf["debugSSInterval"] = defaultConfig.c_debugSSInterval;
     jconf["keepDebugSSOnClipboard"] = defaultConfig.c_keepDebugSSOnClipboard;
-    jconf["raspiIp"] = defaultConfig.c_raspiIp;
-    jconf["raspiPort"] = defaultConfig.c_raspiPort;
     jconf["showDebugPreview"] = defaultConfig.c_showDebugPreview;
     jconf["screenResX"] = defaultConfig.c_screenResX;
     jconf["screenResY"] = defaultConfig.c_screenResY;
     jconf["algo"] = defaultConfig.c_algo;
+
+    for (const auto& c : defaultConfig.c_clientInfos) {
+        jconf["clients"].push_back({
+            {"addr", c.host},
+            {"port", c.port}
+        });
+    }
 
     std::ofstream file(m_configPath);
     if (!file) {
@@ -113,12 +126,16 @@ void screenCaptureWorkerBase::updateCurrentConfig(ScreenCapConfig newConf) {
     json jconf;
     jconf["debugSSInterval"] = m_conf.c_debugSSInterval;
     jconf["keepDebugSSOnClipboard"] = m_conf.c_keepDebugSSOnClipboard;
-    jconf["raspiIp"] = m_conf.c_raspiIp;
-    jconf["raspiPort"] = m_conf.c_raspiPort;
     jconf["showDebugPreview"] = m_conf.c_showDebugPreview;
     jconf["screenResX"] = m_conf.c_screenResX;
     jconf["screenResY"] = m_conf.c_screenResY;
     jconf["algo"] = m_conf.c_algo;
+    for (const auto& c : m_conf.c_clientInfos) {
+        jconf["clients"].push_back({
+            {"addr", c.host},
+            {"port", c.port}
+        });
+    }
     std::ofstream file(m_configPath);
     if (!file) {
         std::cerr << "screenCaptureWorkerBase::updateCurrentConfig() Failed to open config json for writing. The set values will be used during this session but changes won't be saved to disk" << std::endl;

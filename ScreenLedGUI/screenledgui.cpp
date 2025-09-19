@@ -1,11 +1,9 @@
 #include "screenledgui.h"
 #include "./ui_screenledgui.h"
-#include "json.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <QString>
-using json = nlohmann::json;
 
 ScreenLedGUI::ScreenLedGUI(QWidget *parent)
     : QMainWindow(parent)
@@ -45,8 +43,6 @@ int ScreenLedGUI::fillConfigForm()
     // config file was found and it has expected keys -> try filling UI
     ui->debugSSVal->setCheckState(currentConfig.c_keepDebugSSOnClipboard ? Qt::Checked : Qt::Unchecked);
     ui->debugSsIntervalVal->setText(QString::number(currentConfig.c_debugSSInterval));
-    ui->raspiPortVal->setText(QString::number(currentConfig.c_raspiPort));
-    ui->raspiIpVal->setText(QString(currentConfig.c_raspiIp.c_str()));
     ui->showPreviewVal->setCheckState(currentConfig.c_showDebugPreview ? Qt::Checked : Qt::Unchecked);
     ui->screenResXval->setValue(currentConfig.c_screenResX);
     ui->screenResYval->setValue(currentConfig.c_screenResY);
@@ -62,6 +58,18 @@ int ScreenLedGUI::fillConfigForm()
     }
     ui->algoSelectVal->setCurrentIndex(activeIndex);
 
+    bool firstClientSet = false; // GUI has one client fields which need special handling
+    for (auto &client : currentConfig.c_clientInfos) {
+        if (!firstClientSet) {
+            ui->raspiIpVal1->setText(QString::fromStdString(client.host));
+            ui->raspiPortVal1->setText(QString::number(client.port));
+            firstClientSet = true;
+        } else {
+            addClientRowToGUI(client.host, client.port); // rest need to be added as "extra" rows
+        }
+    }
+
+
     return 0;
 }
 
@@ -69,14 +77,18 @@ void ScreenLedGUI::saveConfigForm()
 {
     ScreenCapConfig newConf;
     bool convOk = true;
-
-    newConf.c_raspiIp = ui->raspiIpVal->text().toStdString();
-    int raspiPort = ui->raspiPortVal->text().toInt(&convOk);
-    if (!convOk) {
-        ui->raspiPortVal->clear(); // Todo show error message instead of just clearing it
+    
+    if (m_extraClientIpInputs.size() != m_extraClientPortInputs.size()) {
+        std::cerr << "m_extraClientIpInputs and m_extraClientPortInputs somehow have different sizes -> cannot save config!" << std::endl;
         return;
     }
-    newConf.c_raspiPort = raspiPort;
+
+    newConf.c_clientInfos.clear(); // default value needs to be removed from the vector
+    newConf.c_clientInfos.push_back({ui->raspiIpVal1->text().toStdString(), ui->raspiPortVal1->text().toInt(&convOk)}); //TODO: check convOk for these
+    for (int i=0; i < m_extraClientPortInputs.size(); i++) { // Above check ensures that both vectors have the same size -> size of either one can be used here
+        newConf.c_clientInfos.push_back({m_extraClientIpInputs.at(i)->text().toStdString(), m_extraClientPortInputs.at(i)->text().toInt(&convOk)});
+    }
+
     int debugSsInterval = ui->debugSsIntervalVal->text().toInt(&convOk);
     if (!convOk)
     {
@@ -133,6 +145,44 @@ void ScreenLedGUI::on_startButton_clicked()
     }
 }
 
+void ScreenLedGUI::addClientRowToGUI(const std::string ip = "", int port = -1) {
+    m_numRaspis++;
+    std::string txt = "Raspi" + std::to_string(m_numRaspis) + " IP:PORT";
+    QHBoxLayout *row = new QHBoxLayout;
+    QSpacerItem *leftSpacer  = new QSpacerItem(20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    QLabel *label            = new QLabel(QString::fromStdString(txt));
+    QLineEdit *edit1         = new QLineEdit;
+    QLineEdit *edit2         = new QLineEdit;
+    QSpacerItem *rightSpacer = new QSpacerItem(20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    label->setStyleSheet("color: rgb(255, 255, 255);");
+    edit1->setStyleSheet("background-color: rgb(153, 153, 153);");
+    edit2->setStyleSheet("background-color: rgb(153, 153, 153);");
+    if (!ip.empty()) {
+        edit1->setText(QString::fromStdString(ip));
+    }
+    if (port != -1) {
+        edit2->setText(QString::number(port));
+    }
+    row->addItem(leftSpacer);
+    row->addWidget(label);
+    row->addWidget(edit1);
+    row->addWidget(edit2);
+    row->addItem(rightSpacer);
+    row->setStretch(0, 1);
+    row->setStretch(1, 2);
+    row->setStretch(2, 2);
+    row->setStretch(3, 2);
+    row->setStretch(4, 1);
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(centralWidget()->layout());
+    if (mainLayout) {
+        mainLayout->insertLayout(3 + m_numRaspis - 2, row);
+        m_extraClientIpInputs.push_back(edit1);
+        m_extraClientPortInputs.push_back(edit2);
+    }
+
+}
+
 void ScreenLedGUI::on_saveConfig_clicked()
 {
     saveConfigForm();
@@ -142,5 +192,11 @@ void ScreenLedGUI::on_saveConfig_clicked()
 void ScreenLedGUI::on_algoSelectVal_currentTextChanged(const QString &arg1)
 {
     m_screenCapWorker->m_conf.c_algo = algoNameMap[arg1.toStdString()]; //TODO: might be dangerous to change this while the application runs if its read at the same time
+}
+
+//TODO: NEED TO MAKE A DELETE BUTTON
+void ScreenLedGUI::on_addAnotherClientButt_clicked()
+{
+    addClientRowToGUI();
 }
 
