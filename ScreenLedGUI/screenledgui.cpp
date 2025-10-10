@@ -4,6 +4,14 @@
 #include <iostream>
 #include <string>
 #include <QString>
+#include <QStringList>
+#include <QRegularExpression>
+#include <QVersionNumber>
+#include <QProcess>
+#include <QDir>
+#include <QFileDialog>
+#include <QFile>
+
 
 ScreenLedGUI::ScreenLedGUI(QWidget *parent)
     : QMainWindow(parent)
@@ -46,6 +54,7 @@ int ScreenLedGUI::fillConfigForm()
     ui->showPreviewVal->setCheckState(currentConfig.c_showDebugPreview ? Qt::Checked : Qt::Unchecked);
     ui->screenResXval->setValue(currentConfig.c_screenResX);
     ui->screenResYval->setValue(currentConfig.c_screenResY);
+    ui->autorunPathVal->setText(currentConfig.c_autorunScriptPath);
 
     int activeIndex = 0;
     int i = 0;
@@ -77,7 +86,7 @@ void ScreenLedGUI::saveConfigForm()
 {
     ScreenCapConfig newConf;
     bool convOk = true;
-    
+
     if (m_extraClientIpInputs.size() != m_extraClientPortInputs.size()) {
         std::cerr << "m_extraClientIpInputs and m_extraClientPortInputs somehow have different sizes -> cannot save config!" << std::endl;
         return;
@@ -101,6 +110,7 @@ void ScreenLedGUI::saveConfigForm()
     newConf.c_screenResX = ui->screenResXval->value();
     newConf.c_screenResY = ui->screenResYval->value();
     newConf.c_algo = algoNameMap[ui->algoSelectVal->currentText().toStdString()];
+    newConf.c_autorunScriptPath = ui->autorunPathVal->text();
 
     m_screenCapWorker->updateCurrentConfig(newConf);
 }
@@ -183,6 +193,109 @@ void ScreenLedGUI::addClientRowToGUI(const std::string ip = "", int port = -1) {
 
 }
 
+
+// From chatgpt: find the latest python version from the host system
+void ScreenLedGUI::findPythonExecutable()
+{
+#ifdef _WIN32
+    QStringList candidates = {"py", "python3", "python"};
+#else
+    QStringList candidates = {"python3", "python"};
+#endif
+
+    QString newestPython;
+    QVersionNumber newestVersion = QVersionNumber(0,0,0);
+
+    for (const QString &cmd : candidates)
+    {
+        QProcess process;
+        process.start(cmd, {"--version"});
+        if (!process.waitForFinished(1000)) // 1s timeout
+        {
+            continue;
+        }
+
+        QString output = QString::fromLocal8Bit(process.readAllStandardOutput() + process.readAllStandardError()).trimmed();
+
+        // Match version like "Python 3.13.3"
+        QRegularExpression re("Python (\\d+)\\.(\\d+)\\.(\\d+)");
+        QRegularExpressionMatch match = re.match(output);
+        if (match.hasMatch())
+        {
+            int major = match.captured(1).toInt();
+            int minor = match.captured(2).toInt();
+            int patch = match.captured(3).toInt();
+            QVersionNumber ver(major, minor, patch);
+
+            if (ver > newestVersion)
+            {
+                newestVersion = ver;
+                newestPython = cmd;
+            }
+        }
+    }
+
+    if (!newestPython.isEmpty())
+    {
+        qDebug() << "Newest python found from the system is: " << newestVersion.toString() << " using command: " << newestPython;
+        m_pythonCmd = newestPython;
+    }
+    else
+    {
+        throw std::runtime_error("No Python executable found on this system.");
+    }
+}
+
+
+bool ScreenLedGUI::startRapsiReceivers()
+{
+    ui->rcv_output->clear();
+
+    if (!QFile::exists(ui->autorunPathVal->text()))
+    {
+        ui->rcv_output->appendPlainText("You need to select your autorun python file first!");
+        return false;
+    }
+
+    if (m_pythonCmd.isEmpty()) {
+        findPythonExecutable();
+    }
+    m_rcvRunnerThread = new QThread();
+    m_rcvRunner = new ReceiverRunner(ui->autorunPathVal->text(), m_pythonCmd);
+    m_rcvRunner->moveToThread(m_rcvRunnerThread);
+
+    connect(m_rcvRunner, &ReceiverRunner::outputReady, this, [&](const QString &line) {
+        static QRegularExpression regex = QRegularExpression("[\\r\\n]");
+        QString trimmed = line;
+        trimmed.remove(regex);
+        ui->rcv_output->appendPlainText(trimmed);
+    });
+
+    connect(m_rcvRunnerThread, &QThread::started, m_rcvRunner, &ReceiverRunner::start);
+    connect(m_rcvRunner, &ReceiverRunner::finished, m_rcvRunnerThread, &QThread::quit);
+    connect(m_rcvRunnerThread, &QThread::finished, m_rcvRunnerThread, &QObject::deleteLater);
+    connect(m_rcvRunnerThread, &QThread::finished, this, [this]() {
+        // Upon stop, we disable the start button while waiting for the python thread to exit. Once the thred emits finished it should be safe to enable again
+        m_rcvRunner = nullptr;
+        m_rcvRunnerThread = nullptr;
+        ui->startRcvsButton->setEnabled(true);
+    });
+
+    m_rcvRunnerThread->start();
+
+    return true;
+}
+
+bool ScreenLedGUI::stopRaspiReceivers()
+{
+    if (m_rcvRunner) {
+        QMetaObject::invokeMethod(m_rcvRunner, "stop", Qt::QueuedConnection);
+        ui->startRcvsButton->setDisabled(true);
+    }
+    return true;
+}
+
+
 void ScreenLedGUI::on_saveConfig_clicked()
 {
     saveConfigForm();
@@ -198,5 +311,44 @@ void ScreenLedGUI::on_algoSelectVal_currentTextChanged(const QString &arg1)
 void ScreenLedGUI::on_addAnotherClientButt_clicked()
 {
     addClientRowToGUI();
+}
+
+
+void ScreenLedGUI::on_startRcvsButton_clicked()
+{
+    bool res = false;
+    if (!m_rcvsRunning) {
+        res = startRapsiReceivers();
+        if (res) {
+            ui->startRcvsButton->setText("Stop Receivers");
+        }
+    } else {
+        res = stopRaspiReceivers();
+        if (res) {
+            ui->startRcvsButton->setText("Start (Raspi) Receivers");
+        }
+    }
+
+    // only change the internal run status if start/stop was ok
+    if (res) {
+        m_rcvsRunning = !m_rcvsRunning;
+    }
+}
+
+
+void ScreenLedGUI::on_selectAutoRunScriptFile_clicked()
+{
+    QString startDir = QDir::homePath();
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        tr("Select autorun python script"),
+        startDir,
+        tr("Python files (*.py)"));
+
+    if (!fileName.isEmpty())
+    {
+        qDebug() << "autorun script selected from filedialog: " << fileName;
+        ui->autorunPathVal->setText(fileName);
+    }
 }
 

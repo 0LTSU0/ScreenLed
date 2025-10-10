@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <QString>
 
 #define NUM_LED_SEGMENTS 20 // TODO: make this adjustable
 
@@ -35,6 +36,7 @@ struct ScreenCapConfig {
     int c_screenResX = 1920;
     int c_screenResY = 1080;
     ScreenLedAlgorithm c_algo = ScreenLedAlgorithm::MEAN_DEFAULT;
+    QString c_autorunScriptPath = "";
 };
 
 

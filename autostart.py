@@ -2,6 +2,7 @@ import paramiko
 import sys
 import signal
 import time
+import threading
 
 class raspiConf:
     def __init__(self, ip, listen_port, leds):
@@ -14,9 +15,10 @@ class raspiConf:
 
 RASPI_HOSTS = [raspiConf("192.168.1.98", 65431, "-300,480"), raspiConf("192.168.1.99", 65432, "-288,185")]
 channels = []
-
+stop_flag = False
 
 def quit_handler(sig, frame):
+    print("quit_handler triggered!")
     global channels
     for channel in channels:
         try:
@@ -25,6 +27,15 @@ def quit_handler(sig, frame):
         except Exception as e:
             print(f"Sending ctrl+c to raspi failed {e}")
     sys.exit(0)
+
+
+def monitor_stdin():
+    global stop_flag
+    for line in sys.stdin:
+        if line.strip().lower() == "stop":
+            print("triggering quit handler (via stdin stop command)")
+            stop_flag = True
+            break
 
 
 def main():
@@ -42,10 +53,11 @@ def main():
         channel = client.invoke_shell()
         channel.settimeout(0)
         channel.send(command + "\n")
-        time.sleep(2)
         channels.append((host, channel))
 
-    while True:
+    threading.Thread(target=monitor_stdin, daemon=True).start()
+
+    while not stop_flag:
         for host, channel in channels:
             if channel.recv_ready():
                 data = channel.recv(1024).decode("utf-8")
@@ -57,6 +69,8 @@ def main():
             if channel.exit_status_ready():
                 print(f"{str(host)} HAS UNEXPECTEDLY QUIT!")
         time.sleep(0.1) # throttle a little bit to prevent high CPU usage
+
+    quit_handler(None, None)
 
 
 if __name__ == "__main__":

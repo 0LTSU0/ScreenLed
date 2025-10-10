@@ -17,7 +17,9 @@ set(PROJECT_SOURCES
         screenledgui.cpp
         screenledgui.h
         screenledgui.ui
-		consts.h
+        consts.h
+        receiverrunner.h
+        receiverrunner.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
