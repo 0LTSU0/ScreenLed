@@ -13,6 +13,8 @@
 #include "ScreenCapLinux.h"
 #endif
 
+#include "receiverrunner.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class ScreenLedGUI;
@@ -36,12 +38,19 @@ private slots:
 
     void on_addAnotherClientButt_clicked();
 
+    void on_startRcvsButton_clicked();
+
+    void on_selectAutoRunScriptFile_clicked();
+
 private:
     //functions
     int fillConfigForm();
     void saveConfigForm();
     void updateStatusLabel();
     void addClientRowToGUI(const std::string ip, int port);
+    bool startRapsiReceivers();
+    bool stopRaspiReceivers();
+    void findPythonExecutable();
 
     //class variables
     QThread* m_screenLibTh = new QThread;
@@ -54,10 +63,14 @@ private:
 #endif
 
     bool m_libScreenledThreadIsRunning = false;
+    bool m_rcvsRunning = false;
+    QString m_pythonCmd = "";
     runStatus currentRunStatus = runStatus::IDLE;
     std::vector<QLineEdit*> m_extraClientIpInputs;
     std::vector<QLineEdit*> m_extraClientPortInputs;
 
+    ReceiverRunner *m_rcvRunner = nullptr;
+    QThread *m_rcvRunnerThread = new QThread(this);
     QTimer *statusUpdatetimer;  // Timer to schedule status label updates
     Ui::ScreenLedGUI *ui;
 };

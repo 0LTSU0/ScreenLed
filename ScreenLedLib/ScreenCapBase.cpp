@@ -78,6 +78,7 @@ bool screenCaptureWorkerBase::loadConfigs(){
     m_conf.c_screenResX = conf["screenResX"].get<int>();
     m_conf.c_screenResY = conf["screenResY"].get<int>();
     m_conf.c_algo = conf["algo"].get<ScreenLedAlgorithm>();
+    m_conf.c_autorunScriptPath = conf.contains("autorunScriptPath") ? QString::fromStdString(conf["autorunScriptPath"].get<std::string>()) : "";
 
     m_conf.c_clientInfos.clear();
     for (const auto& item : conf["clients"]) {
@@ -99,6 +100,7 @@ bool screenCaptureWorkerBase::createConfigFile(){
     jconf["screenResX"] = defaultConfig.c_screenResX;
     jconf["screenResY"] = defaultConfig.c_screenResY;
     jconf["algo"] = defaultConfig.c_algo;
+    jconf["autorunScriptPath"] = defaultConfig.c_autorunScriptPath.toStdString();
 
     for (const auto& c : defaultConfig.c_clientInfos) {
         jconf["clients"].push_back({
@@ -130,6 +132,7 @@ void screenCaptureWorkerBase::updateCurrentConfig(ScreenCapConfig newConf) {
     jconf["screenResX"] = m_conf.c_screenResX;
     jconf["screenResY"] = m_conf.c_screenResY;
     jconf["algo"] = m_conf.c_algo;
+    jconf["autorunScriptPath"] = m_conf.c_autorunScriptPath.toStdString();
     for (const auto& c : m_conf.c_clientInfos) {
         jconf["clients"].push_back({
             {"addr", c.host},
