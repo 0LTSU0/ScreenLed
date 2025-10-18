@@ -1,0 +1,130 @@
+/*.grid-container-samplescreen {
+    display: grid;
+    grid-template-columns: repeat(64, 10px);
+    grid-template-rows: repeat(36, 10px);
+    gap: 1px;
+    margin: 20px;
+}*/
+
+.pixel {
+    width: 10px;
+    height: 10px;
+    background-color: black;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.moving-block1 {
+    background-color: red;
+}
+
+.moving-block2 {
+    background-color: blue;
+}
+
+#configurationViewTitle {
+    padding-top: 10px;
+}
+
+#configurationArea {
+    flex: 0 0 100%;
+    height: 700px;
+    overflow: hidden;
+    position: relative;
+    border-color: gray;
+    border-style: dashed;
+}
+
+#configurationStats {
+    flex: 1;
+    border-color: gray;
+    border-style: dashed;
+    border-left-color: white;
+}
+
+#sampleView {
+    display: flex;
+    height: fit-content;
+    width: 100%;
+    padding-top: 20px;
+}
+
+#sampleScreen {
+    display: inline-block;
+    height: auto;
+}
+
+#sampleConfigs {
+    flex: 1; /* Take remaining space */
+    min-width: 0; /* Prevent overflow */
+    border: dashed gray; /* optional */
+}
+
+#configurationView {
+    display: flex;
+    height: fit-content;
+    width: 100%;
+    padding-top: 20px;
+}
+
+#configrationButtons {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.draggable-box {
+  position: absolute;
+  width: 320px;
+  height: 50;
+  background-color: #5599ffa8;
+  color: rgb(0, 0, 0);
+  padding: 10px;
+  cursor: move;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.draggable-box canvas {
+  background: white;
+}
+
+.bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+.strip-label {
+  flex-grow: 1;
+  font-weight: bold;
+}
+
+.lednum-input {
+  width: 60px;
+  padding: 2px 4px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: right;
+}
+
+.delete-btn {
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.delete-btn:hover {
+  background: darkred;
+}

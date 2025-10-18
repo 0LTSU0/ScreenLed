@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<link rel="stylesheet" type="text/css" href="/static/style.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<link href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css" rel="stylesheet">
+<script
+	src="https://code.jquery.com/jquery-3.7.1.min.js"
+	integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+	crossorigin="anonymous">
+</script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.8/js/bootstrap.min.js"></script>
+<script src="/static/scripts.js"></script>
+
+<html>
+    <script>0</script> <!--workaround for unstyled flash in firefox https://stackoverflow.com/a/57888310-->
+
+
+    <body>
+        <div class="d-flex flex-column justify-content-center align-items-center">
+            <div class="row" id="sampleDisplayPreview">
+                <h1>Sample Display View</h1>
+            </div>
+            <div id="sampleView">
+                <div id="sampleScreen">
+                    <canvas id="sampleScreenCanvas" width="600px" height="350px"></canvas>
+                </div>
+                <div id="sampleConfigs">
+                    <label for="previewModeSelection">Preview mode:</label>
+                    <select name="Previews" id="previewModeSelection">
+                        <option value="bouncingBlocks">Bouncing Blocks</option>
+                        <option value="staticGreen">Static Green</option>
+                        <option value="staticRed">Static Red</option>
+                        <option value="staticBlue">Static Blue</option>
+                    </select><br>
+                    
+                    <div id="fillPercentContainer" style="display: none;">
+                        <label for="fillPercentSlider">Fill percentage:</label>
+                        <input type="range" id="fillPercentSlider" min="0" max="100" step="10" value="50" style="width: 300px;"/>
+                        <span id="fillPercentSliderValue">50%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" id="configurationViewTitle">
+                <h1>Config view</h1>
+            </div>
+
+            <div class="d-flex align-items-center" id="configrationButtons">
+                <button id="addClient">Add source</button>
+                <button id="addStripButton">Add led strip</button>
+                <button id="clearButton" onclick="resetConfigurationView()">Reset</button>
+            </div>
+
+            <div id="configurationView">
+                <div id="configurationArea"></div>
+                <!--div id="configurationStats"></div-->
+            </div>
+                
+            </div>
+        </div>
+    </body>
+</html>
