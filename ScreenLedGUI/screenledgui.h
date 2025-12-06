@@ -14,6 +14,7 @@
 #endif
 
 #include "receiverrunner.h"
+#include "advancedsettings.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,6 +30,23 @@ public:
     ScreenLedGUI(QWidget *parent = nullptr);
     ~ScreenLedGUI();
 
+    // allow advanced settings window to access this object's screencapworker's configuration
+    ScreenCapConfig getScreenCapWorkerConf() {
+        if (!m_screenCapWorker) {
+            qWarning() << "getScreenCapWorkerConf() NO m_screenCapWorker. Returning default conf";
+            return ScreenCapConfig();
+        }
+        return m_screenCapWorker->getCurrentConfig();
+    }
+    bool setScreenCapWorkerConf(ScreenCapConfig conf) {
+        if (!m_screenCapWorker) {
+            qWarning() << "No m_screenCapWorker";
+            return false;
+        }
+        m_screenCapWorker->updateCurrentConfig(conf);
+        return true;
+    }
+
 private slots:
     void on_startButton_clicked();
 
@@ -41,6 +59,8 @@ private slots:
     void on_startRcvsButton_clicked();
 
     void on_selectAutoRunScriptFile_clicked();
+
+    void on_advancedSettings_clicked();
 
 private:
     //functions
@@ -73,5 +93,6 @@ private:
     QThread *m_rcvRunnerThread = new QThread(this);
     QTimer *statusUpdatetimer;  // Timer to schedule status label updates
     Ui::ScreenLedGUI *ui;
+    AdvancedSettings *m_advancedSettingsWindow = nullptr;
 };
 #endif // SCREENLEDGUI_H

@@ -25,10 +25,8 @@ ScreenLedGUI::ScreenLedGUI(QWidget *parent)
     m_screenCapWorker->moveToThread(m_screenLibTh);
 #if defined(WIN32)
     QObject::connect(m_screenLibTh, &QThread::started, m_screenCapWorker, &screenCaptureWorkerWindows::run);
-    ui->showPreviewVal->setEnabled(false); // on windows we don't support showing preview output TODO: ADD SUPPORT :)
 #else
     QObject::connect(m_screenLibTh, &QThread::started, m_screenCapWorker, &screenCaptureWorkerLinux::run);
-    ui->debugSSVal->setEnabled(false); // on linux we don't support putting image to clipboard because it seems unnecessarily difficult to implement
 #endif
     fillConfigForm();
 }
@@ -49,11 +47,6 @@ int ScreenLedGUI::fillConfigForm()
     auto currentConfig = m_screenCapWorker->getCurrentConfig();
 
     // config file was found and it has expected keys -> try filling UI
-    ui->debugSSVal->setCheckState(currentConfig.c_keepDebugSSOnClipboard ? Qt::Checked : Qt::Unchecked);
-    ui->debugSsIntervalVal->setText(QString::number(currentConfig.c_debugSSInterval));
-    ui->showPreviewVal->setCheckState(currentConfig.c_showDebugPreview ? Qt::Checked : Qt::Unchecked);
-    ui->screenResXval->setValue(currentConfig.c_screenResX);
-    ui->screenResYval->setValue(currentConfig.c_screenResY);
     ui->autorunPathVal->setText(currentConfig.c_autorunScriptPath);
 
     int activeIndex = 0;
@@ -98,17 +91,6 @@ void ScreenLedGUI::saveConfigForm()
         newConf.c_clientInfos.push_back({m_extraClientIpInputs.at(i)->text().toStdString(), m_extraClientPortInputs.at(i)->text().toInt(&convOk)});
     }
 
-    int debugSsInterval = ui->debugSsIntervalVal->text().toInt(&convOk);
-    if (!convOk)
-    {
-        ui->debugSsInterval->clear(); // Todo show error message instead of just clearing it
-        return;
-    }
-    newConf.c_debugSSInterval = debugSsInterval;
-    newConf.c_keepDebugSSOnClipboard = ui->debugSSVal->checkState() == Qt::Checked;
-    newConf.c_showDebugPreview = ui->showPreviewVal->checkState() == Qt::Checked;
-    newConf.c_screenResX = ui->screenResXval->value();
-    newConf.c_screenResY = ui->screenResYval->value();
     newConf.c_algo = algoNameMap[ui->algoSelectVal->currentText().toStdString()];
     newConf.c_autorunScriptPath = ui->autorunPathVal->text();
 
@@ -350,5 +332,16 @@ void ScreenLedGUI::on_selectAutoRunScriptFile_clicked()
         qDebug() << "autorun script selected from filedialog: " << fileName;
         ui->autorunPathVal->setText(fileName);
     }
+}
+
+
+void ScreenLedGUI::on_advancedSettings_clicked()
+{
+    if (!m_advancedSettingsWindow) {
+        m_advancedSettingsWindow = new AdvancedSettings(m_screenCapWorker->getCurrentConfig(), this);
+    }
+    m_advancedSettingsWindow->show();
+    m_advancedSettingsWindow->raise();
+    m_advancedSettingsWindow->activateWindow();
 }
 
