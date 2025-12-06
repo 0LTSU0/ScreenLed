@@ -23,7 +23,7 @@ def quit_handler(sig, frame):
     for channel in channels:
         try:
             print(f"Sending CTRL+C to {channel}")
-            channel.send("\x03")  # ==Ctrl+C
+            channel[1].send("\x03")  # ==Ctrl+C
         except Exception as e:
             print(f"Sending ctrl+c to raspi failed {e}")
     sys.exit(0)

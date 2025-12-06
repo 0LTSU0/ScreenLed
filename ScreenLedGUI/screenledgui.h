@@ -67,7 +67,7 @@ private:
     int fillConfigForm();
     void saveConfigForm();
     void updateStatusLabel();
-    void addClientRowToGUI(const std::string ip, int port);
+    void addClientRowToGUI(const std::string ip, int port, DeviceType deviceType);
     bool startRapsiReceivers();
     bool stopRaspiReceivers();
     void findPythonExecutable();
@@ -88,6 +88,7 @@ private:
     runStatus currentRunStatus = runStatus::IDLE;
     std::vector<QLineEdit*> m_extraClientIpInputs;
     std::vector<QLineEdit*> m_extraClientPortInputs;
+    std::vector<QComboBox*> m_extraClientDevTypeInputs;
 
     ReceiverRunner *m_rcvRunner = nullptr;
     QThread *m_rcvRunnerThread = new QThread(this);

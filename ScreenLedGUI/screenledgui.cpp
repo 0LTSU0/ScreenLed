@@ -1,6 +1,5 @@
 #include "screenledgui.h"
 #include "./ui_screenledgui.h"
-#include <fstream>
 #include <iostream>
 #include <string>
 #include <QString>
@@ -46,6 +45,11 @@ int ScreenLedGUI::fillConfigForm()
 {
     auto currentConfig = m_screenCapWorker->getCurrentConfig();
 
+    // Init selections to device type selector
+    for (const auto& [key, value] : clientDevMap) {
+        ui->deviceTypeVal1->addItem(QString::fromStdString(key), value);
+    }
+
     // config file was found and it has expected keys -> try filling UI
     ui->autorunPathVal->setText(currentConfig.c_autorunScriptPath);
 
@@ -65,19 +69,19 @@ int ScreenLedGUI::fillConfigForm()
         if (!firstClientSet) {
             ui->raspiIpVal1->setText(QString::fromStdString(client.host));
             ui->raspiPortVal1->setText(QString::number(client.port));
+            ui->deviceTypeVal1->setCurrentIndex(ui->deviceTypeVal1->findData(client.deviceType));
             firstClientSet = true;
         } else {
-            addClientRowToGUI(client.host, client.port); // rest need to be added as "extra" rows
+            addClientRowToGUI(client.host, client.port, client.deviceType); // rest need to be added as "extra" rows
         }
     }
-
 
     return 0;
 }
 
 void ScreenLedGUI::saveConfigForm()
 {
-    ScreenCapConfig newConf;
+    ScreenCapConfig newConf = m_screenCapWorker->getCurrentConfig();
     bool convOk = true;
 
     if (m_extraClientIpInputs.size() != m_extraClientPortInputs.size()) {
@@ -86,9 +90,13 @@ void ScreenLedGUI::saveConfigForm()
     }
 
     newConf.c_clientInfos.clear(); // default value needs to be removed from the vector
-    newConf.c_clientInfos.push_back({ui->raspiIpVal1->text().toStdString(), ui->raspiPortVal1->text().toInt(&convOk)}); //TODO: check convOk for these
+    newConf.c_clientInfos.push_back({ui->raspiIpVal1->text().toStdString(),
+                                     ui->raspiPortVal1->text().toInt(&convOk),
+                                     clientDevMap[ui->deviceTypeVal1->currentText().toStdString()]}); //TODO: check convOk for these
     for (int i=0; i < m_extraClientPortInputs.size(); i++) { // Above check ensures that both vectors have the same size -> size of either one can be used here
-        newConf.c_clientInfos.push_back({m_extraClientIpInputs.at(i)->text().toStdString(), m_extraClientPortInputs.at(i)->text().toInt(&convOk)});
+        newConf.c_clientInfos.push_back({m_extraClientIpInputs.at(i)->text().toStdString(),
+                                         m_extraClientPortInputs.at(i)->text().toInt(&convOk),
+                                         clientDevMap[m_extraClientDevTypeInputs.at(i)->currentText().toStdString()]});
     }
 
     newConf.c_algo = algoNameMap[ui->algoSelectVal->currentText().toStdString()];
@@ -137,7 +145,8 @@ void ScreenLedGUI::on_startButton_clicked()
     }
 }
 
-void ScreenLedGUI::addClientRowToGUI(const std::string ip = "", int port = -1) {
+void ScreenLedGUI::addClientRowToGUI(const std::string ip = "", int port = -1, DeviceType deviceType = DeviceType::SIMULATOR)
+{
     m_numRaspis++;
     std::string txt = "Raspi" + std::to_string(m_numRaspis) + " IP:PORT";
     QHBoxLayout *row = new QHBoxLayout;
@@ -145,11 +154,17 @@ void ScreenLedGUI::addClientRowToGUI(const std::string ip = "", int port = -1) {
     QLabel *label            = new QLabel(QString::fromStdString(txt));
     QLineEdit *edit1         = new QLineEdit;
     QLineEdit *edit2         = new QLineEdit;
+    QComboBox *edit3         = new QComboBox;
     QSpacerItem *rightSpacer = new QSpacerItem(20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
     label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     label->setStyleSheet("color: rgb(255, 255, 255);");
     edit1->setStyleSheet("background-color: rgb(153, 153, 153);");
     edit2->setStyleSheet("background-color: rgb(153, 153, 153);");
+    edit3->setStyleSheet("background-color: rgb(153, 153, 153);");
+    for (const auto& [key, value] : clientDevMap) {
+        edit3->addItem(QString::fromStdString(key), value);
+    }
+    edit3->setCurrentIndex(edit3->findData(deviceType));
     if (!ip.empty()) {
         edit1->setText(QString::fromStdString(ip));
     }
@@ -160,17 +175,20 @@ void ScreenLedGUI::addClientRowToGUI(const std::string ip = "", int port = -1) {
     row->addWidget(label);
     row->addWidget(edit1);
     row->addWidget(edit2);
+    row->addWidget(edit3);
     row->addItem(rightSpacer);
-    row->setStretch(0, 1);
-    row->setStretch(1, 2);
-    row->setStretch(2, 2);
-    row->setStretch(3, 2);
+    row->setStretch(0, 0);
+    row->setStretch(1, 1);
+    row->setStretch(2, 1);
+    row->setStretch(3, 0);
     row->setStretch(4, 1);
+    row->setStretch(5, 0);
     QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(centralWidget()->layout());
     if (mainLayout) {
         mainLayout->insertLayout(3 + m_numRaspis - 2, row);
         m_extraClientIpInputs.push_back(edit1);
         m_extraClientPortInputs.push_back(edit2);
+        m_extraClientDevTypeInputs.push_back(edit3);
     }
 
 }
