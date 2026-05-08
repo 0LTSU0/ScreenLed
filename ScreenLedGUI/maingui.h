@@ -39,6 +39,8 @@ private slots:
 
     void on_startButt_clicked();
 
+    void on_startReceiversButt_clicked();
+
 private:
     Ui::MainGUI *ui;
 
@@ -50,6 +52,8 @@ private:
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;
     runStatus m_libRunStatus = runStatus::IDLE;
+    ReceiverRunner* m_rcvRunner = nullptr;
+    QThread* m_rcvRunnerThread = nullptr;
 
     // screenledlib things
     QThread* m_screenLibTh = new QThread;

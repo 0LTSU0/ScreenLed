@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QString>
 #include <QMessageBox>
+#include <QFile>
 
 MainGUI::MainGUI(QWidget *parent)
     : QMainWindow(parent)
@@ -170,5 +171,23 @@ void MainGUI::on_startButt_clicked()
     default:
         break;
     }
+}
+
+
+void MainGUI::on_startReceiversButt_clicked()
+{
+    auto configPath = m_screenCapWorker->getCurrentConfig().c_autorunScriptPath;
+    if (configPath.isEmpty() || !QFile::exists(configPath)) {
+        QMessageBox::information(this, "No autorun script", QString("No autorun script found from %1").arg(configPath.isEmpty() ? "<not set in settings>" : configPath));
+        return;
+    }
+
+    m_rcvRunner = new ReceiverRunner(m_screenCapWorker->getCurrentConfig().c_autorunScriptPath);
+    if (!m_rcvRunner->findPythonInterpeter()) {
+        QMessageBox::information(this, "No autorun script", "Could not find python interpeter from this system");
+        return;
+    }
+    m_rcvRunnerThread = new QThread();
+    m_rcvRunner->moveToThread(m_rcvRunnerThread);
 }
 

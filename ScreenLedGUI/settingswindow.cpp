@@ -3,6 +3,9 @@
 #include <qcombobox.h>
 #include <qscreen.h>
 
+#include <QDir>
+#include <QFileDialog>
+
 SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig *config, std::function<void(ScreenCapConfig)> updateConfigFunc)
     : QWidget(parent)
     , ui(new Ui::SettingsWindow)
@@ -162,5 +165,22 @@ void SettingsWindow::on_detectResolution_clicked()
     QRect geometry = screen->geometry();
     ui->ScreenResX->setValue(geometry.width());
     ui->ScreenResY->setValue(geometry.height());
+}
+
+
+void SettingsWindow::on_AutoRunScriptSelect_clicked()
+{
+    QString startDir = QDir::homePath();
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        tr("Select autorun python script"),
+        startDir,
+        tr("Python files (*.py)"));
+
+    if (!fileName.isEmpty())
+    {
+        qDebug() << "autorun script selected from filedialog: " << fileName;
+        ui->AutoRunScriptVal->setText(fileName);
+    }
 }
 

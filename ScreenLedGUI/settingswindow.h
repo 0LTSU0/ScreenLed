@@ -35,6 +35,8 @@ private slots:
 
     void on_detectResolution_clicked();
 
+    void on_AutoRunScriptSelect_clicked();
+
 private:
     Ui::SettingsWindow *ui;
     ScreenCapConfig *m_configptr;
