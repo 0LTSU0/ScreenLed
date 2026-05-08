@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ScreenCapBase.h"
 #include <WinSock2.h>
 #include <Ws2tcpip.h>

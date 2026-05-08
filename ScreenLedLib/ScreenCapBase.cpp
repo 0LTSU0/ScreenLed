@@ -85,6 +85,7 @@ bool screenCaptureWorkerBase::loadConfigs(){
         clientInfo c;
         c.host = item["addr"];
         c.port = item["port"];
+        c.type = item["type"];
         m_conf.c_clientInfos.push_back(c);
     }
 
@@ -105,7 +106,8 @@ bool screenCaptureWorkerBase::createConfigFile(){
     for (const auto& c : defaultConfig.c_clientInfos) {
         jconf["clients"].push_back({
             {"addr", c.host},
-            {"port", c.port}
+            {"port", c.port},
+            {"type", c.type}
         });
     }
 
@@ -136,7 +138,8 @@ void screenCaptureWorkerBase::updateCurrentConfig(ScreenCapConfig newConf) {
     for (const auto& c : m_conf.c_clientInfos) {
         jconf["clients"].push_back({
             {"addr", c.host},
-            {"port", c.port}
+            {"port", c.port},
+            {"type", c.type}
         });
     }
     std::ofstream file(m_configPath);
