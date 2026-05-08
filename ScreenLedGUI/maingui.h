@@ -37,6 +37,8 @@ private slots:
 
     void on_actionConfiguration_triggered();
 
+    void on_startButt_clicked();
+
 private:
     Ui::MainGUI *ui;
 
@@ -47,6 +49,7 @@ private:
 
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;
+    runStatus m_libRunStatus = runStatus::IDLE;
 
     // screenledlib things
     QThread* m_screenLibTh = new QThread;

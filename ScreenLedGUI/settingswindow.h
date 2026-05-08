@@ -5,6 +5,7 @@
 #include <qboxlayout.h>
 #include <qlineedit.h>
 #include <vector>
+#include <functional>
 
 #include "Commons.h"
 
@@ -24,7 +25,7 @@ class SettingsWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit SettingsWindow(QWidget *parent = nullptr, ScreenCapConfig *config = nullptr);
+    explicit SettingsWindow(QWidget *parent = nullptr, ScreenCapConfig *config = nullptr, std::function<void(ScreenCapConfig)> = nullptr);
     ~SettingsWindow();
 
 private slots:
@@ -32,9 +33,12 @@ private slots:
 
     void on_addReceiverButton_clicked();
 
+    void on_detectResolution_clicked();
+
 private:
     Ui::SettingsWindow *ui;
     ScreenCapConfig *m_configptr;
+    std::function<void(ScreenCapConfig)> m_updateConfigFunc;
     std::vector<ReceiverConfigRow> m_receiverConfigRows;
 
     // funcs
@@ -43,6 +47,7 @@ private:
     void newReceiverRow();
     static QHBoxLayout* createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect);
     bool validateFields();
+    void saveConfig();
 };
 
 #endif // SETTINGSWINDOW_H

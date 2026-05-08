@@ -5,6 +5,7 @@
 
 #include <QApplication>
 #include <QString>
+#include <QMessageBox>
 
 MainGUI::MainGUI(QWidget *parent)
     : QMainWindow(parent)
@@ -51,8 +52,14 @@ void MainGUI::populateAlgoSelect() {
 
 void MainGUI::populateReceiverStatusRows() {
     if (!m_receiverStatusRows.empty()) {
-        for (auto& row : m_receiverStatusRows) {
+        for (auto row : m_receiverStatusRows) {
+            QLayoutItem *item;
+            while ((item = row->takeAt(0)) != nullptr) {
+                if (item->widget()) delete item->widget();
+                delete item;
+            }
             ui->receiverStatusContainer->removeItem(row);
+            delete row;
         }
         m_receiverStatusRows.clear();
     }
@@ -79,9 +86,11 @@ void MainGUI::populateReceiverStatusRows() {
 }
 
 void MainGUI::onExitActions() {
-    //TODO: Make sure things are stopped on quit
+    if (m_libRunStatus == runStatus::RUNNING) {
+        on_startButt_clicked(); // if still running when exiting, stop the library first
+    }
 
-    // Make sure currently selected algo gets saved since its on the main window rather than configuration
+    // Make sure currently selected algo gets saved since its on the main window rather than configuration and thus has no save button
     m_screenCapWorker->updateCurrentConfig(m_screenCapWorker->getCurrentConfig());
 }
 
@@ -118,7 +127,21 @@ void MainGUI::on_actionAbout_triggered()
 
 void MainGUI::on_actionConfiguration_triggered()
 {
-    SettingsWindow *settings = new SettingsWindow(nullptr, &m_screenCapWorker->getCurrentConfig()); // no parent for it to be a real window
+    if (m_libRunStatus != runStatus::IDLE) {
+        auto reply = QMessageBox::question(this, "Warning", "ScreenLed is running. Opening settings will stop it, is this OK?",
+                                           QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            on_startButt_clicked(); // stop
+        } else {
+            return;
+        }
+    }
+
+    SettingsWindow *settings = new SettingsWindow(nullptr, // no parent for it to be a real window
+                                                  &m_screenCapWorker->getCurrentConfig(),
+                                                  [this](ScreenCapConfig conf) {
+                                                      m_screenCapWorker->updateCurrentConfig(conf);
+                                                  });
     settings->setAttribute(Qt::WA_DeleteOnClose);
     settings->setWindowModality(Qt::ApplicationModal);
     connect(settings, &QObject::destroyed, this, [this]() {
@@ -126,5 +149,26 @@ void MainGUI::on_actionConfiguration_triggered()
         populateReceiverStatusRows();
     });
     settings->show();
+}
+
+
+void MainGUI::on_startButt_clicked()
+{
+    switch (m_libRunStatus) {
+    case runStatus::IDLE:
+        m_screenLibTh->start();
+        ui->startButt->setText("Stop");
+        m_libRunStatus = runStatus::RUNNING;
+        break;
+    case runStatus::RUNNING:
+        m_screenCapWorker->stop();
+        m_screenLibTh->quit();
+        m_screenLibTh->wait();
+        ui->startButt->setText("Start");
+        m_libRunStatus = runStatus::IDLE;
+        break;
+    default:
+        break;
+    }
 }
 

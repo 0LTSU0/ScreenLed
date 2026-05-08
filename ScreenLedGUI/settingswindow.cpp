@@ -1,13 +1,15 @@
 #include "settingswindow.h"
 #include "ui_settingswindow.h"
 #include <qcombobox.h>
+#include <qscreen.h>
 
-SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig *config)
+SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig *config, std::function<void(ScreenCapConfig)> updateConfigFunc)
     : QWidget(parent)
     , ui(new Ui::SettingsWindow)
 {
     ui->setupUi(this);
     m_configptr = config;
+    m_updateConfigFunc = updateConfigFunc;
     populateSettingsWindow();
 }
 
@@ -102,6 +104,7 @@ bool SettingsWindow::validateFields() {
 
     for (auto& receiverRow : m_receiverConfigRows)
     {
+        if (receiverRow.portEdit->text().isEmpty() || receiverRow.hostEdit->text().isEmpty()) return false;
         receiverRow.portEdit->text().toInt(&convOk);
         if (!convOk) return false; // TODO  error message
     }
@@ -109,13 +112,40 @@ bool SettingsWindow::validateFields() {
     return true;
 }
 
+void SettingsWindow::saveConfig() {
+    // Note to self: this expects that validateFields() has been run before calling this
+    ScreenCapConfig newConf;
+    newConf.c_debugSSInterval = ui->DebugSSintervalVal->text().toInt();
+    newConf.c_keepDebugSSOnClipboard = ui->DebugSSVal->checkState() == Qt::Checked;
+    newConf.c_showDebugPreview = ui->DebugPreviewVal->checkState() == Qt::Checked;
+    newConf.c_screenResX = ui->ScreenResX->value();
+    newConf.c_screenResY = ui->ScreenResY->value();
+    newConf.c_algo = m_configptr->c_algo; // this is not in settings panel, need to take from currently active config
+    newConf.c_autorunScriptPath = ui->AutoRunScriptVal->text();
+
+    if (!m_receiverConfigRows.empty()) {
+        newConf.c_clientInfos.clear(); // if we have some receivers, default localhost receiver can be removed. Otherwise lets keep it
+    }
+    for (auto& receiverRow : m_receiverConfigRows) {
+        clientInfo newClient;
+        newClient.host = receiverRow.hostEdit->text().toStdString();
+        newClient.port = receiverRow.portEdit->text().toInt();
+        newClient.type = static_cast<receiverType>(receiverRow.typeSelect->currentData().toInt());
+        newConf.c_clientInfos.push_back(newClient);
+    }
+
+    m_updateConfigFunc(newConf);
+}
+
 void SettingsWindow::on_SaveButton_clicked()
 {
     if (!validateFields()) {
         qDebug() << "validate fields failed on settings window close";
         close(); // TODO error message
+        return;
     }
 
+    saveConfig();
     close();
 }
 
@@ -123,5 +153,14 @@ void SettingsWindow::on_SaveButton_clicked()
 void SettingsWindow::on_addReceiverButton_clicked()
 {
     newReceiverRow();
+}
+
+
+void SettingsWindow::on_detectResolution_clicked()
+{
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect geometry = screen->geometry();
+    ui->ScreenResX->setValue(geometry.width());
+    ui->ScreenResY->setValue(geometry.height());
 }
 
