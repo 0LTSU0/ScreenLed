@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ScreenCapBase.h"
 #include <arpa/inet.h>
 #include <unistd.h>

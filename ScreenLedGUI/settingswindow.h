@@ -6,6 +6,7 @@
 #include <qlineedit.h>
 #include <vector>
 #include <functional>
+#include "qcombobox.h"
 
 #include "Commons.h"
 
