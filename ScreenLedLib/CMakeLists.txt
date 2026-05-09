@@ -31,7 +31,10 @@ if (UNIX)
 	target_include_directories(ScreenLedLib PRIVATE ${OpenCV_INCLUDE_DIRS})
 endif()
 
-target_link_libraries(ScreenLedLib PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ws2_32)
+target_link_libraries(ScreenLedLib PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+if (WIN32)
+	target_link_libraries(ScreenLedLib PRIVATE ws2_32)
+endif()
 
 target_include_directories(ScreenLedLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty)
 target_include_directories(ScreenLedLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

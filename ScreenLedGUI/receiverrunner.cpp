@@ -24,7 +24,7 @@ void ReceiverRunner::start()
         emit outputReady("ERR" + QString::fromLocal8Bit(error));
     });
 
-    connect(m_process, &QProcess::finished, this, [this]() {
+    connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [this](int exitCode, QProcess::ExitStatus status) {
         emit finished();
     });
 
