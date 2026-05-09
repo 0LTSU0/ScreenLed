@@ -57,16 +57,16 @@ set(PROJECT_SOURCES
         consts.h
         receiverrunner.h
         receiverrunner.cpp
+        maingui.h maingui.cpp maingui.ui
+        aboutwindow.h aboutwindow.cpp aboutwindow.ui
+        settingswindow.h settingswindow.cpp settingswindow.ui
+        receiverconsole.h receiverconsole.cpp receiverconsole.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenLedGUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        maingui.h maingui.cpp maingui.ui
-        aboutwindow.h aboutwindow.cpp aboutwindow.ui
-        settingswindow.h settingswindow.cpp settingswindow.ui
-        receiverconsole.h receiverconsole.cpp receiverconsole.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ScreenLedGUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
