@@ -93,6 +93,8 @@ void MainGUI::onExitActions() {
 
     // Make sure currently selected algo gets saved since its on the main window rather than configuration and thus has no save button
     m_screenCapWorker->updateCurrentConfig(m_screenCapWorker->getCurrentConfig());
+
+    stopReceivers();
 }
 
 void MainGUI::on_actionExit_triggered()
@@ -176,18 +178,94 @@ void MainGUI::on_startButt_clicked()
 
 void MainGUI::on_startReceiversButt_clicked()
 {
+    bool res = false;
+    if (!m_receiversRunning ) {
+        res = startReceivers();
+        if (res) {
+            ui->startReceiversButt->setText("Stop (SSH) Receivers");
+        }
+    } else {
+        res = stopReceivers();
+        if (res) {
+            ui->startReceiversButt->setText("Start (SSH) Receivers");
+        }
+    }
+
+    m_receiversRunning = !m_receiversRunning;
+
+    // only change the internal run status if start/stop was ok
+    //if (res) {
+    //    m_receiversRunning = !m_receiversRunning;
+    //}
+}
+
+bool MainGUI::startReceivers() {
     auto configPath = m_screenCapWorker->getCurrentConfig().c_autorunScriptPath;
     if (configPath.isEmpty() || !QFile::exists(configPath)) {
         QMessageBox::information(this, "No autorun script", QString("No autorun script found from %1").arg(configPath.isEmpty() ? "<not set in settings>" : configPath));
-        return;
+        return false;
     }
 
     m_rcvRunner = new ReceiverRunner(m_screenCapWorker->getCurrentConfig().c_autorunScriptPath);
     if (!m_rcvRunner->findPythonInterpeter()) {
         QMessageBox::information(this, "No autorun script", "Could not find python interpeter from this system");
-        return;
+        return false;
     }
     m_rcvRunnerThread = new QThread();
     m_rcvRunner->moveToThread(m_rcvRunnerThread);
+
+    connect(m_rcvRunner, &ReceiverRunner::outputReady, this, [&](const QString &line) {
+        static QRegularExpression regex = QRegularExpression("[\\r\\n]");
+        QString trimmed = line;
+        trimmed.remove(regex);
+        m_rcvRunnerOutput.push_back(trimmed);
+        if (m_rcvRunnerOutput.size() > m_maxRcvRunnerLines) {
+            m_rcvRunnerOutput.erase(m_rcvRunnerOutput.begin());
+        }
+        if (m_receiverConsoleOpen && m_receiverConsole != nullptr && !m_receiverConsoleInitialFillOngoing) {
+            m_receiverConsole->appendOutput(trimmed);
+        }
+        qDebug() << "RCVRunner output: " << trimmed;
+    });
+
+    connect(m_rcvRunnerThread, &QThread::started, m_rcvRunner, &ReceiverRunner::start);
+    connect(m_rcvRunner, &ReceiverRunner::finished, m_rcvRunnerThread, &QThread::quit);
+    connect(m_rcvRunnerThread, &QThread::finished, m_rcvRunnerThread, &QObject::deleteLater);
+    connect(m_rcvRunnerThread, &QThread::finished, this, [this]() {
+        // Upon stop, we disable the start button while waiting for the python thread to exit. Once the thred emits finished it should be safe to enable again
+        m_rcvRunner = nullptr;
+        m_rcvRunnerThread = nullptr;
+        ui->startReceiversButt->setEnabled(true);
+    });
+
+    m_rcvRunnerThread->start();
+    return true;
+}
+
+bool MainGUI::stopReceivers() {
+    if (m_rcvRunner != nullptr) {
+        QMetaObject::invokeMethod(m_rcvRunner, "stop", Qt::QueuedConnection);
+        ui->startReceiversButt->setEnabled(false);
+    }
+    return true;
+}
+
+void MainGUI::on_actionReceiver_console_triggered()
+{
+    if (m_receiverConsoleOpen) return;
+
+    m_receiverConsole = new ReceiverConsole();
+    m_receiverConsole->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_receiverConsole, &QObject::destroyed, this, [this]() {
+        m_receiverConsoleOpen = false;
+        m_receiverConsole = nullptr;
+    });
+    if (!m_rcvRunnerOutput.empty()) { // if there already is something, fill it to the window
+        m_receiverConsoleInitialFillOngoing = true;
+        m_receiverConsole->fillInitialOutput(m_rcvRunnerOutput);
+        m_receiverConsoleInitialFillOngoing = false;
+    }
+    m_receiverConsoleOpen = true;
+    m_receiverConsole->show();
 }
 

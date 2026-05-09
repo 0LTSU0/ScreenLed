@@ -30,6 +30,7 @@ struct clientInfo {
     std::string host;
     int port;
     receiverType type;
+    std::string ledStripArg;
 };
 
 inline std::map<std::string, ScreenLedAlgorithm> algoNameMap{{"Default: mean", ScreenLedAlgorithm::MEAN_DEFAULT},
@@ -50,7 +51,7 @@ inline std::map<receiverType, std::string> receiverTypeValueMap{
 struct ScreenCapConfig {
     int c_debugSSInterval = 10;
     bool c_keepDebugSSOnClipboard = false;
-    std::vector<clientInfo> c_clientInfos = {{"127.0.0.1", 65432, receiverType::DUMMY}};
+    std::vector<clientInfo> c_clientInfos = {{"127.0.0.1", 65432, receiverType::DUMMY, ""}};
     bool c_showDebugPreview = false;
     int c_screenResX = 1920;
     int c_screenResY = 1080;

@@ -86,6 +86,7 @@ bool screenCaptureWorkerBase::loadConfigs(){
         c.host = item["addr"];
         c.port = item["port"];
         c.type = item["type"];
+        c.ledStripArg = item["ledStripArg"];
         m_conf.c_clientInfos.push_back(c);
     }
 
@@ -107,7 +108,8 @@ bool screenCaptureWorkerBase::createConfigFile(){
         jconf["clients"].push_back({
             {"addr", c.host},
             {"port", c.port},
-            {"type", c.type}
+            {"type", c.type},
+            {"ledStripArg", c.ledStripArg}
         });
     }
 
@@ -139,7 +141,8 @@ void screenCaptureWorkerBase::updateCurrentConfig(ScreenCapConfig newConf) {
         jconf["clients"].push_back({
             {"addr", c.host},
             {"port", c.port},
-            {"type", c.type}
+            {"type", c.type},
+            {"ledStripArg", c.ledStripArg}
         });
     }
     std::ofstream file(m_configPath);

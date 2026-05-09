@@ -19,11 +19,24 @@ void ReceiverRunner::start()
         emit outputReady(QString::fromLocal8Bit(output));
     });
 
+    connect(m_process, &QProcess::readyReadStandardError, this, [this]() {
+        QByteArray error = m_process->readAllStandardError();
+        emit outputReady("ERR" + QString::fromLocal8Bit(error));
+    });
+
     connect(m_process, &QProcess::finished, this, [this]() {
         emit finished();
     });
 
     m_process->start();
+
+    // emit to capture into receiver console
+    if (!m_process->waitForStarted(3000)) {
+        emit outputReady(QString("Failed to start process: %1").arg(m_process->errorString()));
+        emit finished();
+        return;
+    }
+    emit outputReady(QString("Receiver script process started with PID: %1").arg(m_process->processId()));
 }
 
 
@@ -95,7 +108,7 @@ bool ReceiverRunner::findPythonInterpeter() {
     if (!newestPython.isEmpty())
     {
         qDebug() << "Newest python found from the system is: " << newestVersion.toString() << " using command: " << newestPython;
-        m_pythonCmd = newestPython;
+        m_pythonExc = newestPython;
     }
     else
     {

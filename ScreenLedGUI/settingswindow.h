@@ -14,6 +14,7 @@ struct ReceiverConfigRow {
     QLineEdit *hostEdit;
     QLineEdit *portEdit;
     QComboBox *typeSelect;
+    QLineEdit *ledStripArg;
 };
 
 namespace Ui {
@@ -47,7 +48,7 @@ private:
     void populateSettingsWindow();
     void populateReceiverRows();
     void newReceiverRow();
-    static QHBoxLayout* createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect);
+    static QHBoxLayout* createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect, QLineEdit *ledStripArg);
     bool validateFields();
     void saveConfig();
 };

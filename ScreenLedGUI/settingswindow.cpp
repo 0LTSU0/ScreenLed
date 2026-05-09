@@ -50,6 +50,8 @@ void SettingsWindow::populateReceiverRows() {
         QLineEdit *hostFiled = new QLineEdit();
         QLineEdit *portField = new QLineEdit();
         QComboBox *typeSelect = new QComboBox();
+        QLineEdit *ledStripArg = new QLineEdit();
+        ledStripArg->setPlaceholderText("LED Strip Arg");
 
         for (auto& [name, type] : receiverTypeNameMap) {
             typeSelect->addItem(QString::fromStdString(name), static_cast<int>(type));
@@ -60,11 +62,14 @@ void SettingsWindow::populateReceiverRows() {
         if (idx != -1) typeSelect->setCurrentIndex(idx);
         hostFiled->setText(QString::fromStdString(client.host));
         portField->setText(QString::number(client.port));
+        if (!client.ledStripArg.empty()) { // only fill if not empty to keep placeholder text visible
+            ledStripArg->setText(QString::fromStdString(client.ledStripArg));
+        }
 
-        QHBoxLayout *rowLayout = createRow(hostFiled, portField, typeSelect);
+        QHBoxLayout *rowLayout = createRow(hostFiled, portField, typeSelect, ledStripArg);
 
         ui->receiverRowContainer->addLayout(rowLayout);
-        m_receiverConfigRows.push_back({rowLayout, hostFiled, portField, typeSelect});
+        m_receiverConfigRows.push_back({rowLayout, hostFiled, portField, typeSelect, ledStripArg});
     }
 }
 
@@ -72,27 +77,30 @@ void SettingsWindow::newReceiverRow() {
     QLineEdit *hostFiled = new QLineEdit();
     QLineEdit *portField = new QLineEdit();
     QComboBox *typeSelect = new QComboBox();
+    QLineEdit *ledStripArg = new QLineEdit();
     for (auto& [name, type] : receiverTypeNameMap) {
         typeSelect->addItem(QString::fromStdString(name), static_cast<int>(type));
     }
     hostFiled->setPlaceholderText("127.0.0.1");
     portField->setPlaceholderText("6967");
+    ledStripArg->setPlaceholderText("LED Strip Arg");
 
-    QHBoxLayout *rowLayout = createRow(hostFiled, portField, typeSelect);
+    QHBoxLayout *rowLayout = createRow(hostFiled, portField, typeSelect, ledStripArg);
     ui->receiverRowContainer->addLayout(rowLayout);
-    m_receiverConfigRows.push_back({rowLayout, hostFiled, portField, typeSelect});
+    m_receiverConfigRows.push_back({rowLayout, hostFiled, portField, typeSelect, ledStripArg});
 }
 
-QHBoxLayout* SettingsWindow::createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect)
+QHBoxLayout* SettingsWindow::createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect, QLineEdit *ledStripArg)
 {
     QHBoxLayout *rowLayout = new QHBoxLayout();
     rowLayout->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Preferred));
-    rowLayout->addWidget(hostFiled, 2); // second arg is stretcg
-    rowLayout->addWidget(portField, 1); // second arg is stretcg
-    rowLayout->addWidget(typeSelect, 1); // second arg is stretcg
+    rowLayout->addWidget(hostFiled, 2); // second arg is stretch
+    rowLayout->addWidget(portField, 2); // second arg is stretch
+    rowLayout->addWidget(typeSelect, 2); // second arg is stretch
+    rowLayout->addWidget(ledStripArg, 2);
     rowLayout->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Preferred));
     rowLayout->setStretch(0,1); //stretch first spacer
-    rowLayout->setStretch(4,1); //stretch first spacer
+    rowLayout->setStretch(5,1); //stretch last spacer
     return rowLayout;
 }
 
@@ -134,6 +142,7 @@ void SettingsWindow::saveConfig() {
         newClient.host = receiverRow.hostEdit->text().toStdString();
         newClient.port = receiverRow.portEdit->text().toInt();
         newClient.type = static_cast<receiverType>(receiverRow.typeSelect->currentData().toInt());
+        newClient.ledStripArg = receiverRow.ledStripArg->text().toStdString();
         newConf.c_clientInfos.push_back(newClient);
     }
 

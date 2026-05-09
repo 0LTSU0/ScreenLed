@@ -28,7 +28,6 @@ private:
     QString m_scriptPath;
     QString m_pythonExc;
     QProcess *m_process = nullptr;
-    QString m_pythonCmd;
 };
 
 #endif // RECEIVERRUNNER_H

@@ -13,6 +13,7 @@
 #endif
 
 #include "receiverrunner.h"
+#include "receiverconsole.h"
 
 namespace Ui {
 class MainGUI;
@@ -41,6 +42,8 @@ private slots:
 
     void on_startReceiversButt_clicked();
 
+    void on_actionReceiver_console_triggered();
+
 private:
     Ui::MainGUI *ui;
 
@@ -48,12 +51,20 @@ private:
     void populateAlgoSelect();
     void populateReceiverStatusRows();
     void onExitActions();
+    bool startReceivers();
+    bool stopReceivers();
 
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;
     runStatus m_libRunStatus = runStatus::IDLE;
     ReceiverRunner* m_rcvRunner = nullptr;
     QThread* m_rcvRunnerThread = nullptr;
+    static constexpr int m_maxRcvRunnerLines = 100;
+    std::vector<QString> m_rcvRunnerOutput;
+    bool m_receiversRunning = false;
+    bool m_receiverConsoleOpen = false;
+    bool m_receiverConsoleInitialFillOngoing = false; // to prevent live output from being appended when console is just opened
+    ReceiverConsole *m_receiverConsole = nullptr;
 
     // screenledlib things
     QThread* m_screenLibTh = new QThread;
