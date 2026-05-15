@@ -11,8 +11,10 @@ class ReceiverRunner : public QObject
 {
     Q_OBJECT
 public:
-    explicit ReceiverRunner(const QString &starterScript, const QString &pythonExc,  QObject *parent = nullptr)
-        : m_scriptPath(starterScript), m_pythonExc(pythonExc) {}
+    explicit ReceiverRunner(const QString &starterScript, QObject *parent = nullptr)
+        : m_scriptPath(starterScript) {}
+
+    bool findPythonInterpeter();
 
 public slots:
     void start();

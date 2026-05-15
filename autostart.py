@@ -20,7 +20,7 @@ stop_flag = False
 def quit_handler(sig, frame):
     print("quit_handler triggered!")
     global channels
-    for channel in channels:
+    for host, channel in channels:
         try:
             print(f"Sending CTRL+C to {channel}")
             channel.send("\x03")  # ==Ctrl+C

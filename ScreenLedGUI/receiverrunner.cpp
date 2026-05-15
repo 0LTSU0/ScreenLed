@@ -1,4 +1,6 @@
 #include "receiverrunner.h"
+#include <qregularexpression.h>
+#include <qversionnumber.h>
 
 void ReceiverRunner::start()
 {
@@ -17,11 +19,24 @@ void ReceiverRunner::start()
         emit outputReady(QString::fromLocal8Bit(output));
     });
 
-    connect(m_process, &QProcess::finished, this, [this]() {
+    connect(m_process, &QProcess::readyReadStandardError, this, [this]() {
+        QByteArray error = m_process->readAllStandardError();
+        emit outputReady("ERR" + QString::fromLocal8Bit(error));
+    });
+
+    connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [this](int exitCode, QProcess::ExitStatus status) {
         emit finished();
     });
 
     m_process->start();
+
+    // emit to capture into receiver console
+    if (!m_process->waitForStarted(3000)) {
+        emit outputReady(QString("Failed to start process: %1").arg(m_process->errorString()));
+        emit finished();
+        return;
+    }
+    emit outputReady(QString("Receiver script process started with PID: %1").arg(m_process->processId()));
 }
 
 
@@ -49,4 +64,55 @@ void ReceiverRunner::stop()
 
     delete m_process;
     m_process = nullptr;
+}
+
+bool ReceiverRunner::findPythonInterpeter() {
+#ifdef _WIN32
+    QStringList candidates = {"py", "python3", "python"};
+#else
+    QStringList candidates = {"python3", "python"};
+#endif
+
+    QString newestPython;
+    QVersionNumber newestVersion = QVersionNumber(0,0,0);
+
+    for (const QString &cmd : candidates)
+    {
+        QProcess process;
+        process.start(cmd, {"--version"});
+        if (!process.waitForFinished(1000)) // 1s timeout
+        {
+            continue;
+        }
+
+        QString output = QString::fromLocal8Bit(process.readAllStandardOutput() + process.readAllStandardError()).trimmed();
+
+        // Match version like "Python 3.13.3"
+        QRegularExpression re("Python (\\d+)\\.(\\d+)\\.(\\d+)");
+        QRegularExpressionMatch match = re.match(output);
+        if (match.hasMatch())
+        {
+            int major = match.captured(1).toInt();
+            int minor = match.captured(2).toInt();
+            int patch = match.captured(3).toInt();
+            QVersionNumber ver(major, minor, patch);
+
+            if (ver > newestVersion)
+            {
+                newestVersion = ver;
+                newestPython = cmd;
+            }
+        }
+    }
+
+    if (!newestPython.isEmpty())
+    {
+        qDebug() << "Newest python found from the system is: " << newestVersion.toString() << " using command: " << newestPython;
+        m_pythonExc = newestPython;
+    }
+    else
+    {
+        return false;
+    }
+    return true;
 }

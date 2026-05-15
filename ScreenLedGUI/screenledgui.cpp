@@ -261,7 +261,7 @@ bool ScreenLedGUI::startRapsiReceivers()
         findPythonExecutable();
     }
     m_rcvRunnerThread = new QThread();
-    m_rcvRunner = new ReceiverRunner(ui->autorunPathVal->text(), m_pythonCmd);
+    m_rcvRunner = new ReceiverRunner(ui->autorunPathVal->text());
     m_rcvRunner->moveToThread(m_rcvRunnerThread);
 
     connect(m_rcvRunner, &ReceiverRunner::outputReady, this, [&](const QString &line) {

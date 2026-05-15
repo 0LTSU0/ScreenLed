@@ -1,6 +1,43 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ScreenLedGUI VERSION 0.1 LANGUAGES CXX)
+project(ScreenLedGUI VERSION 0.2.0 LANGUAGES CXX)
+
+# --- Get git hash ---
+find_package(Git QUIET)
+
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} status --porcelain
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_STATUS
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(GIT_STATUS)
+        set(GIT_DIRTY "-dirty")
+    else()
+        set(GIT_DIRTY "")
+    endif()
+else()
+    set(GIT_HASH "nogit")
+    set(GIT_DIRTY "")
+endif()
+
+set(APP_VERSION "${PROJECT_VERSION}-${GIT_HASH}${GIT_DIRTY}")
+
+# Generate header
+configure_file(
+    ${CMAKE_SOURCE_DIR}/version.h.in
+    ${CMAKE_BINARY_DIR}/generated/version.h
+    @ONLY
+)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -14,12 +51,13 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        screenledgui.cpp
-        screenledgui.h
-        screenledgui.ui
         consts.h
         receiverrunner.h
         receiverrunner.cpp
+        maingui.h maingui.cpp maingui.ui
+        aboutwindow.h aboutwindow.cpp aboutwindow.ui
+        settingswindow.h settingswindow.cpp settingswindow.ui
+        receiverconsole.h receiverconsole.cpp receiverconsole.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -52,6 +90,7 @@ add_subdirectory(../ScreenLedLib ${CMAKE_CURRENT_BINARY_DIR}/lib)
 target_link_libraries(ScreenLedGUI PRIVATE ScreenLedLib)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ScreenLedLib)
+target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_BINARY_DIR}/generated)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
