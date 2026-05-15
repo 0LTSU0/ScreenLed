@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ScreenLedGUI VERSION 0.1.1 LANGUAGES CXX)
+project(ScreenLedGUI VERSION 0.2.0 LANGUAGES CXX)
 
 # --- Get git hash ---
 find_package(Git QUIET)
@@ -51,9 +51,6 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        screenledgui.cpp
-        screenledgui.h
-        screenledgui.ui
         consts.h
         receiverrunner.h
         receiverrunner.cpp
