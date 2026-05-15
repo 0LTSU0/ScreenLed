@@ -4,6 +4,7 @@
 
 #include <QMainWindow>
 #include <QHBoxLayout>
+#include <QThread>
 
 #include "consts.h"
 #if defined(WIN32)
@@ -12,7 +13,7 @@
 #include "ScreenCapLinux.h"
 #endif
 
-#include "receiverrunner.h"
+#include "receiverrunnerssh.h"
 #include "receiverconsole.h"
 
 namespace Ui {
@@ -57,7 +58,7 @@ private:
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;
     runStatus m_libRunStatus = runStatus::IDLE;
-    ReceiverRunner* m_rcvRunner = nullptr;
+    ReceiverRunnerSSH* m_rcvRunner = nullptr;
     QThread* m_rcvRunnerThread = nullptr;
     static constexpr int m_maxRcvRunnerLines = 100;
     std::vector<QString> m_rcvRunnerOutput;

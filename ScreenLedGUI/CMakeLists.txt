@@ -54,6 +54,8 @@ set(PROJECT_SOURCES
         consts.h
         receiverrunner.h
         receiverrunner.cpp
+        receiverrunnerssh.h
+        receiverrunnerssh.cpp
         maingui.h maingui.cpp maingui.ui
         aboutwindow.h aboutwindow.cpp aboutwindow.ui
         settingswindow.h settingswindow.cpp settingswindow.ui
@@ -91,6 +93,10 @@ target_link_libraries(ScreenLedGUI PRIVATE ScreenLedLib)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ScreenLedLib)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_BINARY_DIR}/generated)
+
+# Add libssh
+add_subdirectory(../ThirdParty/libssh2/ ${CMAKE_CURRENT_BINARY_DIR}/libssh2)
+target_link_libraries(ScreenLedGUI PRIVATE libssh2_static)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

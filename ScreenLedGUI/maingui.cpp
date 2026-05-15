@@ -200,21 +200,11 @@ void MainGUI::on_startReceiversButt_clicked()
 }
 
 bool MainGUI::startReceivers() {
-    auto configPath = m_screenCapWorker->getCurrentConfig().c_autorunScriptPath;
-    if (configPath.isEmpty() || !QFile::exists(configPath)) {
-        QMessageBox::information(this, "No autorun script", QString("No autorun script found from %1").arg(configPath.isEmpty() ? "<not set in settings>" : configPath));
-        return false;
-    }
-
-    m_rcvRunner = new ReceiverRunner(m_screenCapWorker->getCurrentConfig().c_autorunScriptPath);
-    if (!m_rcvRunner->findPythonInterpeter()) {
-        QMessageBox::information(this, "No autorun script", "Could not find python interpeter from this system");
-        return false;
-    }
+    m_rcvRunner = new ReceiverRunnerSSH(m_screenCapWorker->getCurrentConfig().c_clientInfos);
     m_rcvRunnerThread = new QThread();
     m_rcvRunner->moveToThread(m_rcvRunnerThread);
 
-    connect(m_rcvRunner, &ReceiverRunner::outputReady, this, [&](const QString &line) {
+    connect(m_rcvRunner, &ReceiverRunnerSSH::outputReady, this, [&](const QString &line) {
         static QRegularExpression regex = QRegularExpression("[\\r\\n]");
         QString trimmed = line;
         trimmed.remove(regex);
@@ -228,8 +218,8 @@ bool MainGUI::startReceivers() {
         qDebug() << "RCVRunner output: " << trimmed;
     });
 
-    connect(m_rcvRunnerThread, &QThread::started, m_rcvRunner, &ReceiverRunner::start);
-    connect(m_rcvRunner, &ReceiverRunner::finished, m_rcvRunnerThread, &QThread::quit);
+    connect(m_rcvRunnerThread, &QThread::started, m_rcvRunner, &ReceiverRunnerSSH::start);
+    connect(m_rcvRunner, &ReceiverRunnerSSH::finished, m_rcvRunnerThread, &QThread::quit);
     connect(m_rcvRunnerThread, &QThread::finished, m_rcvRunnerThread, &QObject::deleteLater);
     connect(m_rcvRunnerThread, &QThread::finished, this, [this]() {
         // Upon stop, we disable the start button while waiting for the python thread to exit. Once the thred emits finished it should be safe to enable again
@@ -244,7 +234,7 @@ bool MainGUI::startReceivers() {
 
 bool MainGUI::stopReceivers() {
     if (m_rcvRunner != nullptr) {
-        QMetaObject::invokeMethod(m_rcvRunner, "stop", Qt::QueuedConnection);
+        QMetaObject::invokeMethod(m_rcvRunner, "stop", Qt::DirectConnection);
         ui->startReceiversButt->setEnabled(false);
     }
     return true;
