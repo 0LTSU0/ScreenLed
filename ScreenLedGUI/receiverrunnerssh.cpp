@@ -1,5 +1,8 @@
 #include "receiverrunnerssh.h"
 #include <QThread>
+#include <QDebug>
+#include <QEventLoop>
+#include <QNetworkInterface>
 
 ReceiverRunnerSSH::ReceiverRunnerSSH(std::vector<clientInfo> &hosts, QObject *parent)
     : QObject(parent), m_clients(hosts)
@@ -85,9 +88,10 @@ bool ReceiverRunnerSSH::connectHost(SSHConnection &conn)
     libssh2_session_set_blocking(conn.session, 0);
 
     // Send the command
-    //std::string cmd = "sudo ./led_server port=" + std::to_string(conn.client.port)
-    //                  + " strips=" + conn.client.ledStripArg + "\n";
-    std::string cmd = "ls -la \n";
+    std::string cmd = "sudo ./led_receiver port=" + std::to_string(conn.client.port)
+                      + " strips=" + conn.client.ledStripArg
+                      + " host=" + m_localIP.toStdString() + "\n";
+    //std::string cmd = "./randStr.sh \n";
     libssh2_channel_write(conn.channel, cmd.c_str(), cmd.size());
 
     emit outputReady(QString("[%1] Started led_server").arg(QString::fromStdString(conn.client.host)));
@@ -95,8 +99,61 @@ bool ReceiverRunnerSSH::connectHost(SSHConnection &conn)
 }
 
 
+bool ReceiverRunnerSSH::initStatusListener()
+{
+    m_statusListener = new receiverrunnerssh_statuslistener();
+    m_statusListenerThread = new QThread(this);
+    m_statusListener->moveToThread(m_statusListenerThread);
+
+    connect(m_statusListenerThread, &QThread::started,
+            m_statusListener, &receiverrunnerssh_statuslistener::start);
+
+
+    // TEMP
+    connect(m_statusListener,
+            &receiverrunnerssh_statuslistener::udpMessageReceived,
+            this,
+            &ReceiverRunnerSSH::updateConnectionAliveTs,
+            Qt::DirectConnection);
+
+    QEventLoop loop;
+    bool ok = false;
+
+    connect(m_statusListener, &receiverrunnerssh_statuslistener::started, &loop, [&]{
+        ok = true;
+        loop.quit();
+    });
+
+    connect(m_statusListener, &receiverrunnerssh_statuslistener::error, &loop, [&](const QString &msg){
+        //qCritical() << msg;
+        m_statusListenerErr = msg;
+        ok = false;
+        loop.quit();
+    });
+
+    m_statusListenerThread->start();
+    loop.exec(); // wait for init to fail or succeed
+
+    return ok;
+}
+
+
 void ReceiverRunnerSSH::start()
 {
+    if (!initStatusListener()) {
+        emit outputReady("ERROR: Could not start statusListener!");
+        emit outputReady(m_statusListenerErr);
+        emit finished();
+        return;
+    }
+
+    if (m_localIP.isEmpty())
+    {
+        emit outputReady("ERROR: Local ip is not known. Cannot provide our IP to led receivers");
+        emit finished();
+        return;
+    }
+
     m_stopFlag = false;
     m_connections.clear();
 
@@ -142,7 +199,7 @@ void ReceiverRunnerSSH::start()
                 conn.channel = nullptr;
             }
         }
-        QThread::msleep(100);
+        QThread::msleep(50);
     }
 
     cleanup();
@@ -184,4 +241,77 @@ void ReceiverRunnerSSH::cleanup()
         }
     }
     m_connections.clear();
+
+    if (m_statusListener && m_statusListenerThread) {
+
+        // Run stop() in the listener's own thread
+        QMetaObject::invokeMethod(
+            m_statusListener,
+            "stop",
+            Qt::BlockingQueuedConnection
+        );
+
+        m_statusListenerThread->quit();
+        m_statusListenerThread->wait();
+
+        m_statusListener = nullptr;
+        m_statusListenerThread = nullptr;
+    }
+}
+
+void ReceiverRunnerSSH::updateConnectionAliveTs(const QByteArray &msg,
+                                                const QHostAddress &addr,
+                                                quint16 port)
+{
+    qDebug() << msg << addr << port;
+    for (auto& connection : m_connections)
+    {
+        auto client = connection.client;
+        if (client.host == addr.toString().toStdString())
+        {
+            if (msg.toStdString().find("alive") != std::string::npos)
+            {
+                connection.lastAliveTS = std::chrono::system_clock::now();
+            }
+        }
+    }
+}
+
+QString ReceiverRunnerSSH::getLocalIPv4()
+{
+    // TODO: there should be a way to select correct interface or ip
+    const auto interfaces = QNetworkInterface::allInterfaces();
+    for (const QNetworkInterface &iface : interfaces)
+    {
+        // Skip interfaces that are down or loopback
+        if (!(iface.flags() & QNetworkInterface::IsUp) ||
+            !(iface.flags() & QNetworkInterface::IsRunning) ||
+            (iface.flags() & QNetworkInterface::IsLoopBack))
+        {
+            continue;
+        }
+
+        for (const QNetworkAddressEntry &entry : iface.addressEntries())
+        {
+            const QHostAddress &addr = entry.ip();
+
+            if (addr.protocol() == QAbstractSocket::IPv4Protocol)
+            {
+                qDebug() << "getLocalIPv4 returning" << addr.toString();
+                return addr.toString();
+            }
+        }
+    }
+
+    return {};
+}
+
+std::vector<std::pair<QString, std::chrono::system_clock::time_point>> ReceiverRunnerSSH::getAliveTimestamps()
+{
+    std::vector<std::pair<QString, std::chrono::system_clock::time_point>> res;
+    for (auto& conn : m_connections)
+    {
+        res.emplace_back(QString::fromStdString(conn.client.host), conn.lastAliveTS);
+    }
+    return res;
 }

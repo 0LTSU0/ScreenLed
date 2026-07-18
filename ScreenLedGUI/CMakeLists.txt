@@ -46,8 +46,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Network)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -60,6 +60,7 @@ set(PROJECT_SOURCES
         aboutwindow.h aboutwindow.cpp aboutwindow.ui
         settingswindow.h settingswindow.cpp settingswindow.ui
         receiverconsole.h receiverconsole.cpp receiverconsole.ui
+        receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -86,6 +87,7 @@ else()
 endif()
 
 target_link_libraries(ScreenLedGUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(ScreenLedGUI PRIVATE Qt${QT_VERSION_MAJOR}::Network)
 
 # Add ScreenLed library and json header
 add_subdirectory(../ScreenLedLib ${CMAKE_CURRENT_BINARY_DIR}/lib)

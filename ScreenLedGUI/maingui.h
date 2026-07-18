@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include <QHBoxLayout>
 #include <QThread>
+#include <QTimer>
 
 #include "consts.h"
 #if defined(WIN32)
@@ -54,6 +55,9 @@ private:
     void onExitActions();
     bool startReceivers();
     bool stopReceivers();
+    void periodicUIUpdate();
+    void updateReceiverStatusRow(QString host, QString status);
+    void updateAllSSHReceiverStatusRows(QString staus);
 
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;
@@ -66,6 +70,7 @@ private:
     bool m_receiverConsoleOpen = false;
     bool m_receiverConsoleInitialFillOngoing = false; // to prevent live output from being appended when console is just opened
     ReceiverConsole *m_receiverConsole = nullptr;
+    QTimer *m_uiUpdateTimer = new QTimer(this);
 
     // screenledlib things
     QThread* m_screenLibTh = new QThread;

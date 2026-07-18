@@ -29,6 +29,9 @@ MainGUI::MainGUI(QWidget *parent)
 
     populateAlgoSelect();
     populateReceiverStatusRows();
+
+    connect(m_uiUpdateTimer, &QTimer::timeout, this, &MainGUI::periodicUIUpdate);
+    m_uiUpdateTimer->start(1000);
 }
 
 MainGUI::~MainGUI()
@@ -83,7 +86,31 @@ void MainGUI::populateReceiverStatusRows() {
         ui->receiverStatusContainer->addLayout(rowLayout);
         m_receiverStatusRows.append(rowLayout);
     }
+}
 
+void MainGUI::updateReceiverStatusRow(QString host, QString status)
+{
+    // this is bad and very brittle. Should store something more sensible in m_receiverStatusRows than the rowLayouts
+    for (auto& rowLayout : m_receiverStatusRows)
+    {
+        if (qobject_cast<QLabel*>(rowLayout->itemAt(2)->widget())->text().contains(host))
+        {
+            qobject_cast<QLabel*>(rowLayout->itemAt(3)->widget())->setText(status);
+            return;
+        }
+    }
+}
+
+void MainGUI::updateAllSSHReceiverStatusRows(QString status)
+{
+    // this is bad and very brittle. Should store something more sensible in m_receiverStatusRows than the rowLayouts
+    for (auto& rowLayout : m_receiverStatusRows)
+    {
+        if (qobject_cast<QLabel*>(rowLayout->itemAt(1)->widget())->text().contains("ssh"))
+        {
+            qobject_cast<QLabel*>(rowLayout->itemAt(3)->widget())->setText(status);
+        }
+    }
 }
 
 void MainGUI::onExitActions() {
@@ -180,18 +207,20 @@ void MainGUI::on_startReceiversButt_clicked()
 {
     bool res = false;
     if (!m_receiversRunning ) {
+        m_receiversRunning = true;
         res = startReceivers();
         if (res) {
             ui->startReceiversButt->setText("Stop (SSH) Receivers");
         }
     } else {
+        m_receiversRunning = false;
         res = stopReceivers();
         if (res) {
             ui->startReceiversButt->setText("Start (SSH) Receivers");
         }
     }
 
-    m_receiversRunning = !m_receiversRunning;
+    //m_receiversRunning = !m_receiversRunning;
 
     // only change the internal run status if start/stop was ok
     //if (res) {
@@ -226,8 +255,17 @@ bool MainGUI::startReceivers() {
         m_rcvRunner = nullptr;
         m_rcvRunnerThread = nullptr;
         ui->startReceiversButt->setEnabled(true);
+
+        if (m_receiversRunning) {
+            // if m_receiversRunning is set to True when we hit this, then the rcvRunner has exited unexpectedlys since
+            // when stop button is pressed, m_receiversRunning is set to false before doing any real stop activities
+            qDebug() << "Seems m_rcvRunnerThread finished unexpectedly";
+            m_receiversRunning = false;
+            ui->startReceiversButt->setText("Start (SSH) Receivers");
+        }
     });
 
+    updateAllSSHReceiverStatusRows("Starting");
     m_rcvRunnerThread->start();
     return true;
 }
@@ -237,6 +275,7 @@ bool MainGUI::stopReceivers() {
         QMetaObject::invokeMethod(m_rcvRunner, "stop", Qt::DirectConnection);
         ui->startReceiversButt->setEnabled(false);
     }
+    updateAllSSHReceiverStatusRows("Not running");
     return true;
 }
 
@@ -259,3 +298,21 @@ void MainGUI::on_actionReceiver_console_triggered()
     m_receiverConsole->show();
 }
 
+void MainGUI::periodicUIUpdate()
+{
+    auto currTime = std::chrono::system_clock::now();
+    if (m_rcvRunner != nullptr)
+    {
+        for (auto& connection : m_rcvRunner->getAliveTimestamps())
+        {
+            if (connection.second == std::chrono::system_clock::time_point{}) continue; // alive ts not set -> dont update
+
+            double secondsAgo =
+                std::chrono::duration<double>(currTime - connection.second).count();
+            QString status = "Running (last alive ";
+            status.append(QString::number(secondsAgo, 'f', 1));
+            status.append("s ago)");
+            updateReceiverStatusRow(connection.first, status);
+        }
+    }
+}

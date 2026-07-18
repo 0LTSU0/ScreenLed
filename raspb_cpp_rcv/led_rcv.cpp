@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <thread>
+#include <chrono>
 #include <cstring>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -90,7 +91,7 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
     return tokens;
 }
 
-bool parseArgs(int argc, char* argv[], int &port, std::vector<Strip> &strips)  {
+bool parseArgs(int argc, char* argv[], int &port, std::vector<Strip> &strips, std::string &host)  {
     for (int i = 0; i < argc; i++) {
         std::string arg = argv[i];
         auto pos = arg.find('=');
@@ -105,7 +106,7 @@ bool parseArgs(int argc, char* argv[], int &port, std::vector<Strip> &strips)  {
         if (key == "port") {
             std::cout << "Got port argument: " << value << std::endl;
             port = std::stoi(value);
-        } 
+        }
         else if (key == "strips") {
             auto parts = split(value, ',');
             for (const auto &leds : parts) {
@@ -120,22 +121,55 @@ bool parseArgs(int argc, char* argv[], int &port, std::vector<Strip> &strips)  {
                 strips.push_back(st_conf);
             }
         }
+        else if (key == "host") {
+            std::cout << "Got host argument: " << value << std::endl;
+            host = value;
+        }
     }
 
-    if (port != 0 && !strips.empty()) {
+    if (port != 0 && !strips.empty() && !host.empty()) {
         return true;
     } else {
-        std::cout << "Didn't get port and/or at least one strip led amount as arguments. Usage ./led_server port=12345 strips=123,-234,456" << std::endl;
+        std::cout << "Didn't get port and/or host and/or at least one strip led amount as arguments. Usage ./led_server port=12345 strips=123,-234,456 host=192.168.1.100" << std::endl;
     }
+    return false;
+}
+
+void sendAliveLoop(std::string host, int port) {
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        perror("alive socket");
+        return;
+    }
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    if (inet_pton(AF_INET, host.c_str(), &addr.sin_addr) <= 0) {
+        std::cerr << "Invalid host for alive messages: " << host << std::endl;
+        close(sock);
+        return;
+    }
+
+    const char* msg = "alive";
+    while (true) {
+        sendto(sock, msg, strlen(msg), 0, (struct sockaddr*)&addr, sizeof(addr));
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
+
+    close(sock);
 }
 
 int main(int argc, char* argv[]) {
 
     int port = 0;
     std::vector<Strip> strips;
-    if (!parseArgs(argc, argv, port, strips)) {
+    std::string host;
+    if (!parseArgs(argc, argv, port, strips, host)) {
         return -1;
     }
+
+    std::thread(sendAliveLoop, host, 6969).detach();
 
     int total_leds = 0;
     for (auto &st : strips) total_leds += st.LED_COUNT;
