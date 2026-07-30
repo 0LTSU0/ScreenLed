@@ -14,7 +14,6 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
 
     steps:
       - name: Checkout
@@ -27,6 +26,12 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           cache: true
+
+      - name: Install Linux specific things
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install -y libopencv-dev
 
       - name: Configure CMake
         run: cmake -S ScreenLedGUI -B build
