@@ -20,13 +20,26 @@ jobs:
 
     permissions:
       actions: write
-      contents: write
+      contents: read
+      pull-requests: read
 
     steps:
+      - name: Get PR branch
+        id: pr
+        run: |
+          branch=$(gh pr view ${{ github.event.issue.number }} \
+            --json headRefName \
+            --jq '.headRefName')
+
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Trigger build workflow
         run: |
-          gh workflow run "${{ github.workflow }}" \
-            --ref "${{ github.event.issue.pull_request.head.ref }}"
+          gh workflow run "Build ScreenLed GUI" \
+            --ref "${{ steps.pr.outputs.branch }}" \
+            --repo "${{ github.repository }}"
         env:
           GH_TOKEN: ${{ github.token }}
 
