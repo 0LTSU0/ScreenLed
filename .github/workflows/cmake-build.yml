@@ -3,50 +3,19 @@ name: Build ScreenLed GUI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-
-  workflow_dispatch:
-
   issue_comment:
     types: [created]
+  workflow_dispatch:
 
 jobs:
-  # Trigger this workflow manually from a PR comment
-  trigger-comment:
-    if: >
-      github.event_name == 'issue_comment' &&
-      github.event.issue.pull_request &&
-      github.event.comment.body == 'trigger gha'
-    runs-on: ubuntu-latest
-
-    permissions:
-      actions: write
-      contents: read
-      pull-requests: read
-
-    steps:
-      - name: Get PR branch
-        id: pr
-        run: |
-          branch=$(gh pr view ${{ github.event.issue.number }} \
-            --json headRefName \
-            --jq '.headRefName')
-
-          echo "branch=$branch" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Trigger build workflow
-        run: |
-          gh workflow run "Build ScreenLed GUI" \
-            --ref "${{ steps.pr.outputs.branch }}" \
-            --repo "${{ github.repository }}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-
   build:
     name: Build (${{ matrix.os }})
-    if: github.event_name != 'issue_comment'
     runs-on: ${{ matrix.os }}
+    # Only run for issue_comment events if it's a PR comment containing "trigger gha"
+    if: >
+      github.event_name != 'issue_comment' ||
+      (github.event.issue.pull_request != null &&
+       contains(github.event.comment.body, 'trigger gha'))
 
     strategy:
       matrix:
@@ -55,7 +24,15 @@ jobs:
           - windows-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout (PR comment trigger)
+        if: github.event_name == 'issue_comment'
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+          submodules: recursive
+
+      - name: Checkout (default)
+        if: github.event_name != 'issue_comment'
         uses: actions/checkout@v4
         with:
           submodules: recursive
