@@ -23,6 +23,12 @@ jobs:
       - name: Install CMake
         uses: lukka/get-cmake@latest
 
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.0'
+          cache: true
+
       - name: Configure CMake
         run: cmake -S ScreenLedGUI -B build
 
