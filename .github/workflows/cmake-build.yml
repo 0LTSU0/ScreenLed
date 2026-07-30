@@ -3,11 +3,36 @@ name: Build ScreenLed GUI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+
   workflow_dispatch:
 
+  issue_comment:
+    types: [created]
+
 jobs:
+  # Trigger this workflow manually from a PR comment
+  trigger-comment:
+    if: >
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      github.event.comment.body == 'trigger gha'
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
+      - name: Trigger build workflow
+        run: |
+          gh workflow run "${{ github.workflow }}" \
+            --ref "${{ github.event.issue.pull_request.head.ref }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   build:
     name: Build (${{ matrix.os }})
+    if: github.event_name != 'issue_comment'
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -20,7 +45,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-            submodules: recursive
+          submodules: recursive
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
