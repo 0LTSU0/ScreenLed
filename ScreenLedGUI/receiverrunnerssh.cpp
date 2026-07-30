@@ -2,10 +2,9 @@
 #include <QThread>
 #include <QDebug>
 #include <QEventLoop>
-#include <QNetworkInterface>
 
-ReceiverRunnerSSH::ReceiverRunnerSSH(std::vector<clientInfo> &hosts, QObject *parent)
-    : QObject(parent), m_clients(hosts)
+ReceiverRunnerSSH::ReceiverRunnerSSH(std::vector<clientInfo> &hosts, QString nwInterfaceName, QObject *parent)
+    : QObject(parent), m_clients(hosts), m_localNWInterfaceName(nwInterfaceName)
 {
 #ifdef Q_OS_WIN
     WSADATA wsaData;
@@ -108,8 +107,6 @@ bool ReceiverRunnerSSH::initStatusListener()
     connect(m_statusListenerThread, &QThread::started,
             m_statusListener, &receiverrunnerssh_statuslistener::start);
 
-
-    // TEMP
     connect(m_statusListener,
             &receiverrunnerssh_statuslistener::udpMessageReceived,
             this,
@@ -279,32 +276,22 @@ void ReceiverRunnerSSH::updateConnectionAliveTs(const QByteArray &msg,
 
 QString ReceiverRunnerSSH::getLocalIPv4()
 {
-    // TODO: there should be a way to select correct interface or ip
-    const auto interfaces = QNetworkInterface::allInterfaces();
-    for (const QNetworkInterface &iface : interfaces)
+    QNetworkInterface iface = QNetworkInterface::interfaceFromName(m_localNWInterfaceName);
+    if (!iface.isValid()) {
+        return "";
+    }
+    for (const QNetworkAddressEntry &entry : iface.addressEntries())
     {
-        // Skip interfaces that are down or loopback
-        if (!(iface.flags() & QNetworkInterface::IsUp) ||
-            !(iface.flags() & QNetworkInterface::IsRunning) ||
-            (iface.flags() & QNetworkInterface::IsLoopBack))
+        const QHostAddress &addr = entry.ip();
+        if (addr.protocol() == QAbstractSocket::IPv4Protocol)
         {
-            continue;
-        }
-
-        for (const QNetworkAddressEntry &entry : iface.addressEntries())
-        {
-            const QHostAddress &addr = entry.ip();
-
-            if (addr.protocol() == QAbstractSocket::IPv4Protocol)
-            {
-                qDebug() << "getLocalIPv4 returning" << addr.toString();
-                return addr.toString();
-            }
+            qDebug() << "getLocalIPv4() returning " << addr.toString();
+            return addr.toString();
         }
     }
-
-    return {};
+    return "";
 }
+
 
 std::vector<std::pair<QString, std::chrono::system_clock::time_point>> ReceiverRunnerSSH::getAliveTimestamps()
 {

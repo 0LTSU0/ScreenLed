@@ -79,6 +79,7 @@ bool screenCaptureWorkerBase::loadConfigs(){
     m_conf.c_screenResY = conf["screenResY"].get<int>();
     m_conf.c_algo = conf["algo"].get<ScreenLedAlgorithm>();
     m_conf.c_autorunScriptPath = conf.contains("autorunScriptPath") ? QString::fromStdString(conf["autorunScriptPath"].get<std::string>()) : "";
+    m_conf.c_preferredLocalNetworkInterface = conf.contains("preferredLocalNetworkInterface") ? conf["preferredLocalNetworkInterface"].get<std::string>() : "";
 
     m_conf.c_clientInfos.clear();
     for (const auto& item : conf["clients"]) {
@@ -103,6 +104,7 @@ bool screenCaptureWorkerBase::createConfigFile(){
     jconf["screenResY"] = defaultConfig.c_screenResY;
     jconf["algo"] = defaultConfig.c_algo;
     jconf["autorunScriptPath"] = defaultConfig.c_autorunScriptPath.toStdString();
+    jconf["preferredLocalNetworkInterface"] = defaultConfig.c_preferredLocalNetworkInterface;
 
     for (const auto& c : defaultConfig.c_clientInfos) {
         jconf["clients"].push_back({
@@ -137,6 +139,7 @@ void screenCaptureWorkerBase::updateCurrentConfig(ScreenCapConfig newConf) {
     jconf["screenResY"] = m_conf.c_screenResY;
     jconf["algo"] = m_conf.c_algo;
     jconf["autorunScriptPath"] = m_conf.c_autorunScriptPath.toStdString();
+    jconf["preferredLocalNetworkInterface"] = m_conf.c_preferredLocalNetworkInterface;
     for (const auto& c : m_conf.c_clientInfos) {
         jconf["clients"].push_back({
             {"addr", c.host},

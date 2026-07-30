@@ -10,6 +10,7 @@
 #include <QObject>
 #include <QString>
 #include <QThread>
+#include <QNetworkInterface>
 
 #include "receiverrunnerssh_statuslistener.h"
 
@@ -41,7 +42,7 @@ class ReceiverRunnerSSH : public QObject
     Q_OBJECT
 
 public:
-    ReceiverRunnerSSH(std::vector<clientInfo> &clients, QObject *parent = nullptr);
+    ReceiverRunnerSSH(std::vector<clientInfo> &clients, QString nwInterfaceName, QObject *parent = nullptr);
     ~ReceiverRunnerSSH();
 
     std::vector<std::pair<QString, std::chrono::system_clock::time_point>> getAliveTimestamps();
@@ -74,6 +75,8 @@ private:
     receiverrunnerssh_statuslistener* m_statusListener = nullptr;
     QThread *m_statusListenerThread = nullptr;
     QString m_statusListenerErr;
+    QString m_localNWInterfaceName;
     QString m_localIP = getLocalIPv4();
+    QNetworkInterface selectCorrectInterface(const std::vector<QNetworkInterface>&);
 };
 

@@ -2,6 +2,7 @@
 #include "ui_maingui.h"
 #include "aboutwindow.h"
 #include "settingswindow.h"
+#include "errordialog.h"
 
 #include <QApplication>
 #include <QString>
@@ -211,6 +212,8 @@ void MainGUI::on_startReceiversButt_clicked()
         res = startReceivers();
         if (res) {
             ui->startReceiversButt->setText("Stop (SSH) Receivers");
+        } else {
+            m_receiversRunning = false;
         }
     } else {
         m_receiversRunning = false;
@@ -219,17 +222,17 @@ void MainGUI::on_startReceiversButt_clicked()
             ui->startReceiversButt->setText("Start (SSH) Receivers");
         }
     }
-
-    //m_receiversRunning = !m_receiversRunning;
-
-    // only change the internal run status if start/stop was ok
-    //if (res) {
-    //    m_receiversRunning = !m_receiversRunning;
-    //}
 }
 
 bool MainGUI::startReceivers() {
-    m_rcvRunner = new ReceiverRunnerSSH(m_screenCapWorker->getCurrentConfig().c_clientInfos);
+    // App config needs to have network interface selected for this to work so verify it first
+    if (m_screenCapWorker->getCurrentConfig().c_preferredLocalNetworkInterface.empty())
+    {
+        (new ErrorDialog())->Error("Network interface for feedback channel must be set in settings before SSH runner can be used.");
+        return false;
+    }
+
+    m_rcvRunner = new ReceiverRunnerSSH(m_screenCapWorker->getCurrentConfig().c_clientInfos, QString::fromStdString(m_screenCapWorker->getCurrentConfig().c_preferredLocalNetworkInterface));
     m_rcvRunnerThread = new QThread();
     m_rcvRunner->moveToThread(m_rcvRunnerThread);
 
