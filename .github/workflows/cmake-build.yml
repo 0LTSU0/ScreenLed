@@ -26,7 +26,6 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.11.0'
           cache: true
 
       - name: Configure CMake
