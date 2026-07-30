@@ -46,24 +46,29 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Network)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network)
 
 set(PROJECT_SOURCES
         main.cpp
         consts.h
         receiverrunner.h
         receiverrunner.cpp
+        receiverrunnerssh.h
+        receiverrunnerssh.cpp
         maingui.h maingui.cpp maingui.ui
         aboutwindow.h aboutwindow.cpp aboutwindow.ui
         settingswindow.h settingswindow.cpp settingswindow.ui
         receiverconsole.h receiverconsole.cpp receiverconsole.ui
+        receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
+        errordialog.h errordialog.cpp errordialog.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenLedGUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        qtresources.qrc
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ScreenLedGUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -84,6 +89,7 @@ else()
 endif()
 
 target_link_libraries(ScreenLedGUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(ScreenLedGUI PRIVATE Qt${QT_VERSION_MAJOR}::Network)
 
 # Add ScreenLed library and json header
 add_subdirectory(../ScreenLedLib ${CMAKE_CURRENT_BINARY_DIR}/lib)
@@ -91,6 +97,10 @@ target_link_libraries(ScreenLedGUI PRIVATE ScreenLedLib)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ScreenLedLib)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_BINARY_DIR}/generated)
+
+# Add libssh
+add_subdirectory(../ThirdParty/libssh2/ ${CMAKE_CURRENT_BINARY_DIR}/libssh2)
+target_link_libraries(ScreenLedGUI PRIVATE libssh2_static)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

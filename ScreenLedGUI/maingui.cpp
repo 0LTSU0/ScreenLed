@@ -2,6 +2,7 @@
 #include "ui_maingui.h"
 #include "aboutwindow.h"
 #include "settingswindow.h"
+#include "errordialog.h"
 
 #include <QApplication>
 #include <QString>
@@ -29,6 +30,9 @@ MainGUI::MainGUI(QWidget *parent)
 
     populateAlgoSelect();
     populateReceiverStatusRows();
+
+    connect(m_uiUpdateTimer, &QTimer::timeout, this, &MainGUI::periodicUIUpdate);
+    m_uiUpdateTimer->start(1000);
 }
 
 MainGUI::~MainGUI()
@@ -83,7 +87,31 @@ void MainGUI::populateReceiverStatusRows() {
         ui->receiverStatusContainer->addLayout(rowLayout);
         m_receiverStatusRows.append(rowLayout);
     }
+}
 
+void MainGUI::updateReceiverStatusRow(QString host, QString status)
+{
+    // this is bad and very brittle. Should store something more sensible in m_receiverStatusRows than the rowLayouts
+    for (auto& rowLayout : m_receiverStatusRows)
+    {
+        if (qobject_cast<QLabel*>(rowLayout->itemAt(2)->widget())->text().contains(host))
+        {
+            qobject_cast<QLabel*>(rowLayout->itemAt(3)->widget())->setText(status);
+            return;
+        }
+    }
+}
+
+void MainGUI::updateAllSSHReceiverStatusRows(QString status)
+{
+    // this is bad and very brittle. Should store something more sensible in m_receiverStatusRows than the rowLayouts
+    for (auto& rowLayout : m_receiverStatusRows)
+    {
+        if (qobject_cast<QLabel*>(rowLayout->itemAt(1)->widget())->text().contains("ssh"))
+        {
+            qobject_cast<QLabel*>(rowLayout->itemAt(3)->widget())->setText(status);
+        }
+    }
 }
 
 void MainGUI::onExitActions() {
@@ -180,41 +208,35 @@ void MainGUI::on_startReceiversButt_clicked()
 {
     bool res = false;
     if (!m_receiversRunning ) {
+        m_receiversRunning = true;
         res = startReceivers();
         if (res) {
             ui->startReceiversButt->setText("Stop (SSH) Receivers");
+        } else {
+            m_receiversRunning = false;
         }
     } else {
+        m_receiversRunning = false;
         res = stopReceivers();
         if (res) {
             ui->startReceiversButt->setText("Start (SSH) Receivers");
         }
     }
-
-    m_receiversRunning = !m_receiversRunning;
-
-    // only change the internal run status if start/stop was ok
-    //if (res) {
-    //    m_receiversRunning = !m_receiversRunning;
-    //}
 }
 
 bool MainGUI::startReceivers() {
-    auto configPath = m_screenCapWorker->getCurrentConfig().c_autorunScriptPath;
-    if (configPath.isEmpty() || !QFile::exists(configPath)) {
-        QMessageBox::information(this, "No autorun script", QString("No autorun script found from %1").arg(configPath.isEmpty() ? "<not set in settings>" : configPath));
+    // App config needs to have network interface selected for this to work so verify it first
+    if (m_screenCapWorker->getCurrentConfig().c_preferredLocalNetworkInterface.empty())
+    {
+        (new ErrorDialog())->Error("Network interface for feedback channel must be set in settings before SSH runner can be used.");
         return false;
     }
 
-    m_rcvRunner = new ReceiverRunner(m_screenCapWorker->getCurrentConfig().c_autorunScriptPath);
-    if (!m_rcvRunner->findPythonInterpeter()) {
-        QMessageBox::information(this, "No autorun script", "Could not find python interpeter from this system");
-        return false;
-    }
+    m_rcvRunner = new ReceiverRunnerSSH(m_screenCapWorker->getCurrentConfig().c_clientInfos, QString::fromStdString(m_screenCapWorker->getCurrentConfig().c_preferredLocalNetworkInterface));
     m_rcvRunnerThread = new QThread();
     m_rcvRunner->moveToThread(m_rcvRunnerThread);
 
-    connect(m_rcvRunner, &ReceiverRunner::outputReady, this, [&](const QString &line) {
+    connect(m_rcvRunner, &ReceiverRunnerSSH::outputReady, this, [&](const QString &line) {
         static QRegularExpression regex = QRegularExpression("[\\r\\n]");
         QString trimmed = line;
         trimmed.remove(regex);
@@ -228,25 +250,35 @@ bool MainGUI::startReceivers() {
         qDebug() << "RCVRunner output: " << trimmed;
     });
 
-    connect(m_rcvRunnerThread, &QThread::started, m_rcvRunner, &ReceiverRunner::start);
-    connect(m_rcvRunner, &ReceiverRunner::finished, m_rcvRunnerThread, &QThread::quit);
+    connect(m_rcvRunnerThread, &QThread::started, m_rcvRunner, &ReceiverRunnerSSH::start);
+    connect(m_rcvRunner, &ReceiverRunnerSSH::finished, m_rcvRunnerThread, &QThread::quit);
     connect(m_rcvRunnerThread, &QThread::finished, m_rcvRunnerThread, &QObject::deleteLater);
     connect(m_rcvRunnerThread, &QThread::finished, this, [this]() {
         // Upon stop, we disable the start button while waiting for the python thread to exit. Once the thred emits finished it should be safe to enable again
         m_rcvRunner = nullptr;
         m_rcvRunnerThread = nullptr;
         ui->startReceiversButt->setEnabled(true);
+
+        if (m_receiversRunning) {
+            // if m_receiversRunning is set to True when we hit this, then the rcvRunner has exited unexpectedlys since
+            // when stop button is pressed, m_receiversRunning is set to false before doing any real stop activities
+            qDebug() << "Seems m_rcvRunnerThread finished unexpectedly";
+            m_receiversRunning = false;
+            ui->startReceiversButt->setText("Start (SSH) Receivers");
+        }
     });
 
+    updateAllSSHReceiverStatusRows("Starting");
     m_rcvRunnerThread->start();
     return true;
 }
 
 bool MainGUI::stopReceivers() {
     if (m_rcvRunner != nullptr) {
-        QMetaObject::invokeMethod(m_rcvRunner, "stop", Qt::QueuedConnection);
+        QMetaObject::invokeMethod(m_rcvRunner, "stop", Qt::DirectConnection);
         ui->startReceiversButt->setEnabled(false);
     }
+    updateAllSSHReceiverStatusRows("Not running");
     return true;
 }
 
@@ -269,3 +301,21 @@ void MainGUI::on_actionReceiver_console_triggered()
     m_receiverConsole->show();
 }
 
+void MainGUI::periodicUIUpdate()
+{
+    auto currTime = std::chrono::system_clock::now();
+    if (m_rcvRunner != nullptr)
+    {
+        for (auto& connection : m_rcvRunner->getAliveTimestamps())
+        {
+            if (connection.second == std::chrono::system_clock::time_point{}) continue; // alive ts not set -> dont update
+
+            double secondsAgo =
+                std::chrono::duration<double>(currTime - connection.second).count();
+            QString status = "Running (last alive ";
+            status.append(QString::number(secondsAgo, 'f', 1));
+            status.append("s ago)");
+            updateReceiverStatusRow(connection.first, status);
+        }
+    }
+}

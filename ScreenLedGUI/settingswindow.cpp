@@ -6,12 +6,14 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QDebug>
+#include <QNetworkInterface>
 
 SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig *config, std::function<void(ScreenCapConfig)> updateConfigFunc)
     : QWidget(parent)
     , ui(new Ui::SettingsWindow)
 {
     ui->setupUi(this);
+    setWindowTitle("ScreenLed Configuration");
     m_configptr = config;
     m_updateConfigFunc = updateConfigFunc;
     populateSettingsWindow();
@@ -44,6 +46,7 @@ void SettingsWindow::populateSettingsWindow()
     }
 
     populateReceiverRows();
+    populateNWInterfaceSelector(QString::fromStdString(m_configptr->c_preferredLocalNetworkInterface));
 }
 
 void SettingsWindow::populateReceiverRows() {
@@ -134,6 +137,7 @@ void SettingsWindow::saveConfig() {
     newConf.c_screenResY = ui->ScreenResY->value();
     newConf.c_algo = m_configptr->c_algo; // this is not in settings panel, need to take from currently active config
     newConf.c_autorunScriptPath = ui->AutoRunScriptVal->text();
+    newConf.c_preferredLocalNetworkInterface = ui->nwInterfaceVal->currentData().toString().toStdString();
 
     if (!m_receiverConfigRows.empty()) {
         newConf.c_clientInfos.clear(); // if we have some receivers, default localhost receiver can be removed. Otherwise lets keep it
@@ -194,3 +198,46 @@ void SettingsWindow::on_AutoRunScriptSelect_clicked()
     }
 }
 
+void SettingsWindow::populateNWInterfaceSelector(QString selectedName)
+{
+    qDebug() << "populateNWInterfaceSelector target selected interface" << selectedName;
+
+    ui->nwInterfaceVal->addItem("None", "");
+    if (selectedName.isEmpty())
+    {
+        ui->nwInterfaceVal->setCurrentIndex(0);
+    }
+    const auto interfaces = QNetworkInterface::allInterfaces();
+
+    std::vector<QNetworkInterface> validInterfaces;
+    std::copy_if(
+        interfaces.begin(),
+        interfaces.end(),
+        std::back_inserter(validInterfaces),
+        [](const QNetworkInterface &iface) {
+            const auto flags = iface.flags();
+            return (flags & QNetworkInterface::IsUp) &&
+                   (flags & QNetworkInterface::IsRunning) &&
+                   !(flags & QNetworkInterface::IsLoopBack);
+        });
+    int idx = 1;
+    for (const auto &interface : validInterfaces)
+    {
+        QString t = interface.humanReadableName() + ": ";
+        for (const QNetworkAddressEntry &entry : interface.addressEntries())
+        {
+            const QHostAddress &addr = entry.ip();
+            if (addr.protocol() == QAbstractSocket::IPv4Protocol)
+            {
+                t.append(addr.toString());
+                break;
+            }
+        }
+        ui->nwInterfaceVal->addItem(t, interface.name());
+        if (interface.name() == selectedName)
+        {
+            ui->nwInterfaceVal->setCurrentIndex(idx);
+        }
+        idx++;
+    }
+}

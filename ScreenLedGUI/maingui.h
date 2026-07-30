@@ -4,6 +4,8 @@
 
 #include <QMainWindow>
 #include <QHBoxLayout>
+#include <QThread>
+#include <QTimer>
 
 #include "consts.h"
 #if defined(WIN32)
@@ -12,7 +14,7 @@
 #include "ScreenCapLinux.h"
 #endif
 
-#include "receiverrunner.h"
+#include "receiverrunnerssh.h"
 #include "receiverconsole.h"
 
 namespace Ui {
@@ -53,11 +55,14 @@ private:
     void onExitActions();
     bool startReceivers();
     bool stopReceivers();
+    void periodicUIUpdate();
+    void updateReceiverStatusRow(QString host, QString status);
+    void updateAllSSHReceiverStatusRows(QString staus);
 
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;
     runStatus m_libRunStatus = runStatus::IDLE;
-    ReceiverRunner* m_rcvRunner = nullptr;
+    ReceiverRunnerSSH* m_rcvRunner = nullptr;
     QThread* m_rcvRunnerThread = nullptr;
     static constexpr int m_maxRcvRunnerLines = 100;
     std::vector<QString> m_rcvRunnerOutput;
@@ -65,6 +70,7 @@ private:
     bool m_receiverConsoleOpen = false;
     bool m_receiverConsoleInitialFillOngoing = false; // to prevent live output from being appended when console is just opened
     ReceiverConsole *m_receiverConsole = nullptr;
+    QTimer *m_uiUpdateTimer = new QTimer(this);
 
     // screenledlib things
     QThread* m_screenLibTh = new QThread;

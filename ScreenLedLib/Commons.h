@@ -57,6 +57,7 @@ struct ScreenCapConfig {
     int c_screenResY = 1080;
     ScreenLedAlgorithm c_algo = ScreenLedAlgorithm::MEAN_DEFAULT;
     QString c_autorunScriptPath = "";
+    std::string c_preferredLocalNetworkInterface = "";
 };
 
 inline bool isWindows() {

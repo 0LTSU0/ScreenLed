@@ -48,6 +48,7 @@ private:
     // funcs
     void populateSettingsWindow();
     void populateReceiverRows();
+    void populateNWInterfaceSelector(QString selectedName);
     void newReceiverRow();
     static QHBoxLayout* createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect, QLineEdit *ledStripArg);
     bool validateFields();
