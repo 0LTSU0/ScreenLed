@@ -318,4 +318,10 @@ void MainGUI::periodicUIUpdate()
             updateReceiverStatusRow(connection.first, status);
         }
     }
+    if (m_screenCapWorker != nullptr && m_screenCapWorker->m_isRunning)
+    {
+        ui->statusbar->showMessage("Running FPS: " + QString::number(m_screenCapWorker->m_fps));
+    } else {
+        ui->statusbar->showMessage("IDLE");
+    }
 }

@@ -69,6 +69,7 @@ struct ScreenCapConfig {
     QString c_autorunScriptPath = "";
     std::string c_preferredLocalNetworkInterface = "";
     activeScreenArea c_analyzerScreenArea = activeScreenArea::FULL;
+    int c_analyzerDownscaleFactor = 1;
 };
 
 inline bool isWindows() {

@@ -50,6 +50,7 @@ private:
     void populateReceiverRows();
     void populateNWInterfaceSelector(QString selectedName);
     void populateScreenAreaSelector(activeScreenArea selectedVal);
+    void populateAnalyzerDownscaleFactorSelector(int selectedVal);
     void newReceiverRow();
     static QHBoxLayout* createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect, QLineEdit *ledStripArg);
     bool validateFields();

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>717</width>
-    <height>478</height>
+    <width>928</width>
+    <height>504</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,9 +16,6 @@
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
@@ -31,9 +28,6 @@
     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,2,2,1">
      <item>
       <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -47,9 +41,6 @@
        <property name="text">
         <string>Debug SS interval (only Windows)</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-       </property>
       </widget>
      </item>
      <item>
@@ -57,9 +48,6 @@
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -74,9 +62,6 @@
     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2,2,1">
      <item>
       <spacer name="horizontalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -90,9 +75,6 @@
        <property name="text">
         <string>Cliboard debug SS (only Windows)</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-       </property>
       </widget>
      </item>
      <item>
@@ -104,9 +86,6 @@
      </item>
      <item>
       <spacer name="horizontalSpacer_4">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -121,9 +100,6 @@
     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,2,2,1">
      <item>
       <spacer name="horizontalSpacer_5">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -137,9 +113,6 @@
        <property name="text">
         <string>Debug Preview</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-       </property>
       </widget>
      </item>
      <item>
@@ -151,9 +124,6 @@
      </item>
      <item>
       <spacer name="horizontalSpacer_6">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -168,9 +138,6 @@
     <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,2,1,1,1">
      <item>
       <spacer name="horizontalSpacer_7">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -183,9 +150,6 @@
       <widget class="QLabel" name="ScreenRes">
        <property name="text">
         <string>Screen Resolution</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -216,9 +180,6 @@
     <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,2,2,1">
      <item>
       <spacer name="horizontalSpacer_8">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -231,9 +192,6 @@
       <widget class="QLabel" name="AutoRunScript">
        <property name="text">
         <string>Autorun Script Path</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -253,9 +211,6 @@
     <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,2,2,1">
      <item>
       <spacer name="horizontalSpacer_9">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -269,9 +224,6 @@
        <property name="text">
         <string>Network interface for SSH feedback</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-       </property>
       </widget>
      </item>
      <item>
@@ -279,9 +231,6 @@
      </item>
      <item>
       <spacer name="horizontalSpacer_10">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -296,9 +245,6 @@
     <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,2,2,1">
      <item>
       <spacer name="horizontalSpacer_11">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -312,9 +258,6 @@
        <property name="text">
         <string>SS Analysis Area</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-       </property>
       </widget>
      </item>
      <item>
@@ -322,8 +265,48 @@
      </item>
      <item>
       <spacer name="horizontalSpacer_12">
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="1,2,2,1">
+     <item>
+      <spacer name="horizontalSpacer_13">
        <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="AnalyzerDownscaleFactor">
+       <property name="text">
+        <string>SS Analysis Downscale factor</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="AnalyzerDownscaleFactorVal"/>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_14">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -337,9 +320,6 @@
    </item>
    <item>
     <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
@@ -353,9 +333,6 @@
    </item>
    <item>
     <spacer name="verticalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>

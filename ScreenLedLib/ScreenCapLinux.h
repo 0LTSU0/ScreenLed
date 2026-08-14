@@ -25,6 +25,7 @@ public:
     void initScreenShotting();
     void deinitScreenShotting();
     void takeScreenShot();
+    void convertToCommonSSFormat(void* ximage); // Actially XImage*, see below
     void sendRGBData(const char* buf);
     bool openUDPPort(const char* host, int port);
     bool closeUDPPorts();

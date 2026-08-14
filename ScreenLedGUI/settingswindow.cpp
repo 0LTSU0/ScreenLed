@@ -48,6 +48,7 @@ void SettingsWindow::populateSettingsWindow()
     populateReceiverRows();
     populateNWInterfaceSelector(QString::fromStdString(m_configptr->c_preferredLocalNetworkInterface));
     populateScreenAreaSelector(m_configptr->c_analyzerScreenArea);
+    populateAnalyzerDownscaleFactorSelector(m_configptr->c_analyzerDownscaleFactor);
 }
 
 void SettingsWindow::populateReceiverRows() {
@@ -140,6 +141,7 @@ void SettingsWindow::saveConfig() {
     newConf.c_autorunScriptPath = ui->AutoRunScriptVal->text();
     newConf.c_preferredLocalNetworkInterface = ui->nwInterfaceVal->currentData().toString().toStdString();
     newConf.c_analyzerScreenArea = static_cast<activeScreenArea>(ui->analAreaVal->currentData().toInt());
+    newConf.c_analyzerDownscaleFactor = ui->AnalyzerDownscaleFactorVal->currentData().toInt();
 
     if (!m_receiverConfigRows.empty()) {
         newConf.c_clientInfos.clear(); // if we have some receivers, default localhost receiver can be removed. Otherwise lets keep it
@@ -256,4 +258,18 @@ void SettingsWindow::populateScreenAreaSelector(activeScreenArea selectedVal)
         i++;
     }
     ui->analAreaVal->setCurrentIndex(activeIndex);
+}
+
+void SettingsWindow::populateAnalyzerDownscaleFactorSelector(int selectedVal)
+{
+    int activeIndex = -1;
+    for (int i=1; i <= 3; i++)
+    {
+        ui->AnalyzerDownscaleFactorVal->addItem(QString::number(i), i);
+        if (i == selectedVal)
+        {
+            activeIndex = i - 1;
+        }
+    }
+    ui->AnalyzerDownscaleFactorVal->setCurrentIndex(activeIndex);
 }

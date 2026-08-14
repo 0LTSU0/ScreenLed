@@ -20,6 +20,8 @@ add_library(ScreenLedLib
 
 )
 
+set_source_files_properties(ScreenCapLinux.cpp PROPERTIES COMPILE_OPTIONS "-mssse3")
+
 if (UNIX)
 	# sudo apt install libx11-dev libxext-dev libxrandr-dev
 	# sudo apt install libopencv-dev

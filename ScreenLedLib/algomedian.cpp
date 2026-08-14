@@ -22,7 +22,7 @@ void AlgoMedian::analyzeColors(std::vector<rgbValue>& res, const ScreenCapConfig
     std::vector<std::vector<int>> greens(NUM_LED_SEGMENTS);
     std::vector<std::vector<int>> blues(NUM_LED_SEGMENTS);
 
-    int xPerSegment = conf.c_screenResX / NUM_LED_SEGMENTS;
+    int xPerSegment = pixelData.width / NUM_LED_SEGMENTS;
     int res_y = pixelData.height;
 
     int starty, endy;
@@ -43,9 +43,8 @@ void AlgoMedian::analyzeColors(std::vector<rgbValue>& res, const ScreenCapConfig
     }
 
     for (int y = starty; y < endy; y += 10) {
-        int currentSegment = 0;
         for (int x = 0; x < pixelData.width; x += 4) {
-            if (x % xPerSegment == 0 && x != 0) currentSegment++;
+            int currentSegment = std::min(x / xPerSegment, NUM_LED_SEGMENTS - 1);
             int r, g, b;
             pixelData.getPixel(x, y, r, g, b);
             reds[currentSegment].push_back(r);
