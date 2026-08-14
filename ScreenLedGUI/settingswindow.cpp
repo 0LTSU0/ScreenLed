@@ -47,6 +47,7 @@ void SettingsWindow::populateSettingsWindow()
 
     populateReceiverRows();
     populateNWInterfaceSelector(QString::fromStdString(m_configptr->c_preferredLocalNetworkInterface));
+    populateScreenAreaSelector(m_configptr->c_analyzerScreenArea);
 }
 
 void SettingsWindow::populateReceiverRows() {
@@ -138,6 +139,7 @@ void SettingsWindow::saveConfig() {
     newConf.c_algo = m_configptr->c_algo; // this is not in settings panel, need to take from currently active config
     newConf.c_autorunScriptPath = ui->AutoRunScriptVal->text();
     newConf.c_preferredLocalNetworkInterface = ui->nwInterfaceVal->currentData().toString().toStdString();
+    newConf.c_analyzerScreenArea = static_cast<activeScreenArea>(ui->analAreaVal->currentData().toInt());
 
     if (!m_receiverConfigRows.empty()) {
         newConf.c_clientInfos.clear(); // if we have some receivers, default localhost receiver can be removed. Otherwise lets keep it
@@ -240,4 +242,18 @@ void SettingsWindow::populateNWInterfaceSelector(QString selectedName)
         }
         idx++;
     }
+}
+
+void SettingsWindow::populateScreenAreaSelector(activeScreenArea selectedVal)
+{
+    int activeIndex = 0;
+    int i = 0;
+    for (auto& [type, name] : screenAnalysisAreaMap) {
+        ui->analAreaVal->addItem(QString::fromStdString(name), static_cast<int>(type));
+        if (type == selectedVal) {
+            activeIndex = i;
+        }
+        i++;
+    }
+    ui->analAreaVal->setCurrentIndex(activeIndex);
 }

@@ -20,6 +20,12 @@ enum receiverType {
     ESP32
 };
 
+enum activeScreenArea {
+    FULL,
+    CENTER_THIRD,
+    AUTO
+};
+
 struct rgbValue {
     int r = 0;
     int g = 0;
@@ -47,6 +53,10 @@ inline std::map<receiverType, std::string> receiverTypeValueMap{
     {receiverType::ESP32,        "ESP32"}
 };
 
+inline std::map<activeScreenArea, std::string> screenAnalysisAreaMap{{activeScreenArea::FULL, "Full"},
+                                                                  {activeScreenArea::CENTER_THIRD, "Center Third"},
+                                                                  {activeScreenArea::AUTO, "Auto"}};
+
 // config struct for ScreenLedLib (NOTE: screenCaptureWorkerBase::createConfigFile() uses this definition for default values)
 struct ScreenCapConfig {
     int c_debugSSInterval = 10;
@@ -58,6 +68,7 @@ struct ScreenCapConfig {
     ScreenLedAlgorithm c_algo = ScreenLedAlgorithm::MEAN_DEFAULT;
     QString c_autorunScriptPath = "";
     std::string c_preferredLocalNetworkInterface = "";
+    activeScreenArea c_analyzerScreenArea = activeScreenArea::FULL;
 };
 
 inline bool isWindows() {
@@ -67,5 +78,17 @@ inline bool isWindows() {
     return false;
 #endif
 }
+
+struct RawPixelBuffer {
+    int width  = 0;
+    int height = 0;
+    // tightly packed RGB, row-major: buf[(y*width + x)*3 + {0=R,1=G,2=B}]
+    std::vector<unsigned char> rgb;
+
+    inline void getPixel(int x, int y, int& r, int& g, int& b) const {
+        const unsigned char* p = &rgb[(static_cast<size_t>(y) * width + x) * 3];
+        r = p[0]; g = p[1]; b = p[2];
+    }
+};
 
 #endif // COMMONS_H

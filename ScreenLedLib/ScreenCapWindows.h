@@ -29,6 +29,7 @@ public:
     void initScreenShotting();
     void deinitScreenShotting();
     void takeScreenShot();
+    void convertToCommonSSFormat(const std::shared_ptr<DWORD[]>& pixelData);
     void sendRGBData(const char* buffer);
     bool openUDPPort(const char* host, int port);
     bool closeUDPPorts();

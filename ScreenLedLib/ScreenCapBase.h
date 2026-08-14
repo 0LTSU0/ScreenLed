@@ -39,6 +39,7 @@ public slots:
 
 public:
     // common vars. Note to self: these need to be public so that the classes deriving this can use them
+    RawPixelBuffer m_CommonPixelData;
     std::string m_configPath;
     ScreenCapConfig m_conf;
     std::atomic_bool m_isRunning{false};

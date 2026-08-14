@@ -49,6 +49,7 @@ private:
     void populateSettingsWindow();
     void populateReceiverRows();
     void populateNWInterfaceSelector(QString selectedName);
+    void populateScreenAreaSelector(activeScreenArea selectedVal);
     void newReceiverRow();
     static QHBoxLayout* createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect, QLineEdit *ledStripArg);
     bool validateFields();
