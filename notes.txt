@@ -1,0 +1,102 @@
+Original
+RawPixelBuffer toRawPixelBuffer(const ScreenCapConfig& /*conf*/, XImage* image) {
+    RawPixelBuffer img;
+    if (!image || !image->data) return img; // empty -> caller can bail
+    img.width  = image->width;
+    img.height = image->height;
+    img.rgb.resize(static_cast<size_t>(img.width) * img.height * 3);
+
+    for (int y = 0; y < img.height; ++y) {
+        for (int x = 0; x < img.width; ++x) {
+            unsigned long pixel = XGetPixel(image, x, y);
+            unsigned char* p = &img.rgb[(static_cast<size_t>(y) * img.width + x) * 3];
+            p[0] = static_cast<unsigned char>((pixel & image->red_mask)   >> 16);
+            p[1] = static_cast<unsigned char>((pixel & image->green_mask) >> 8);
+            p[2] = static_cast<unsigned char>(pixel & image->blue_mask);
+        }
+    }
+    return img;
+}
+
+
+
+
+Direct-buffer version (scalar first, to establish correctness)
+cpp
+RawPixelBuffer toRawPixelBuffer(const ScreenCapConfig& /*conf*/, XImage* image)
+{
+    RawPixelBuffer img;
+    if (!image || !image->data) return img;
+
+    img.width  = image->width;
+    img.height = image->height;
+    img.rgb.resize(static_cast<size_t>(img.width) * img.height * 3);
+
+    // Common fast path: 32bpp ZPixmap, byte order matches host (typical on x86 Linux/X11)
+    if (image->bits_per_pixel == 32 &&
+        image->byte_order == LSBFirst &&
+        image->red_mask   == 0x00FF0000 &&
+        image->green_mask == 0x0000FF00 &&
+        image->blue_mask  == 0x000000FF)
+    {
+        const int stride = image->bytes_per_line; // may include padding, don't assume width*4
+        const unsigned char* src = reinterpret_cast<const unsigned char*>(image->data);
+        unsigned char* dst = img.rgb.data();
+
+        for (int y = 0; y < img.height; ++y) {
+            const unsigned char* srcRow = src + static_cast<size_t>(y) * stride;
+            unsigned char* dstRow = dst + static_cast<size_t>(y) * img.width * 3;
+            for (int x = 0; x < img.width; ++x) {
+                // srcRow[x*4 + 0..3] = B, G, R, X  (little-endian 0x00RRGGBB)
+                dstRow[x*3+0] = srcRow[x*4+2]; // R
+                dstRow[x*3+1] = srcRow[x*4+1]; // G
+                dstRow[x*3+2] = srcRow[x*4+0]; // B
+            }
+        }
+        return img;
+    }
+
+    // Fallback: slow but correct, for unusual visuals/depths
+    for (int y = 0; y < img.height; ++y) {
+        for (int x = 0; x < img.width; ++x) {
+            unsigned long pixel = XGetPixel(image, x, y);
+            unsigned char* p = &img.rgb[(static_cast<size_t>(y) * img.width + x) * 3];
+            p[0] = static_cast<unsigned char>((pixel & image->red_mask)   >> 16);
+            p[1] = static_cast<unsigned char>((pixel & image->green_mask) >> 8);
+            p[2] = static_cast<unsigned char>(pixel & image->blue_mask);
+        }
+    }
+    return img;
+}
+
+Important details specific to X11 that don't exist on the Windows side:
+
+bytes_per_line (stride) may not equal width * 4. X servers can pad rows. Always use image->bytes_per_line, never assume tight packing — this is a common source of diagonal-shear-looking bugs if ignored.
+byte_order and masks vary by visual/server. The fast path above assumes the typical case (32bpp TrueColor, little-endian, standard RGB masks) which covers the vast majority of real X11 desktops on x86, but isn't guaranteed. Keep the generic fallback for safety, or assert these properties once at startup and log/error if they don't hold, rather than checking every frame.
+This mirrors exactly what you already did on Windows: you don't need GetPixel-style APIs once you know the buffer layout, and the same is true here — XGetPixel is the X11 analogue of the "byte accessor" you already replaced.
+Now add SIMD — same code as Windows
+
+Since the byte layout is BGRX → RGB (same shuffle problem, just R/B swapped from before), reuse the intrinsic approach:
+
+cpp
+#include <immintrin.h> // works fine with GCC/Clang on Linux
+
+void convertRowBGRXtoRGB_SSE(const unsigned char* src, unsigned char* dst, int width) {
+    // pick bytes 2,1,0 (R,G,B from BGRX) per pixel, 4 pixels at a time
+    const __m128i mask = _mm_setr_epi8(
+        2,1,0, 6,5,4, 10,9,8, 14,13,12, -1,-1,-1,-1);
+
+    int x = 0;
+    for (; x + 4 <= width; x += 4) {
+        __m128i pix = _mm_loadu_si128(reinterpret_cast<const __m128i*>(src + x*4));
+        __m128i shuffled = _mm_shuffle_epi8(pix, mask);
+        std::memcpy(dst + x*3, &shuffled, 12);
+    }
+    for (; x < width; ++x) {
+        dst[x*3+0] = src[x*4+2]; // R
+        dst[x*3+1] = src[x*4+1]; // G
+        dst[x*3+2] = src[x*4+0]; // B
+    }
+}
+
+Then call this per row instead of the scalar inner loop in the fast path above — identical pattern to what you already did on Windows, just a different shuffle mask because the channel order is swapped (BGRX vs BGRA layout, but you want RGB out either way).
