@@ -11,7 +11,11 @@ if (WIN32)
 		Sender_Windows.h
 		Sender_Windows.cpp)
 else()
-	set(OS_SPECIFIC_SOURCES)
+	set(OS_SPECIFIC_SOURCES
+	ScreenCapper_Linux.cpp
+	ScreenCapper_Linux.h
+	Sender_Linux.h
+	Sender_Linux.cpp)
 endif()
 
 set(ALGO_SOURCES
@@ -33,7 +37,7 @@ add_library(ScreenLedLib STATIC
 )
 
 target_compile_definitions(ScreenLedLib PRIVATE WIN32_LEAN_AND_MEAN)
-#set_source_files_properties(ScreenCapLinux.cpp PROPERTIES COMPILE_OPTIONS "-mssse3")
+set_source_files_properties(ScreenCapper_Linux.cpp PROPERTIES COMPILE_OPTIONS "-mssse3")
 
 if (UNIX)
 	# sudo apt install libx11-dev libxext-dev libxrandr-dev

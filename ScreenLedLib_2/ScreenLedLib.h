@@ -7,6 +7,7 @@
 #include "Sender_Windows.h"
 #else
 #include "ScreenCapper_Linux.h"
+#include "Sender_Linux.h"
 #endif // _WIN32
 
 #include <QObject>
