@@ -310,7 +310,8 @@ void MainGUI::periodicUIUpdate()
     }
     if (m_screenLedLib.m_screenLedLibIsRunning)
     {
-        ui->statusbar->showMessage("Running FPS: " + QString::number(m_screenLedLib.getScreenCapFPS()));
+        ui->statusbar->showMessage("Running FPS: " + QString::number(m_screenLedLib.getScreenCapFPS(), 'f', 1) +
+                                   " Avg ss to sent delay: " + QString::number(m_screenLedLib.getAvgSSToSentDelay().count(), 'f', 0) + "ms");
     } else {
         ui->statusbar->showMessage("IDLE");
     }
