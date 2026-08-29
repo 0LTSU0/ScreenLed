@@ -2,6 +2,7 @@
 #include "QDebug"
 #include <chrono>
 #include <immintrin.h>
+#include <algorithm>
 
 void screenCaptureWorkerWindows::takeScreenShot() {
     int res_x = m_conf.c_screenResX;
@@ -79,15 +80,40 @@ void convertRowBGRAtoBGR_SSE(const unsigned char* src, unsigned char* dst, int w
 
 void screenCaptureWorkerWindows::convertToCommonSSFormat(const std::shared_ptr<DWORD[]>& pixelData)
 {
-    const int w = m_CommonPixelData.width;
-    const int h = m_CommonPixelData.height;
-    const int srcStride = m_conf.c_screenResX;
+    const int factor = std::max(1, m_conf.c_analyzerDownscaleFactor);
+    const int srcW = m_conf.c_screenResX;
+    const int srcH = m_conf.c_screenResY;
+    const int outW = srcW / factor;
+    const int outH = srcH / factor;
+
+    if (outW <= 0 || outH <= 0) return;
+
+    if (m_CommonPixelData.width != outW || m_CommonPixelData.height != outH) {
+        m_CommonPixelData.width  = outW;
+        m_CommonPixelData.height = outH;
+        m_CommonPixelData.rgb.resize(static_cast<size_t>(outW) * outH * 3);
+    }
+
+    const int srcStride = srcW; // stride is in pixels (DWORDs), not bytes, for this buffer
     const unsigned char* src = reinterpret_cast<const unsigned char*>(pixelData.get());
     unsigned char* dst = m_CommonPixelData.rgb.data();
 
-    for (int y = 0; y < h; ++y) {
-        convertRowBGRAtoBGR_SSE(src + static_cast<size_t>(y) * srcStride * 4,
-                                dst + static_cast<size_t>(y) * w * 3, w);
+    for (int y = 0; y < outH; ++y) {
+        const unsigned char* srcRow = src + static_cast<size_t>(y * factor) * srcStride * 4;
+        unsigned char* dstRow = dst + static_cast<size_t>(y) * outW * 3;
+
+        if (factor == 1) {
+            // contiguous row -> SIMD shuffle applies correctly
+            convertRowBGRAtoBGR_SSE(srcRow, dstRow, outW);
+        } else {
+            // strided sampling -> scalar
+            for (int x = 0; x < outW; ++x) {
+                const unsigned char* p = srcRow + (static_cast<size_t>(x) * factor) * 4;
+                dstRow[x*3+0] = p[0]; // B
+                dstRow[x*3+1] = p[1]; // G
+                dstRow[x*3+2] = p[2]; // R
+            }
+        }
     }
 }
 

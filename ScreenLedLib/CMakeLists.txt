@@ -10,13 +10,15 @@ else()
 	set(OS_SPECIFIC_SOURCES ScreenCapLinux.h ScreenCapLinux.cpp)
 endif()
 
-add_library(ScreenLedLib
+add_library(ScreenLedLib STATIC
 	ScreenCapBase.h
 	ScreenCapBase.cpp
 	${OS_SPECIFIC_SOURCES}
         algomean.h algomean.cpp
         Commons.h
         algomedian.h algomedian.cpp
+	Mailbox.h
+	analyzersender.h analyzersender.cpp
 
 )
 
@@ -35,6 +37,7 @@ endif()
 
 target_link_libraries(ScreenLedLib PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 if (WIN32)
+	target_compile_definitions(ScreenLedLib PRIVATE NOMINMAX)
 	target_link_libraries(ScreenLedLib PRIVATE ws2_32)
 endif()
 

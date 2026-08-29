@@ -8,13 +8,13 @@
 #include <QDebug>
 #include <QNetworkInterface>
 
-SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig *config, std::function<void(ScreenCapConfig)> updateConfigFunc)
+SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig config, std::function<void(ScreenCapConfig)> updateConfigFunc)
     : QWidget(parent)
     , ui(new Ui::SettingsWindow)
 {
     ui->setupUi(this);
     setWindowTitle("ScreenLed Configuration");
-    m_configptr = config;
+    m_config = config;
     m_updateConfigFunc = updateConfigFunc;
     populateSettingsWindow();
 }
@@ -26,16 +26,12 @@ SettingsWindow::~SettingsWindow()
 
 void SettingsWindow::populateSettingsWindow()
 {
-    if (m_configptr == nullptr) {
-        return; //TODO: error message
-    }
-
-    ui->AutoRunScriptVal->setText(m_configptr->c_autorunScriptPath);
-    ui->DebugPreviewVal->setCheckState(m_configptr->c_showDebugPreview ? Qt::Checked : Qt::Unchecked);
-    ui->DebugSSVal->setCheckState(m_configptr->c_keepDebugSSOnClipboard ? Qt::Checked : Qt::Unchecked);
-    ui->DebugSSintervalVal->setText(QString::number(m_configptr->c_debugSSInterval));
-    ui->ScreenResX->setValue(m_configptr->c_screenResX);
-    ui->ScreenResY->setValue(m_configptr->c_screenResY);
+    ui->AutoRunScriptVal->setText(m_config.c_autorunScriptPath);
+    ui->DebugPreviewVal->setCheckState(m_config.c_showDebugPreview ? Qt::Checked : Qt::Unchecked);
+    ui->DebugSSVal->setCheckState(m_config.c_keepDebugSSOnClipboard ? Qt::Checked : Qt::Unchecked);
+    ui->DebugSSintervalVal->setText(QString::number(m_config.c_debugSSInterval));
+    ui->ScreenResX->setValue(m_config.c_screenResX);
+    ui->ScreenResY->setValue(m_config.c_screenResY);
 
     if (isWindows()) {
         // windows does not have debug preview option atm (and well on linux also relies on system libs so TODO add to this project
@@ -46,13 +42,13 @@ void SettingsWindow::populateSettingsWindow()
     }
 
     populateReceiverRows();
-    populateNWInterfaceSelector(QString::fromStdString(m_configptr->c_preferredLocalNetworkInterface));
-    populateScreenAreaSelector(m_configptr->c_analyzerScreenArea);
-    populateAnalyzerDownscaleFactorSelector(m_configptr->c_analyzerDownscaleFactor);
+    populateNWInterfaceSelector(QString::fromStdString(m_config.c_preferredLocalNetworkInterface));
+    populateScreenAreaSelector(m_config.c_analyzerScreenArea);
+    populateAnalyzerDownscaleFactorSelector(m_config.c_analyzerDownscaleFactor);
 }
 
 void SettingsWindow::populateReceiverRows() {
-    for (auto client : m_configptr->c_clientInfos) {
+    for (auto client : m_config.c_clientInfos) {
         QLineEdit *hostFiled = new QLineEdit();
         QLineEdit *portField = new QLineEdit();
         QComboBox *typeSelect = new QComboBox();
@@ -137,7 +133,7 @@ void SettingsWindow::saveConfig() {
     newConf.c_showDebugPreview = ui->DebugPreviewVal->checkState() == Qt::Checked;
     newConf.c_screenResX = ui->ScreenResX->value();
     newConf.c_screenResY = ui->ScreenResY->value();
-    newConf.c_algo = m_configptr->c_algo; // this is not in settings panel, need to take from currently active config
+    newConf.c_algo = m_config.c_algo; // this is not in settings panel, need to take from currently active config
     newConf.c_autorunScriptPath = ui->AutoRunScriptVal->text();
     newConf.c_preferredLocalNetworkInterface = ui->nwInterfaceVal->currentData().toString().toStdString();
     newConf.c_analyzerScreenArea = static_cast<activeScreenArea>(ui->analAreaVal->currentData().toInt());
@@ -155,7 +151,7 @@ void SettingsWindow::saveConfig() {
         newConf.c_clientInfos.push_back(newClient);
     }
 
-    m_updateConfigFunc(newConf);
+    m_updateConfigFunc(newConf); // will be saved on disk
 }
 
 void SettingsWindow::on_SaveButton_clicked()

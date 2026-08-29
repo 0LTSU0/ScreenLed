@@ -9,9 +9,10 @@
 #include "Commons.h"
 #include "algomean.h"
 #include "algomedian.h"
+#include "Mailbox.h"
 
 #define UDP_PACKET_SIZE 1024
-#define MAX_FPS 60 // especially on Linux the performance is so good that we have to throttle down the rate or raspi cant keep up
+#define MAX_FPS 120 // especially on Linux the performance is so good that we have to throttle down the rate or raspi cant keep up
 
 // Base class for taking screenshots and analyzing RGB data from them. This class implements
 // everything cross-platform and screenCaptureWorkerLinux/screenCaptureWorkerWindows
@@ -50,4 +51,7 @@ public:
     // different algo classes
     AlgoMean m_meanAlgo = AlgoMean();
     AlgoMedian m_medianAlgo = AlgoMedian();
+
+private:
+    LatestOnlyMailbox<std::optional<RawPixelBuffer>> mailbox;
 };

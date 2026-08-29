@@ -5,6 +5,7 @@
 #include <chrono>
 #include "json.hpp"
 #include <QThread>
+#include <QDebug>
 
 using json = nlohmann::json;
 
@@ -23,7 +24,12 @@ void screenCaptureWorkerBase::run() {
     while(m_isRunning) {
         auto loopStartTime = std::chrono::high_resolution_clock::now();
         takeScreenShot();
+        auto st = std::chrono::high_resolution_clock::now();
         runAnalFunc();
+        auto et = std::chrono::high_resolution_clock::now();
+        double ms = std::chrono::duration<double, std::milli>(et - st).count();
+        qDebug() << "Analyzer took" << ms << "ms";
+
         sendRGBData(createRGBDataString().c_str());
         if (perfCtr == 10) {
             std::chrono::duration<double> timePer10Frames = std::chrono::high_resolution_clock::now() - measureStartTime;

@@ -17,6 +17,7 @@ void ScreenLedLib::start()
 	m_screenCapWorker.start();
 	m_AnalyzerWorker.start();
 	m_Sender.start();
+    m_screenLedLibIsRunning = true;
 }
 
 void ScreenLedLib::stop()
@@ -24,7 +25,8 @@ void ScreenLedLib::stop()
 	// shutdown order needs to be reverse so that blocking mailbox get()s dont hang
 	m_Sender.stop();
 	m_AnalyzerWorker.stop();
-	m_screenCapWorker.stop();	
+    m_screenCapWorker.stop();
+    m_screenLedLibIsRunning = false;
 }
 
 double ScreenLedLib::getScreenCapFPS()

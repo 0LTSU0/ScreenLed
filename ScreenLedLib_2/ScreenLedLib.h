@@ -42,6 +42,7 @@ public:
 	//vars
 	LatestOnlyMailbox<RawPixelBuffer> m_screenshotMailbox;
 	LatestOnlyMailbox<rgbAnalysisResult> m_rgbDataMailbox;
+    std::atomic<bool> m_screenLedLibIsRunning = false;
 
 private:
 	ScreenCapConfig m_conf;
