@@ -1,9 +1,11 @@
 #include <Analyzer.h>
 #include <QDebug>
 #include <chrono>
+#include <iostream>
 
 void Analyzer::updateConfig(ScreenCapConfig conf)
 {
+	std::cout << "Analyzer received conf update. Selected algo is " << conf.c_algo << std::endl;
 	std::lock_guard lock(m_confMutex);
 	m_config = conf;
 }

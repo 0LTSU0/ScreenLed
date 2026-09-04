@@ -47,7 +47,8 @@ struct clientInfo {
 };
 
 inline std::map<std::string, ScreenLedAlgorithm> algoNameMap{{"Default: mean", ScreenLedAlgorithm::MEAN_DEFAULT},
-                                                             {"Median", ScreenLedAlgorithm::MEDIAN}};
+                                                             {"Median", ScreenLedAlgorithm::MEDIAN},
+                                                             {"FlashBoost", ScreenLedAlgorithm::FLASH_BOOST}};
 
 inline std::map<std::string, receiverType> receiverTypeNameMap{{"Dummy", receiverType::DUMMY},
                                                                {"Raspi (ssh)", receiverType::RASPI_SSH},
