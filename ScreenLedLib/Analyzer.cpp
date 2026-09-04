@@ -28,6 +28,9 @@ void Analyzer::run()
 			case ScreenLedAlgorithm::MEDIAN:
 				m_algoMedian.analyzeColors(m_analysisResult.rgb_values, m_config, pixelbuffer);
 				break;
+			case ScreenLedAlgorithm::FLASH_BOOST:
+				m_algoFlashBoost.analyzeColors(m_analysisResult.rgb_values, m_config, pixelbuffer);
+				break;
 			default:
 				qDebug() << "Unknown ScreenLedAlgorithm in analyzer. Cannot process frame";
 				was_processed = false;

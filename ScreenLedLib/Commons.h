@@ -11,7 +11,8 @@
 
 enum ScreenLedAlgorithm {
     MEAN_DEFAULT,
-    MEDIAN
+    MEDIAN,
+    FLASH_BOOST
 };
 
 enum receiverType {

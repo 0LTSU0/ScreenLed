@@ -7,7 +7,7 @@
 ScreenCapConfig create_test_config()
 {
 	auto config = ScreenCapConfig();
-	config.c_algo = ScreenLedAlgorithm::MEDIAN;
+	config.c_algo = ScreenLedAlgorithm::FLASH_BOOST;
 	config.c_screenResX = 3440;
 	config.c_screenResY = 1440;
 	config.c_analyzerScreenArea = activeScreenArea::CENTER_THIRD;
@@ -26,7 +26,7 @@ int main()
 	std::cout << "Starting ScreenLedLib from main app" << std::endl;
 	sl_lib.start();
 
-	for (int i = 0; i < 60; i++)
+	while (true)
 	{
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		std::cout << "Screencap FPS: " << sl_lib.getScreenCapFPS() << std::endl;
