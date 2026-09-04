@@ -62,6 +62,7 @@ set(PROJECT_SOURCES
         receiverconsole.h receiverconsole.cpp receiverconsole.ui
         receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
         errordialog.h errordialog.cpp errordialog.ui
+        configurator.h configurator.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -69,7 +70,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         qtresources.qrc
-        configurator.h configurator.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ScreenLedGUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
