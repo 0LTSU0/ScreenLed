@@ -27,7 +27,7 @@ class SettingsWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit SettingsWindow(QWidget *parent = nullptr, ScreenCapConfig *config = nullptr, std::function<void(ScreenCapConfig)> = nullptr);
+    explicit SettingsWindow(QWidget *parent = nullptr, ScreenCapConfig config = ScreenCapConfig(), std::function<void(ScreenCapConfig)> = nullptr);
     ~SettingsWindow();
 
 private slots:
@@ -41,7 +41,7 @@ private slots:
 
 private:
     Ui::SettingsWindow *ui;
-    ScreenCapConfig *m_configptr;
+    ScreenCapConfig m_config;
     std::function<void(ScreenCapConfig)> m_updateConfigFunc;
     std::vector<ReceiverConfigRow> m_receiverConfigRows;
 
@@ -49,6 +49,8 @@ private:
     void populateSettingsWindow();
     void populateReceiverRows();
     void populateNWInterfaceSelector(QString selectedName);
+    void populateScreenAreaSelector(activeScreenArea selectedVal);
+    void populateAnalyzerDownscaleFactorSelector(int selectedVal);
     void newReceiverRow();
     static QHBoxLayout* createRow(QLineEdit *hostFiled, QLineEdit *portField, QComboBox *typeSelect, QLineEdit *ledStripArg);
     bool validateFields();

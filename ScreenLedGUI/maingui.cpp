@@ -16,18 +16,6 @@ MainGUI::MainGUI(QWidget *parent)
     ui->setupUi(this);
     ui->statusbar->showMessage("IDLE");
 
-#if defined(WIN32)
-    m_screenCapWorker = new screenCaptureWorkerWindows(m_gConfPath);
-#else
-    m_screenCapWorker = new screenCaptureWorkerLinux(m_gConfPath);
-#endif
-    m_screenCapWorker->moveToThread(m_screenLibTh);
-#if defined(WIN32)
-    QObject::connect(m_screenLibTh, &QThread::started, m_screenCapWorker, &screenCaptureWorkerWindows::run);
-#else
-    QObject::connect(m_screenLibTh, &QThread::started, m_screenCapWorker, &screenCaptureWorkerLinux::run);
-#endif
-
     populateAlgoSelect();
     populateReceiverStatusRows();
 
@@ -42,7 +30,7 @@ MainGUI::~MainGUI()
 }
 
 void MainGUI::populateAlgoSelect() {
-    auto currentConfig = m_screenCapWorker->getCurrentConfig();
+    auto currentConfig = m_screenLedConfigurator.getCurrentConfig();
     int activeIndex = 0;
     int i = 0;
     for (const auto& val : algoNameMap) {
@@ -69,7 +57,7 @@ void MainGUI::populateReceiverStatusRows() {
         m_receiverStatusRows.clear();
     }
 
-    for (auto client : m_screenCapWorker->getCurrentConfig().c_clientInfos) {
+    for (auto client : m_screenLedConfigurator.getCurrentConfig().c_clientInfos) {
         QString statString = "Status N/A for this type";
         if (client.type == receiverType::RASPI_SSH) {
             statString = "Not running";
@@ -120,7 +108,7 @@ void MainGUI::onExitActions() {
     }
 
     // Make sure currently selected algo gets saved since its on the main window rather than configuration and thus has no save button
-    m_screenCapWorker->updateCurrentConfig(m_screenCapWorker->getCurrentConfig());
+    m_screenLedConfigurator.updateCurrentConfig(m_screenLedConfigurator.getCurrentConfig(), true);
 
     stopReceivers();
 }
@@ -136,7 +124,10 @@ void MainGUI::on_mainGUIAlgoSelect_currentTextChanged(const QString &arg1)
 {
     for (const auto& val : algoNameMap) {
         if (val.first == arg1.toStdString()) {
-            m_screenCapWorker->getCurrentConfig().c_algo = val.second;
+            auto conf = m_screenLedConfigurator.getCurrentConfig();
+            conf.c_algo = val.second;
+            m_screenLedConfigurator.updateCurrentConfig(conf, false); // dont flush algo select to disk
+            m_screenLedLib.updateConfig(conf);
             return;
         }
     }
@@ -169,9 +160,9 @@ void MainGUI::on_actionConfiguration_triggered()
     }
 
     SettingsWindow *settings = new SettingsWindow(nullptr, // no parent for it to be a real window
-                                                  &m_screenCapWorker->getCurrentConfig(),
+                                                  m_screenLedConfigurator.getCurrentConfig(),
                                                   [this](ScreenCapConfig conf) {
-                                                      m_screenCapWorker->updateCurrentConfig(conf);
+                                                      m_screenLedConfigurator.updateCurrentConfig(conf, true);
                                                   });
     settings->setAttribute(Qt::WA_DeleteOnClose);
     settings->setWindowModality(Qt::ApplicationModal);
@@ -187,14 +178,13 @@ void MainGUI::on_startButt_clicked()
 {
     switch (m_libRunStatus) {
     case runStatus::IDLE:
-        m_screenLibTh->start();
+        m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
+        m_screenLedLib.start();
         ui->startButt->setText("Stop");
         m_libRunStatus = runStatus::RUNNING;
         break;
     case runStatus::RUNNING:
-        m_screenCapWorker->stop();
-        m_screenLibTh->quit();
-        m_screenLibTh->wait();
+        m_screenLedLib.stop();
         ui->startButt->setText("Start");
         m_libRunStatus = runStatus::IDLE;
         break;
@@ -226,13 +216,13 @@ void MainGUI::on_startReceiversButt_clicked()
 
 bool MainGUI::startReceivers() {
     // App config needs to have network interface selected for this to work so verify it first
-    if (m_screenCapWorker->getCurrentConfig().c_preferredLocalNetworkInterface.empty())
+    if (m_screenLedConfigurator.getCurrentConfig().c_preferredLocalNetworkInterface.empty())
     {
         (new ErrorDialog())->Error("Network interface for feedback channel must be set in settings before SSH runner can be used.");
         return false;
     }
 
-    m_rcvRunner = new ReceiverRunnerSSH(m_screenCapWorker->getCurrentConfig().c_clientInfos, QString::fromStdString(m_screenCapWorker->getCurrentConfig().c_preferredLocalNetworkInterface));
+    m_rcvRunner = new ReceiverRunnerSSH(m_screenLedConfigurator.getCurrentConfig().c_clientInfos, QString::fromStdString(m_screenLedConfigurator.getCurrentConfig().c_preferredLocalNetworkInterface));
     m_rcvRunnerThread = new QThread();
     m_rcvRunner->moveToThread(m_rcvRunnerThread);
 
@@ -317,5 +307,12 @@ void MainGUI::periodicUIUpdate()
             status.append("s ago)");
             updateReceiverStatusRow(connection.first, status);
         }
+    }
+    if (m_screenLedLib.m_screenLedLibIsRunning)
+    {
+        ui->statusbar->showMessage("Running FPS: " + QString::number(m_screenLedLib.getScreenCapFPS(), 'f', 1) +
+                                   " Avg ss to sent delay: " + QString::number(m_screenLedLib.getAvgSSToSentDelay().count(), 'f', 0) + "ms");
+    } else {
+        ui->statusbar->showMessage("IDLE");
     }
 }

@@ -62,6 +62,7 @@ set(PROJECT_SOURCES
         receiverconsole.h receiverconsole.cpp receiverconsole.ui
         receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
         errordialog.h errordialog.cpp errordialog.ui
+        configurator.h configurator.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

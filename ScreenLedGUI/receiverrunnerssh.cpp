@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <QEventLoop>
 
-ReceiverRunnerSSH::ReceiverRunnerSSH(std::vector<clientInfo> &hosts, QString nwInterfaceName, QObject *parent)
+ReceiverRunnerSSH::ReceiverRunnerSSH(std::vector<clientInfo> hosts, QString nwInterfaceName, QObject *parent)
     : QObject(parent), m_clients(hosts), m_localNWInterfaceName(nwInterfaceName)
 {
 #ifdef Q_OS_WIN

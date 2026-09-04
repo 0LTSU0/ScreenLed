@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <QString>
+#include <chrono>
 
 #define NUM_LED_SEGMENTS 20 // TODO: make this adjustable
 
@@ -20,10 +21,21 @@ enum receiverType {
     ESP32
 };
 
+enum activeScreenArea {
+    FULL,
+    CENTER_THIRD,
+    AUTO
+};
+
 struct rgbValue {
     int r = 0;
     int g = 0;
     int b = 0;
+};
+
+struct rgbAnalysisResult {
+    std::vector<rgbValue> rgb_values;
+    std::chrono::steady_clock::time_point source_ss_timestamp{};
 };
 
 struct clientInfo {
@@ -47,6 +59,10 @@ inline std::map<receiverType, std::string> receiverTypeValueMap{
     {receiverType::ESP32,        "ESP32"}
 };
 
+inline std::map<activeScreenArea, std::string> screenAnalysisAreaMap{{activeScreenArea::FULL, "Full"},
+                                                                  {activeScreenArea::CENTER_THIRD, "Center Third"},
+                                                                  {activeScreenArea::AUTO, "Auto"}};
+
 // config struct for ScreenLedLib (NOTE: screenCaptureWorkerBase::createConfigFile() uses this definition for default values)
 struct ScreenCapConfig {
     int c_debugSSInterval = 10;
@@ -58,6 +74,8 @@ struct ScreenCapConfig {
     ScreenLedAlgorithm c_algo = ScreenLedAlgorithm::MEAN_DEFAULT;
     QString c_autorunScriptPath = "";
     std::string c_preferredLocalNetworkInterface = "";
+    activeScreenArea c_analyzerScreenArea = activeScreenArea::FULL;
+    int c_analyzerDownscaleFactor = 1;
 };
 
 inline bool isWindows() {
@@ -67,5 +85,19 @@ inline bool isWindows() {
     return false;
 #endif
 }
+
+struct RawPixelBuffer {
+    int width  = 0;
+    int height = 0;
+    // tightly packed RGB, row-major: buf[(y*width + x)*3 + {0=R,1=G,2=B}]
+    std::vector<unsigned char> rgb;
+    // timestamp of the image contained in this buffer
+    std::chrono::steady_clock::time_point ss_timestamp{};
+
+    inline void getPixel(int x, int y, int& r, int& g, int& b) const {
+        const unsigned char* p = &rgb[(static_cast<size_t>(y) * width + x) * 3];
+        r = p[0]; g = p[1]; b = p[2];
+    }
+};
 
 #endif // COMMONS_H

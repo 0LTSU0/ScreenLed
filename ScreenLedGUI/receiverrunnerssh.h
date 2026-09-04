@@ -42,7 +42,7 @@ class ReceiverRunnerSSH : public QObject
     Q_OBJECT
 
 public:
-    ReceiverRunnerSSH(std::vector<clientInfo> &clients, QString nwInterfaceName, QObject *parent = nullptr);
+    ReceiverRunnerSSH(std::vector<clientInfo> clients, QString nwInterfaceName, QObject *parent = nullptr);
     ~ReceiverRunnerSSH();
 
     std::vector<std::pair<QString, std::chrono::system_clock::time_point>> getAliveTimestamps();
