@@ -5,24 +5,39 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 if (WIN32)
-	set(OS_SPECIFIC_SOURCES ScreenCapWindows.h ScreenCapWindows.cpp)
+	set(OS_SPECIFIC_SOURCES
+		ScreenCapper_Windows.cpp
+		ScreenCapper_Windows.h
+		Sender_Windows.h
+		Sender_Windows.cpp)
 else()
-	set(OS_SPECIFIC_SOURCES ScreenCapLinux.h ScreenCapLinux.cpp)
+	set(OS_SPECIFIC_SOURCES
+	ScreenCapper_Linux.cpp
+	ScreenCapper_Linux.h
+	Sender_Linux.h
+	Sender_Linux.cpp)
 endif()
 
-add_library(ScreenLedLib STATIC
-	ScreenCapBase.h
-	ScreenCapBase.cpp
-	${OS_SPECIFIC_SOURCES}
-        algomean.h algomean.cpp
-        Commons.h
-        algomedian.h algomedian.cpp
-	Mailbox.h
-	analyzersender.h analyzersender.cpp
-
+set(ALGO_SOURCES
+	algomean.h
+	algomean.cpp
+	algomedian.h
+	algomedian.cpp
 )
 
-set_source_files_properties(ScreenCapLinux.cpp PROPERTIES COMPILE_OPTIONS "-mssse3")
+add_library(ScreenLedLib STATIC
+	ScreenLedLib.h
+	ScreenLedLib.cpp
+	Commons.h
+	Mailbox.h
+	Analyzer.cpp
+	Analyzer.h
+	${OS_SPECIFIC_SOURCES}
+	${ALGO_SOURCES}
+)
+
+target_compile_definitions(ScreenLedLib PRIVATE WIN32_LEAN_AND_MEAN)
+set_source_files_properties(ScreenCapper_Linux.cpp PROPERTIES COMPILE_OPTIONS "-mssse3")
 
 if (UNIX)
 	# sudo apt install libx11-dev libxext-dev libxrandr-dev

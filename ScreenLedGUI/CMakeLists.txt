@@ -93,10 +93,10 @@ target_link_libraries(ScreenLedGUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(ScreenLedGUI PRIVATE Qt${QT_VERSION_MAJOR}::Network)
 
 # Add ScreenLed library and json header
-add_subdirectory(../ScreenLedLib_2 ${CMAKE_CURRENT_BINARY_DIR}/lib)
+add_subdirectory(../ScreenLedLib ${CMAKE_CURRENT_BINARY_DIR}/lib)
 target_link_libraries(ScreenLedGUI PRIVATE ScreenLedLib)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty)
-target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ScreenLedLib_2)
+target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ScreenLedLib)
 target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_BINARY_DIR}/generated)
 
 # Add libssh

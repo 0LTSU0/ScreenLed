@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <QString>
+#include <chrono>
 
 #define NUM_LED_SEGMENTS 20 // TODO: make this adjustable
 
@@ -30,6 +31,11 @@ struct rgbValue {
     int r = 0;
     int g = 0;
     int b = 0;
+};
+
+struct rgbAnalysisResult {
+    std::vector<rgbValue> rgb_values;
+    std::chrono::steady_clock::time_point source_ss_timestamp{};
 };
 
 struct clientInfo {
@@ -85,6 +91,8 @@ struct RawPixelBuffer {
     int height = 0;
     // tightly packed RGB, row-major: buf[(y*width + x)*3 + {0=R,1=G,2=B}]
     std::vector<unsigned char> rgb;
+    // timestamp of the image contained in this buffer
+    std::chrono::steady_clock::time_point ss_timestamp{};
 
     inline void getPixel(int x, int y, int& r, int& g, int& b) const {
         const unsigned char* p = &rgb[(static_cast<size_t>(y) * width + x) * 3];
