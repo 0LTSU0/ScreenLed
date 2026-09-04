@@ -52,24 +52,41 @@ void ScreenCaptureWorker::updateConfig(ScreenCapConfig conf)
 
 void ScreenCaptureWorker::run()
 {
-	initScreenShotting();
-	m_running = true;
-	
-	int loopctr = 0;
-	auto fps_ctr_start = std::chrono::steady_clock::now();
-	while (m_running)
-	{
-		screenshot();
-		loopctr++;
-		if (loopctr == 10)
-		{
-			auto now = std::chrono::steady_clock::now();
-			double elapsed = std::chrono::duration<double>(now - fps_ctr_start).count();
-			m_fps = 10.0 / elapsed;
-			fps_ctr_start = now;
-			loopctr = 0;
-		}
-	}
+    initScreenShotting();
+    m_running = true;
+
+    int loopctr = 0;
+    auto fps_ctr_start = std::chrono::steady_clock::now();
+
+    constexpr auto frame_time = std::chrono::microseconds(16667); // ~60 FPS
+
+    while (m_running)
+    {
+        auto frame_start = std::chrono::steady_clock::now();
+
+        screenshot();
+
+        loopctr++;
+        if (loopctr == 10)
+        {
+            auto now = std::chrono::steady_clock::now();
+            double elapsed =
+                std::chrono::duration<double>(now - fps_ctr_start).count();
+
+            m_fps = 10.0 / elapsed;
+
+            fps_ctr_start = now;
+            loopctr = 0;
+        }
+
+        // Limit to ~60 FPS
+        auto elapsed = std::chrono::steady_clock::now() - frame_start;
+
+        if (elapsed < frame_time)
+        {
+            std::this_thread::sleep_for(frame_time - elapsed);
+        }
+    }
 }
 
 void ScreenCaptureWorker::stop()

@@ -55,8 +55,8 @@ bool Sender::initSender()
         m_clientSocks.push_back({ sock, addr });
 
         m_socksOpen = !m_clientSocks.empty(); 
-        return m_socksOpen;
     }
+    return m_socksOpen;
 }
 
 void Sender::deinitSender() 
