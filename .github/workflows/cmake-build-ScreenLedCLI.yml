@@ -52,7 +52,7 @@ jobs:
           sudo apt install -y libopencv-dev libxrandr-dev
 
       - name: Configure CMake
-        run: cmake -S ScreenLedGUI -B build
+        run: cmake -S ScreenLedCLI -B build
 
       - name: Build project
         run: cmake --build build --config Release
