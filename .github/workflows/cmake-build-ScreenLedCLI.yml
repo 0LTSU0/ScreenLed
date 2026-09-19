@@ -1,4 +1,4 @@
-name: Build ScreenLed GUI
+name: Build ScreenLed CLI
 
 on:
   pull_request:
