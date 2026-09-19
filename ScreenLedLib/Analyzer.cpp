@@ -1,9 +1,11 @@
 #include <Analyzer.h>
 #include <QDebug>
 #include <chrono>
+#include <iostream>
 
 void Analyzer::updateConfig(ScreenCapConfig conf)
 {
+	std::cout << "Analyzer received conf update. Selected algo is " << conf.c_algo << std::endl;
 	std::lock_guard lock(m_confMutex);
 	m_config = conf;
 }
@@ -27,6 +29,9 @@ void Analyzer::run()
 				break;
 			case ScreenLedAlgorithm::MEDIAN:
 				m_algoMedian.analyzeColors(m_analysisResult.rgb_values, m_config, pixelbuffer);
+				break;
+			case ScreenLedAlgorithm::FLASH_BOOST:
+				m_algoFlashBoost.analyzeColors(m_analysisResult.rgb_values, m_config, pixelbuffer);
 				break;
 			default:
 				qDebug() << "Unknown ScreenLedAlgorithm in analyzer. Cannot process frame";

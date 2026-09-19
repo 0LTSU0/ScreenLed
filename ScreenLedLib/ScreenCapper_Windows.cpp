@@ -2,20 +2,36 @@
 
 #include <QDebug>
 
-void convertRowBGRAtoBGR_SSE(const unsigned char* src, unsigned char* dst, int width) {
+void convertRowBGRAtoRGB_SSE(
+	const unsigned char* src,
+	unsigned char* dst,
+	int width)
+{
 	const __m128i mask = _mm_setr_epi8(
-		0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, -1, -1, -1, -1);
+		2, 1, 0,       // pixel 0: R G B
+		6, 5, 4,       // pixel 1: R G B
+		10, 9, 8,      // pixel 2: R G B
+		14, 13, 12,    // pixel 3: R G B
+		-1, -1, -1, -1 // unused
+	);
 
 	int x = 0;
-	for (; x + 4 <= width; x += 4) {
-		__m128i pix = _mm_loadu_si128(reinterpret_cast<const __m128i*>(src + x * 4));
+
+	for (; x + 4 <= width; x += 4)
+	{
+		__m128i pix = _mm_loadu_si128(
+			reinterpret_cast<const __m128i*>(src + x * 4));
+
 		__m128i shuffled = _mm_shuffle_epi8(pix, mask);
+
 		std::memcpy(dst + x * 3, &shuffled, 12);
 	}
-	for (; x < width; ++x) {
-		dst[x * 3 + 0] = src[x * 4 + 0];
-		dst[x * 3 + 1] = src[x * 4 + 1];
-		dst[x * 3 + 2] = src[x * 4 + 2];
+
+	for (; x < width; ++x)
+	{
+		dst[x * 3 + 0] = src[x * 4 + 2]; // R
+		dst[x * 3 + 1] = src[x * 4 + 1]; // G
+		dst[x * 3 + 2] = src[x * 4 + 0]; // B
 	}
 }
 
@@ -32,8 +48,10 @@ void ScreenCaptureWorker::run()
 	
 	int loopctr = 0;
 	auto fps_ctr_start = std::chrono::steady_clock::now();
+	auto frame_time_limiter = std::chrono::microseconds(16667);
 	while (m_running)
 	{
+		auto frameStart = std::chrono::steady_clock::now();
 		screenshot();
 		loopctr++;
 		if (loopctr == 10)
@@ -43,6 +61,11 @@ void ScreenCaptureWorker::run()
 			m_fps = 10.0 / elapsed;
 			fps_ctr_start = now;
 			loopctr = 0;
+		}
+		auto frameTime = std::chrono::steady_clock::now() - frameStart;
+		if (frameTime < frame_time_limiter)
+		{
+			std::this_thread::sleep_for(frame_time_limiter - frameTime);
 		}
 	}
 }
@@ -303,15 +326,15 @@ void ScreenCaptureWorker::convertToCommonSSFormat(std::chrono::steady_clock::tim
 
 		if (factor == 1) {
 			// contiguous row -> SIMD shuffle applies correctly
-			convertRowBGRAtoBGR_SSE(srcRow, dstRow, outW);
+			convertRowBGRAtoRGB_SSE(srcRow, dstRow, outW);
 		}
 		else {
 			// strided sampling -> scalar
 			for (int x = 0; x < outW; ++x) {
 				const unsigned char* p = srcRow + (static_cast<size_t>(x) * factor) * 4;
-				dstRow[x * 3 + 0] = p[0]; // B
+				dstRow[x * 3 + 0] = p[2]; // R
 				dstRow[x * 3 + 1] = p[1]; // G
-				dstRow[x * 3 + 2] = p[2]; // R
+				dstRow[x * 3 + 2] = p[0]; // B
 			}
 		}
 	}

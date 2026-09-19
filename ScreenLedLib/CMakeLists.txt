@@ -23,6 +23,8 @@ set(ALGO_SOURCES
 	algomean.cpp
 	algomedian.h
 	algomedian.cpp
+	algoflashboost.h
+	algoflashboost.cpp
 )
 
 add_library(ScreenLedLib STATIC

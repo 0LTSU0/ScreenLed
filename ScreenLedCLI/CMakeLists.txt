@@ -15,5 +15,5 @@ add_executable(ScreenLedCLI main.cpp)
 target_link_libraries(ScreenLedCLI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 # Add ScreenLed library and json header
-add_subdirectory(../ScreenLedLib_2 ${CMAKE_CURRENT_BINARY_DIR}/lib)
+add_subdirectory(../ScreenLedLib ${CMAKE_CURRENT_BINARY_DIR}/lib)
 target_link_libraries(ScreenLedCLI PRIVATE ScreenLedLib)

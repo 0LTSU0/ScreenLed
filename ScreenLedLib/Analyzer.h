@@ -6,6 +6,7 @@
 #include <Mailbox.h>
 #include <algomean.h>
 #include <algomedian.h>
+#include <algoflashboost.h>
 
 class Analyzer : public QThread
 {
@@ -34,4 +35,5 @@ private:
 	rgbAnalysisResult m_analysisResult;
 	AlgoMean m_algoMean;
 	AlgoMedian m_algoMedian;
+	AlgoFlashBoost m_algoFlashBoost;
 };
