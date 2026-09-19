@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build (${{ matrix.os }})
+    name: Build ScreenLedGUI (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     # Only run for issue_comment events if it's a PR comment containing "trigger gha"
     if: >
