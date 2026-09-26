@@ -6,6 +6,7 @@
 #include <vector>
 #include <QString>
 #include <chrono>
+#include <algoflashboost_conf.h>
 
 #define NUM_LED_SEGMENTS 20 // TODO: make this adjustable
 
@@ -14,6 +15,14 @@ enum ScreenLedAlgorithm {
     MEDIAN,
     FLASH_BOOST
 };
+
+inline bool ScreenLedAlgorithmSupportsConfig(ScreenLedAlgorithm algo) {
+    if (algo == ScreenLedAlgorithm::FLASH_BOOST)
+    {
+        return true;
+    }
+    return false;
+}
 
 enum receiverType {
     DUMMY,
@@ -78,6 +87,8 @@ struct ScreenCapConfig {
     std::string c_preferredLocalNetworkInterface = "";
     activeScreenArea c_analyzerScreenArea = activeScreenArea::FULL;
     int c_analyzerDownscaleFactor = 1;
+
+    AlgoFlashBoost_Config c_algoFlashBoostConfig = AlgoFlashBoost_Config();
 };
 
 inline bool isWindows() {

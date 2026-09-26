@@ -43,6 +43,8 @@ private slots:
 
     void on_actionReceiver_console_triggered();
 
+    void on_algoConfigButt_clicked();
+
 private:
     Ui::MainGUI *ui;
 
@@ -55,6 +57,7 @@ private:
     void periodicUIUpdate();
     void updateReceiverStatusRow(QString host, QString status);
     void updateAllSSHReceiverStatusRows(QString staus);
+    void toggleAlgoSettingsButtonActive(bool);
 
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;

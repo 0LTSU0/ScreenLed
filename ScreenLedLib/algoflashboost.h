@@ -15,13 +15,10 @@ public:
     std::vector<int> m_framesSinceFlash;
 
 private:
-    int m_flashTreshold = 70;
-    int m_dimmingSpeed = 10;
-
     std::vector<rgbValue> getRawMedian(const RawPixelBuffer&, const ScreenCapConfig&);
     int medianOf(std::vector<int>& arr);
     int getBrightness(const rgbValue&);
-    rgbValue calcBrightnessForSegment(const rgbValue&, const int timeSinceFlash);
+    rgbValue calcBrightnessForSegment(const rgbValue&, const int timeSinceFlash, const ScreenCapConfig&);
 };
 
 #endif // ALGOFLASHBOOST_H
