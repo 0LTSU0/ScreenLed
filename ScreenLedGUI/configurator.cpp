@@ -49,6 +49,18 @@ bool ScreenLedConfigurator::loadConfigs() {
         m_conf.c_clientInfos.push_back(c);
     }
 
+    //algo confs. TODO we should probably load/create json objects for these in the configs and not here
+    const auto algoFlashBoostConfigJsonKey = m_conf.c_algoFlashBoostConfig.jsonConfKey;
+    if (conf.contains(algoFlashBoostConfigJsonKey))
+    {
+        m_conf.c_algoFlashBoostConfig.c_flashTreshold = conf[algoFlashBoostConfigJsonKey].contains("flashTreshold") ?
+                                                            conf[algoFlashBoostConfigJsonKey]["flashTreshold"].get<int>() :
+                                                            m_conf.c_algoFlashBoostConfig.c_flashTreshold; // default value form initialized conf
+        m_conf.c_algoFlashBoostConfig.c_dimmingSpeed = conf[algoFlashBoostConfigJsonKey].contains("dimmingSpeed") ?
+                                                           conf[algoFlashBoostConfigJsonKey]["dimmingSpeed"].get<int>() :
+                                                           m_conf.c_algoFlashBoostConfig.c_dimmingSpeed; // default value form initialized conf
+    }
+
     return true;
 }
 
@@ -114,6 +126,11 @@ void ScreenLedConfigurator::updateCurrentConfig(ScreenCapConfig newConf, bool sa
             {"ledStripArg", c.ledStripArg}
         });
     }
+
+    // algo confs
+    jconf[m_conf.c_algoFlashBoostConfig.jsonConfKey]["flashTreshold"] = m_conf.c_algoFlashBoostConfig.c_flashTreshold;
+    jconf[m_conf.c_algoFlashBoostConfig.jsonConfKey]["dimmingSpeed"] = m_conf.c_algoFlashBoostConfig.c_dimmingSpeed;
+
     std::ofstream file(m_configPath);
     if (!file) {
         std::cerr << "screenCaptureWorkerBase::updateCurrentConfig() Failed to open config json for writing. The set values will be used during this session but changes won't be saved to disk" << std::endl;

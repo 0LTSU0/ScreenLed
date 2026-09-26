@@ -1,8 +1,10 @@
 #include "maingui.h"
+#include "algoconfigwidget.h"
 #include "ui_maingui.h"
 #include "aboutwindow.h"
 #include "settingswindow.h"
 #include "errordialog.h"
+#include "algoconfigwindow.h"
 
 #include <QApplication>
 #include <QString>
@@ -128,6 +130,7 @@ void MainGUI::on_mainGUIAlgoSelect_currentTextChanged(const QString &arg1)
             conf.c_algo = val.second;
             m_screenLedConfigurator.updateCurrentConfig(conf, false); // dont flush algo select to disk
             m_screenLedLib.updateConfig(conf);
+            toggleAlgoSettingsButtonActive(ScreenLedAlgorithmSupportsConfig(conf.c_algo));
             return;
         }
     }
@@ -316,3 +319,32 @@ void MainGUI::periodicUIUpdate()
         ui->statusbar->showMessage("IDLE");
     }
 }
+
+void MainGUI::toggleAlgoSettingsButtonActive(bool activate)
+{
+    ui->algoConfigButt->setEnabled(activate);
+}
+
+void MainGUI::on_algoConfigButt_clicked()
+{
+    auto currentConf = m_screenLedConfigurator.getCurrentConfig();
+    QWidget* configWidget = nullptr;
+    switch(currentConf.c_algo) {
+    case ScreenLedAlgorithm::FLASH_BOOST:
+        configWidget = buildConfigWidget(currentConf.c_algoFlashBoostConfig);
+        break;
+    default:
+        break;
+    }
+
+    if (configWidget != nullptr)
+    {
+        AlgoConfigWindow *confWindow = new AlgoConfigWindow(nullptr, configWidget); // no parent for it to be a real window
+        confWindow->exec();
+        auto config = m_screenLedConfigurator.getCurrentConfig(); // re-get in case it changed elsewhere
+        config.c_algoFlashBoostConfig = currentConf.c_algoFlashBoostConfig;
+        m_screenLedConfigurator.updateCurrentConfig(config, true);
+        m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
+    }
+}
+

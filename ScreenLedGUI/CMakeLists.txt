@@ -63,6 +63,8 @@ set(PROJECT_SOURCES
         receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
         errordialog.h errordialog.cpp errordialog.ui
         configurator.h configurator.cpp
+		algoconfigwidget.h
+        algoconfigwindow.h algoconfigwindow.cpp algoconfigwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

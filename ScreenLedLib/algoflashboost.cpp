@@ -26,17 +26,17 @@ void AlgoFlashBoost::analyzeColors(std::vector<rgbValue>& result, const ScreenCa
     {
         auto brightnessNow = getBrightness(rawMedians.at(i));
         auto brightnessBefore = getBrightness(m_prevRgbVals.at(i));
-        if (brightnessNow - brightnessBefore > m_flashTreshold)
+        if (brightnessNow - brightnessBefore > conf.c_algoFlashBoostConfig.c_flashTreshold)
         {
             std::cout << "flash on segment " << i << std::endl;
             m_framesSinceFlash.at(i) = 0;   
         }
-        else if (brightnessBefore - brightnessNow > m_flashTreshold)
+        else if (brightnessBefore - brightnessNow > conf.c_algoFlashBoostConfig.c_flashTreshold)
         {
             std::cout << "DEflash on segment" << i << std::endl;
             m_framesSinceFlash.at(i) = 255; // no matter what 255 frames is large enough fake time for the calculator to choose the raw rgb value
         }
-        result.at(i) = calcBrightnessForSegment(rawMedians.at(i), m_framesSinceFlash.at(i));
+        result.at(i) = calcBrightnessForSegment(rawMedians.at(i), m_framesSinceFlash.at(i), conf);
         m_framesSinceFlash.at(i) += 1;
     }
 
@@ -63,7 +63,7 @@ int AlgoFlashBoost::getBrightness(const rgbValue& rgb)
     return (rgb.r + rgb.g + rgb.b) / 3;
 }
 
-rgbValue AlgoFlashBoost::calcBrightnessForSegment(const rgbValue& medianRGB, int timeSinceFlash)
+rgbValue AlgoFlashBoost::calcBrightnessForSegment(const rgbValue& medianRGB, int timeSinceFlash, const ScreenCapConfig& conf)
 {
     int maxChannel = std::max({ medianRGB.r, medianRGB.g, medianRGB.b });
     if (maxChannel == 0)
@@ -73,9 +73,9 @@ rgbValue AlgoFlashBoost::calcBrightnessForSegment(const rgbValue& medianRGB, int
     
     double maxerscale = 255.0 / maxChannel;
     rgbValue maxBrightnessed;
-    maxBrightnessed.r = std::max(static_cast<int>(medianRGB.r * maxerscale) - m_dimmingSpeed * timeSinceFlash, medianRGB.r);
-    maxBrightnessed.g = std::max(static_cast<int>(medianRGB.g * maxerscale) - m_dimmingSpeed * timeSinceFlash, medianRGB.g);
-    maxBrightnessed.b = std::max(static_cast<int>(medianRGB.b * maxerscale) - m_dimmingSpeed * timeSinceFlash, medianRGB.b);
+    maxBrightnessed.r = std::max(static_cast<int>(medianRGB.r * maxerscale) - conf.c_algoFlashBoostConfig.c_dimmingSpeed * timeSinceFlash, medianRGB.r);
+    maxBrightnessed.g = std::max(static_cast<int>(medianRGB.g * maxerscale) - conf.c_algoFlashBoostConfig.c_dimmingSpeed * timeSinceFlash, medianRGB.g);
+    maxBrightnessed.b = std::max(static_cast<int>(medianRGB.b * maxerscale) - conf.c_algoFlashBoostConfig.c_dimmingSpeed * timeSinceFlash, medianRGB.b);
 
     return maxBrightnessed;
 }
