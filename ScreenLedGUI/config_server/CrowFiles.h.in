@@ -1,0 +1,3 @@
+#pragma once
+
+#define CROW_FILES "@CROW_HTML_PATH@"

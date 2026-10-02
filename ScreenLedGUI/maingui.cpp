@@ -5,6 +5,7 @@
 #include "settingswindow.h"
 #include "errordialog.h"
 #include "algoconfigwindow.h"
+#include "config_server/remoteConfigServer.h"
 
 #include <QApplication>
 #include <QString>
@@ -17,12 +18,22 @@ MainGUI::MainGUI(QWidget *parent)
 {
     ui->setupUi(this);
     ui->statusbar->showMessage("IDLE");
+    setWindowTitle("ScreenLedGUI");
 
     populateAlgoSelect();
     populateReceiverStatusRows();
 
     connect(m_uiUpdateTimer, &QTimer::timeout, this, &MainGUI::periodicUIUpdate);
     m_uiUpdateTimer->start(1000);
+
+    if (m_screenLedConfigurator.getCurrentConfig().c_configServerConf.enabled)
+    {
+        m_configHttpServer = new ConfigHttpServer(&m_screenLedConfigurator);
+        if (!m_configHttpServer->start())
+        {
+            (new ErrorDialog())->Error("Failed to start ConfigHttpServer. Remote configuration interface is unavailable.");
+        }
+    }
 }
 
 MainGUI::~MainGUI()
@@ -107,6 +118,11 @@ void MainGUI::updateAllSSHReceiverStatusRows(QString status)
 void MainGUI::onExitActions() {
     if (m_libRunStatus == runStatus::RUNNING) {
         on_startButt_clicked(); // if still running when exiting, stop the library first
+    }
+
+    if (m_configHttpServer)
+    {
+        m_configHttpServer->stop();
     }
 
     // Make sure currently selected algo gets saved since its on the main window rather than configuration and thus has no save button

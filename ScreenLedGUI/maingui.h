@@ -13,6 +13,7 @@
 
 #include "receiverrunnerssh.h"
 #include "receiverconsole.h"
+#include "config_server/remoteConfigServer.h"
 
 namespace Ui {
 class MainGUI;
@@ -71,6 +72,9 @@ private:
     bool m_receiverConsoleInitialFillOngoing = false; // to prevent live output from being appended when console is just opened
     ReceiverConsole *m_receiverConsole = nullptr;
     QTimer *m_uiUpdateTimer = new QTimer(this);
+
+    // config server
+    ConfigHttpServer* m_configHttpServer = nullptr;
 
     // screenledlib things
     ScreenLedConfigurator m_screenLedConfigurator = ScreenLedConfigurator();

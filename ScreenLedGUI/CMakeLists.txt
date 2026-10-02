@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ScreenLedGUI VERSION 0.2.0 LANGUAGES CXX)
+project(ScreenLedGUI VERSION 0.4.0 LANGUAGES CXX)
 
 # --- Get git hash ---
 find_package(Git QUIET)
@@ -30,12 +30,19 @@ else()
     set(GIT_DIRTY "")
 endif()
 
+# Generate headers
 set(APP_VERSION "${PROJECT_VERSION}-${GIT_HASH}${GIT_DIRTY}")
+set(CROW_HTML_PATH "${CMAKE_SOURCE_DIR}/config_server/crow")
 
-# Generate header
 configure_file(
     ${CMAKE_SOURCE_DIR}/version.h.in
     ${CMAKE_BINARY_DIR}/generated/version.h
+    @ONLY
+)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/config_server/CrowFiles.h.in
+    ${CMAKE_BINARY_DIR}/generated/CrowFiles.h
     @ONLY
 )
 
@@ -65,6 +72,8 @@ set(PROJECT_SOURCES
         configurator.h configurator.cpp
 		algoconfigwidget.h
         algoconfigwindow.h algoconfigwindow.cpp algoconfigwindow.ui
+		config_server/remoteConfigServer.h config_server/remoteConfigServer.cpp
+		config_server/ifResolver.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -104,6 +113,12 @@ target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_BINARY_DIR}/generated)
 # Add libssh
 add_subdirectory(../ThirdParty/libssh2/ ${CMAKE_CURRENT_BINARY_DIR}/libssh2)
 target_link_libraries(ScreenLedGUI PRIVATE libssh2_static)
+
+# Add crow
+target_include_directories(ScreenLedGUI SYSTEM PRIVATE
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/crow/include
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/asio/asio/include
+)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
