@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ScreenLedGUI VERSION 0.2.0 LANGUAGES CXX)
+project(ScreenLedGUI VERSION 0.3.0 LANGUAGES CXX)
 
 # --- Get git hash ---
 find_package(Git QUIET)
