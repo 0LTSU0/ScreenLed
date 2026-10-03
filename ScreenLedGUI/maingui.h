@@ -52,7 +52,7 @@ private:
     Ui::MainGUI *ui;
 
     // functions
-    void populateAlgoSelect();
+    void populateAlgoSelect(bool blockSignals = false);
     void populateReceiverStatusRows();
     void onExitActions();
     bool startReceivers();

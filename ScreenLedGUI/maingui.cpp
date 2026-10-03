@@ -12,6 +12,7 @@
 #include <QString>
 #include <QMessageBox>
 #include <QFile>
+#include <QSignalBlocker>
 
 MainGUI::MainGUI(QWidget *parent)
     : QMainWindow(parent)
@@ -47,7 +48,14 @@ MainGUI::~MainGUI()
     delete ui;
 }
 
-void MainGUI::populateAlgoSelect() {
+void MainGUI::populateAlgoSelect(bool blockSignals) {
+    std::unique_ptr<QSignalBlocker> blocker;
+    if (blockSignals) {
+        blocker = std::make_unique<QSignalBlocker>(
+            ui->mainGUIAlgoSelect
+        );
+    }
+
     auto currentConfig = m_screenLedConfigurator.getCurrentConfig();
     int activeIndex = 0;
     int i = 0;
@@ -373,6 +381,7 @@ void MainGUI::configUpdateFromRemote()
 {
     qDebug() << "configUpdateFromRemote() callback called. Pushing new config to lib";
     m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
+    populateAlgoSelect(true);
 }
 
 void MainGUI::on_actionRemote_config_triggered()
