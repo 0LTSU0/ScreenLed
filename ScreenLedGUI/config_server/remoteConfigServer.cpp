@@ -178,11 +178,13 @@ bool ConfigHttpServer::start()
     currentScreenLedConf = m_screenLedConfiguratorPtr->getCurrentConfig(); //reget in case it changed from elsewhere
     currentScreenLedConf.c_configServerConf = m_serverConf;
     m_screenLedConfiguratorPtr->updateCurrentConfig(currentScreenLedConf, true);
+    m_isRunning = true;
     return true;
 }
 
 bool ConfigHttpServer::stop()
 {
+    m_isRunning = false;
     if (m_serverThread == nullptr)
     {
         return true;

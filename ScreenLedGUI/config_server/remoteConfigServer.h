@@ -34,6 +34,10 @@ public:
         for (auto& listener : m_ConfigChangeListeners) { listener(); };
     }
 
+    bool isRunning() {
+        return m_isRunning;
+    }
+
 private:
     static std::string generateAuthToken();
     void startApp();
@@ -43,4 +47,5 @@ private:
     crow::SimpleApp app;
     QThread* m_serverThread = nullptr;
     std::vector<ChangeCallback> m_ConfigChangeListeners;
+    bool m_isRunning = false;
 };

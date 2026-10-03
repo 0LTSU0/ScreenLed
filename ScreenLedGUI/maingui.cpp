@@ -340,12 +340,18 @@ void MainGUI::periodicUIUpdate()
             updateReceiverStatusRow(connection.first, status);
         }
     }
+
+    QString remoteServerStatus = m_configHttpServer->isRunning() ?
+                                 " | Remote config server running" :
+                                 " | Remote config server not running";
+
     if (m_screenLedLib.m_screenLedLibIsRunning)
     {
         ui->statusbar->showMessage("Running FPS: " + QString::number(m_screenLedLib.getScreenCapFPS(), 'f', 1) +
-                                   " Avg ss to sent delay: " + QString::number(m_screenLedLib.getAvgSSToSentDelay().count(), 'f', 0) + "ms");
+                                   " Avg ss to sent delay: " + QString::number(m_screenLedLib.getAvgSSToSentDelay().count(), 'f', 0) + "ms" +
+                                   remoteServerStatus);
     } else {
-        ui->statusbar->showMessage("IDLE");
+        ui->statusbar->showMessage("IDLE" + remoteServerStatus);
     }
 }
 
