@@ -74,6 +74,7 @@ set(PROJECT_SOURCES
         algoconfigwindow.h algoconfigwindow.cpp algoconfigwindow.ui
 		config_server/remoteConfigServer.h config_server/remoteConfigServer.cpp
 		config_server/ifResolver.h
+		config_server/nlohmann2crow.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

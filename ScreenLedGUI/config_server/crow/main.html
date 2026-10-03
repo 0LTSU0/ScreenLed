@@ -321,11 +321,11 @@
 
             const data = await response.json();
 
-            if (!Array.isArray(data.fields)) {
+            if (!Array.isArray(data)) {
                 throw new Error("Invalid configuration response");
             }
 
-            renderConfiguration(data.fields);
+            renderConfiguration(data);
 
         } catch (error) {
             console.error(

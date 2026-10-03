@@ -2,6 +2,7 @@
 
 #include "ifResolver.h"
 #include "CrowFiles.h"
+#include "nlohmann2crow.h"
 #include <random>
 
 std::string ConfigHttpServer::generateAuthToken()
@@ -85,28 +86,8 @@ void ConfigHttpServer::startApp()
             return crow::response(response);
         }
 
-        // TODO: more sensible solution to this instead of lot of ifs. Also these configs should be somehow generated dynamically
-        crow::json::wvalue::list configFields;
-        if (algo == ScreenLedAlgorithm::FLASH_BOOST)
-        {
-            crow::json::wvalue obj;
-            obj["name"] = "flashTreshold";
-            obj["value"] = currentConfig.c_algoFlashBoostConfig.c_flashTreshold;
-            obj["type"] = "int";
-            obj["min"] = std::get<0>(AlgoFlashBoost_Config::fields()).minVal;
-            obj["max"] = std::get<0>(AlgoFlashBoost_Config::fields()).maxVal;
-            configFields.push_back(std::move(obj));
-            crow::json::wvalue obj2;
-            obj2["name"] = "dimmingSpeed";
-            obj2["value"] = currentConfig.c_algoFlashBoostConfig.c_dimmingSpeed;
-            obj2["type"] = "int";
-            obj2["min"] = std::get<1>(AlgoFlashBoost_Config::fields()).minVal;
-            obj2["max"] = std::get<1>(AlgoFlashBoost_Config::fields()).maxVal;
-            configFields.push_back(std::move(obj2));
-        }
-
-        response["fields"] = std::move(configFields);
-        return crow::response(response);
+        auto j = currentConfig.c_algoFlashBoostConfig.toJson();
+        return crow::response(to_crow(j));
     });
 
     CROW_ROUTE(app, "/api/algoConfig/<int>").methods(crow::HTTPMethod::POST)
@@ -137,50 +118,12 @@ void ConfigHttpServer::startApp()
         */
         if (algo == ScreenLedAlgorithm::FLASH_BOOST)
         {
-            if (!body.has("flashTreshold") ||
-                !body.has("dimmingSpeed"))
+            auto j = to_nlohmann(body);
+            auto newAlgoConf = AlgoFlashBoost_Config();
+            if (newAlgoConf.fromJson(j))
             {
-                return crow::response(
-                    400,
-                    "Missing FlashBoost configuration"
-                );
+                currentConfig.c_algoFlashBoostConfig = newAlgoConf;
             }
-
-            const int flashTreshold =
-                body["flashTreshold"].i();
-
-            const int dimmingSpeed =
-                body["dimmingSpeed"].i();
-
-            const auto flashField =
-                std::get<0>(AlgoFlashBoost_Config::fields());
-
-            const auto dimmingField =
-                std::get<1>(AlgoFlashBoost_Config::fields());
-
-            if (flashTreshold < flashField.minVal ||
-                flashTreshold > flashField.maxVal)
-            {
-                return crow::response(
-                    400,
-                    "flashTreshold out of range"
-                );
-            }
-
-            if (dimmingSpeed < dimmingField.minVal ||
-                dimmingSpeed > dimmingField.maxVal)
-            {
-                return crow::response(
-                    400,
-                    "dimmingSpeed out of range"
-                );
-            }
-
-            currentConfig.c_algoFlashBoostConfig.c_flashTreshold =
-                flashTreshold;
-
-            currentConfig.c_algoFlashBoostConfig.c_dimmingSpeed =
-                dimmingSpeed;
         }
 
         currentConfig.c_algo = algo;
