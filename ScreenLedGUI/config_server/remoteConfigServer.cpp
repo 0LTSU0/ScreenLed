@@ -129,6 +129,9 @@ void ConfigHttpServer::startApp()
         currentConfig.c_algo = algo;
         m_screenLedConfiguratorPtr->updateCurrentConfig(currentConfig, true);
 
+        // this should be done async for sure
+        configUpdated();
+
         return crow::response(200);
     });
 

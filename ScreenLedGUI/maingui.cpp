@@ -32,6 +32,10 @@ MainGUI::MainGUI(QWidget *parent)
         if (!m_configHttpServer->start())
         {
             (new ErrorDialog())->Error("Failed to start ConfigHttpServer. Remote configuration interface is unavailable.");
+        } else {
+            m_configHttpServer->addChangeListener([this]() {
+                configUpdateFromRemote();
+            });
         }
     }
 }
@@ -364,3 +368,8 @@ void MainGUI::on_algoConfigButt_clicked()
     }
 }
 
+void MainGUI::configUpdateFromRemote()
+{
+    qDebug() << "configUpdateFromRemote() callback called. Pushing new config to lib";
+    m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
+}

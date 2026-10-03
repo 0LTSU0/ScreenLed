@@ -7,3 +7,6 @@
 [submodule "ThirdParty/asio"]
 	path = ThirdParty/asio
 	url = https://github.com/chriskohlhoff/asio.git
+[submodule "ThirdParty/qr_code_gen"]
+	path = ThirdParty/qr_code_gen
+	url = https://github.com/nayuki/QR-Code-generator

@@ -59,6 +59,7 @@ private:
     void updateReceiverStatusRow(QString host, QString status);
     void updateAllSSHReceiverStatusRows(QString staus);
     void toggleAlgoSettingsButtonActive(bool);
+    void configUpdateFromRemote(); //callback for config_server
 
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;
