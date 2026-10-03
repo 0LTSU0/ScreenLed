@@ -74,7 +74,14 @@ inline std::map<activeScreenArea, std::string> screenAnalysisAreaMap{{activeScre
                                                                   {activeScreenArea::CENTER_THIRD, "Center Third"},
                                                                   {activeScreenArea::AUTO, "Auto"}};
 
-// config struct for ScreenLedLib (NOTE: screenCaptureWorkerBase::createConfigFile() uses this definition for default values)
+// config struct for ScreenLedLib (NOTE: creating config file uses this definition for default values)
+struct ConfigServerConf {
+    bool enabled = false;
+    std::string authToken = "";
+    std::string host = ""; // filling this handled by the server itself. We don't need it for anything but it holds our ip to be given to remote clients
+    int port = 6967; // TODO: this should be configurable
+};
+
 struct ScreenCapConfig {
     int c_debugSSInterval = 10;
     bool c_keepDebugSSOnClipboard = false;
@@ -87,6 +94,8 @@ struct ScreenCapConfig {
     std::string c_preferredLocalNetworkInterface = "";
     activeScreenArea c_analyzerScreenArea = activeScreenArea::FULL;
     int c_analyzerDownscaleFactor = 1;
+
+    ConfigServerConf c_configServerConf = ConfigServerConf();
 
     AlgoFlashBoost_Config c_algoFlashBoostConfig = AlgoFlashBoost_Config();
 };

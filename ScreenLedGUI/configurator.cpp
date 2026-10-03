@@ -49,6 +49,16 @@ bool ScreenLedConfigurator::loadConfigs() {
         m_conf.c_clientInfos.push_back(c);
     }
 
+    // config server config
+    if (conf.contains("configServerConf")) {
+        m_conf.c_configServerConf.enabled = conf["configServerConf"].contains("enabled") ?
+                                            conf["configServerConf"]["enabled"].get<bool>() :
+                                            m_conf.c_configServerConf.enabled; // default value from initialized conf
+        m_conf.c_configServerConf.authToken = conf["configServerConf"].contains("authToken") ?
+                                              conf["configServerConf"]["authToken"].get<std::string>() :
+                                              m_conf.c_configServerConf.authToken; // default value from initialized conf
+    }
+
     //algo confs. TODO we should probably load/create json objects for these in the configs and not here
     const auto algoFlashBoostConfigJsonKey = m_conf.c_algoFlashBoostConfig.jsonConfKey;
     if (conf.contains(algoFlashBoostConfigJsonKey))
@@ -130,6 +140,10 @@ void ScreenLedConfigurator::updateCurrentConfig(ScreenCapConfig newConf, bool sa
     // algo confs
     jconf[m_conf.c_algoFlashBoostConfig.jsonConfKey]["flashTreshold"] = m_conf.c_algoFlashBoostConfig.c_flashTreshold;
     jconf[m_conf.c_algoFlashBoostConfig.jsonConfKey]["dimmingSpeed"] = m_conf.c_algoFlashBoostConfig.c_dimmingSpeed;
+
+    // config server config
+    jconf["configServerConf"]["enabled"] = m_conf.c_configServerConf.enabled;
+    jconf["configServerConf"]["authToken"] = m_conf.c_configServerConf.authToken;
 
     std::ofstream file(m_configPath);
     if (!file) {

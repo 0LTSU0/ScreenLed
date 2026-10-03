@@ -1,3 +1,12 @@
 [submodule "ThirdParty/libssh2"]
 	path = ThirdParty/libssh2
 	url = https://github.com/libssh2/libssh2
+[submodule "ThirdParty/crow"]
+	path = ThirdParty/crow
+	url = https://github.com/CrowCpp/Crow
+[submodule "ThirdParty/asio"]
+	path = ThirdParty/asio
+	url = https://github.com/chriskohlhoff/asio.git
+[submodule "ThirdParty/qr_code_gen"]
+	path = ThirdParty/qr_code_gen
+	url = https://github.com/nayuki/QR-Code-generator

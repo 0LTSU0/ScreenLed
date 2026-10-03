@@ -13,6 +13,7 @@
 
 #include "receiverrunnerssh.h"
 #include "receiverconsole.h"
+#include "config_server/remoteConfigServer.h"
 
 namespace Ui {
 class MainGUI;
@@ -45,11 +46,13 @@ private slots:
 
     void on_algoConfigButt_clicked();
 
+    void on_actionRemote_config_triggered();
+
 private:
     Ui::MainGUI *ui;
 
     // functions
-    void populateAlgoSelect();
+    void populateAlgoSelect(bool blockSignals = false);
     void populateReceiverStatusRows();
     void onExitActions();
     bool startReceivers();
@@ -58,6 +61,7 @@ private:
     void updateReceiverStatusRow(QString host, QString status);
     void updateAllSSHReceiverStatusRows(QString staus);
     void toggleAlgoSettingsButtonActive(bool);
+    void configUpdateFromRemote(); //callback for config_server
 
     // vars
     QVector<QHBoxLayout*> m_receiverStatusRows;
@@ -71,6 +75,9 @@ private:
     bool m_receiverConsoleInitialFillOngoing = false; // to prevent live output from being appended when console is just opened
     ReceiverConsole *m_receiverConsole = nullptr;
     QTimer *m_uiUpdateTimer = new QTimer(this);
+
+    // config server
+    ConfigHttpServer* m_configHttpServer = nullptr;
 
     // screenledlib things
     ScreenLedConfigurator m_screenLedConfigurator = ScreenLedConfigurator();

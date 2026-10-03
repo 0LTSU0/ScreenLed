@@ -5,11 +5,14 @@
 #include "settingswindow.h"
 #include "errordialog.h"
 #include "algoconfigwindow.h"
+#include "config_server/remoteConfigServer.h"
+#include "qrcodewindow.h"
 
 #include <QApplication>
 #include <QString>
 #include <QMessageBox>
 #include <QFile>
+#include <QSignalBlocker>
 
 MainGUI::MainGUI(QWidget *parent)
     : QMainWindow(parent)
@@ -17,12 +20,26 @@ MainGUI::MainGUI(QWidget *parent)
 {
     ui->setupUi(this);
     ui->statusbar->showMessage("IDLE");
+    setWindowTitle("ScreenLedGUI");
 
     populateAlgoSelect();
     populateReceiverStatusRows();
 
     connect(m_uiUpdateTimer, &QTimer::timeout, this, &MainGUI::periodicUIUpdate);
     m_uiUpdateTimer->start(1000);
+
+    if (m_screenLedConfigurator.getCurrentConfig().c_configServerConf.enabled)
+    {
+        m_configHttpServer = new ConfigHttpServer(&m_screenLedConfigurator);
+        if (!m_configHttpServer->start())
+        {
+            (new ErrorDialog())->Error("Failed to start ConfigHttpServer. Remote configuration interface is unavailable.");
+        } else {
+            m_configHttpServer->addChangeListener([this]() {
+                configUpdateFromRemote();
+            });
+        }
+    }
 }
 
 MainGUI::~MainGUI()
@@ -31,7 +48,14 @@ MainGUI::~MainGUI()
     delete ui;
 }
 
-void MainGUI::populateAlgoSelect() {
+void MainGUI::populateAlgoSelect(bool blockSignals) {
+    std::unique_ptr<QSignalBlocker> blocker;
+    if (blockSignals) {
+        blocker = std::make_unique<QSignalBlocker>(
+            ui->mainGUIAlgoSelect
+        );
+    }
+
     auto currentConfig = m_screenLedConfigurator.getCurrentConfig();
     int activeIndex = 0;
     int i = 0;
@@ -107,6 +131,11 @@ void MainGUI::updateAllSSHReceiverStatusRows(QString status)
 void MainGUI::onExitActions() {
     if (m_libRunStatus == runStatus::RUNNING) {
         on_startButt_clicked(); // if still running when exiting, stop the library first
+    }
+
+    if (m_configHttpServer)
+    {
+        m_configHttpServer->stop();
     }
 
     // Make sure currently selected algo gets saved since its on the main window rather than configuration and thus has no save button
@@ -311,12 +340,18 @@ void MainGUI::periodicUIUpdate()
             updateReceiverStatusRow(connection.first, status);
         }
     }
+
+    QString remoteServerStatus = m_configHttpServer->isRunning() ?
+                                 " | Remote config server running" :
+                                 " | Remote config server not running";
+
     if (m_screenLedLib.m_screenLedLibIsRunning)
     {
         ui->statusbar->showMessage("Running FPS: " + QString::number(m_screenLedLib.getScreenCapFPS(), 'f', 1) +
-                                   " Avg ss to sent delay: " + QString::number(m_screenLedLib.getAvgSSToSentDelay().count(), 'f', 0) + "ms");
+                                   " Avg ss to sent delay: " + QString::number(m_screenLedLib.getAvgSSToSentDelay().count(), 'f', 0) + "ms" +
+                                   remoteServerStatus);
     } else {
-        ui->statusbar->showMessage("IDLE");
+        ui->statusbar->showMessage("IDLE" + remoteServerStatus);
     }
 }
 
@@ -346,5 +381,20 @@ void MainGUI::on_algoConfigButt_clicked()
         m_screenLedConfigurator.updateCurrentConfig(config, true);
         m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
     }
+}
+
+void MainGUI::configUpdateFromRemote()
+{
+    qDebug() << "configUpdateFromRemote() callback called. Pushing new config to lib";
+    m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
+    populateAlgoSelect(true);
+}
+
+void MainGUI::on_actionRemote_config_triggered()
+{
+    QrCodeWindow *qrWidow = new QrCodeWindow(m_configHttpServer->getConfigURL(), nullptr); // no parent for it to be a real window
+    qrWidow->setAttribute(Qt::WA_DeleteOnClose);
+    qrWidow->setWindowModality(Qt::ApplicationModal);
+    qrWidow->show();
 }
 

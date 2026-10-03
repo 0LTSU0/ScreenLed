@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ScreenLedGUI VERSION 0.3.0 LANGUAGES CXX)
+project(ScreenLedGUI VERSION 0.4.0 LANGUAGES CXX)
 
 # --- Get git hash ---
 find_package(Git QUIET)
@@ -30,12 +30,19 @@ else()
     set(GIT_DIRTY "")
 endif()
 
+# Generate headers
 set(APP_VERSION "${PROJECT_VERSION}-${GIT_HASH}${GIT_DIRTY}")
+set(CROW_HTML_PATH "${CMAKE_SOURCE_DIR}/config_server/crow")
 
-# Generate header
 configure_file(
     ${CMAKE_SOURCE_DIR}/version.h.in
     ${CMAKE_BINARY_DIR}/generated/version.h
+    @ONLY
+)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/config_server/CrowFiles.h.in
+    ${CMAKE_BINARY_DIR}/generated/CrowFiles.h
     @ONLY
 )
 
@@ -50,27 +57,37 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Network)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network)
 
 set(PROJECT_SOURCES
-        main.cpp
-        consts.h
-        receiverrunner.h
-        receiverrunner.cpp
-        receiverrunnerssh.h
-        receiverrunnerssh.cpp
-        maingui.h maingui.cpp maingui.ui
-        aboutwindow.h aboutwindow.cpp aboutwindow.ui
-        settingswindow.h settingswindow.cpp settingswindow.ui
-        receiverconsole.h receiverconsole.cpp receiverconsole.ui
-        receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
-        errordialog.h errordialog.cpp errordialog.ui
-        configurator.h configurator.cpp
-		algoconfigwidget.h
-        algoconfigwindow.h algoconfigwindow.cpp algoconfigwindow.ui
+    main.cpp
+    consts.h
+    receiverrunner.h
+    receiverrunner.cpp
+    receiverrunnerssh.h
+    receiverrunnerssh.cpp
+    maingui.h maingui.cpp maingui.ui
+    aboutwindow.h aboutwindow.cpp aboutwindow.ui
+    settingswindow.h settingswindow.cpp settingswindow.ui
+    receiverconsole.h receiverconsole.cpp receiverconsole.ui
+    receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
+    errordialog.h errordialog.cpp errordialog.ui
+    configurator.h configurator.cpp
+	algoconfigwidget.h
+    algoconfigwindow.h algoconfigwindow.cpp algoconfigwindow.ui
+	config_server/remoteConfigServer.h config_server/remoteConfigServer.cpp
+	config_server/ifResolver.h
+	config_server/nlohmann2crow.h
+	qrcodewindow.h qrcodewindow.cpp qrcodewindow.ui
+)
+
+set(QR_CODE_SOURCES
+	${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/qr_code_gen/cpp/qrcodegen.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/qr_code_gen/cpp/qrcodegen.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenLedGUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+		${QR_CODE_SOURCES}
         qtresources.qrc
     )
 # Define target properties for Android with Qt 6 as:
@@ -104,6 +121,12 @@ target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_BINARY_DIR}/generated)
 # Add libssh
 add_subdirectory(../ThirdParty/libssh2/ ${CMAKE_CURRENT_BINARY_DIR}/libssh2)
 target_link_libraries(ScreenLedGUI PRIVATE libssh2_static)
+
+# Add crow
+target_include_directories(ScreenLedGUI SYSTEM PRIVATE
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/crow/include
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/asio/asio/include
+)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
