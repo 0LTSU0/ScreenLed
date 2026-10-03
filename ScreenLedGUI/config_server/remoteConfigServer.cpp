@@ -26,6 +26,11 @@ std::string ConfigHttpServer::getConfigStrForQR()
     return os.str();
 }
 
+std::string ConfigHttpServer::getConfigURL()
+{
+    return "http://" + m_serverConf.host + ":" + std::to_string(m_serverConf.port);
+}
+
 void ConfigHttpServer::startApp()
 {
     // TEMP endpoint to host simple site

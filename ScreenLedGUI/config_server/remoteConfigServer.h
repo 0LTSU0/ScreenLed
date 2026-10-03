@@ -24,6 +24,7 @@ public:
     bool start();
     bool stop();
     std::string getConfigStrForQR();
+    std::string getConfigURL();
 
     void addChangeListener(ChangeCallback callback) {
         m_ConfigChangeListeners.push_back(std::move(callback));

@@ -57,30 +57,37 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Network)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network)
 
 set(PROJECT_SOURCES
-        main.cpp
-        consts.h
-        receiverrunner.h
-        receiverrunner.cpp
-        receiverrunnerssh.h
-        receiverrunnerssh.cpp
-        maingui.h maingui.cpp maingui.ui
-        aboutwindow.h aboutwindow.cpp aboutwindow.ui
-        settingswindow.h settingswindow.cpp settingswindow.ui
-        receiverconsole.h receiverconsole.cpp receiverconsole.ui
-        receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
-        errordialog.h errordialog.cpp errordialog.ui
-        configurator.h configurator.cpp
-		algoconfigwidget.h
-        algoconfigwindow.h algoconfigwindow.cpp algoconfigwindow.ui
-		config_server/remoteConfigServer.h config_server/remoteConfigServer.cpp
-		config_server/ifResolver.h
-		config_server/nlohmann2crow.h
+    main.cpp
+    consts.h
+    receiverrunner.h
+    receiverrunner.cpp
+    receiverrunnerssh.h
+    receiverrunnerssh.cpp
+    maingui.h maingui.cpp maingui.ui
+    aboutwindow.h aboutwindow.cpp aboutwindow.ui
+    settingswindow.h settingswindow.cpp settingswindow.ui
+    receiverconsole.h receiverconsole.cpp receiverconsole.ui
+    receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
+    errordialog.h errordialog.cpp errordialog.ui
+    configurator.h configurator.cpp
+	algoconfigwidget.h
+    algoconfigwindow.h algoconfigwindow.cpp algoconfigwindow.ui
+	config_server/remoteConfigServer.h config_server/remoteConfigServer.cpp
+	config_server/ifResolver.h
+	config_server/nlohmann2crow.h
+	qrcodewindow.h qrcodewindow.cpp qrcodewindow.ui
+)
+
+set(QR_CODE_SOURCES
+	${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/qr_code_gen/cpp/qrcodegen.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/qr_code_gen/cpp/qrcodegen.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenLedGUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+		${QR_CODE_SOURCES}
         qtresources.qrc
     )
 # Define target properties for Android with Qt 6 as:

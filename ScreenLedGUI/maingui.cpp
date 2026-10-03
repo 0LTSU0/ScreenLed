@@ -6,6 +6,7 @@
 #include "errordialog.h"
 #include "algoconfigwindow.h"
 #include "config_server/remoteConfigServer.h"
+#include "qrcodewindow.h"
 
 #include <QApplication>
 #include <QString>
@@ -373,3 +374,12 @@ void MainGUI::configUpdateFromRemote()
     qDebug() << "configUpdateFromRemote() callback called. Pushing new config to lib";
     m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
 }
+
+void MainGUI::on_actionRemote_config_triggered()
+{
+    QrCodeWindow *qrWidow = new QrCodeWindow(m_configHttpServer->getConfigURL(), nullptr); // no parent for it to be a real window
+    qrWidow->setAttribute(Qt::WA_DeleteOnClose);
+    qrWidow->setWindowModality(Qt::ApplicationModal);
+    qrWidow->show();
+}
+

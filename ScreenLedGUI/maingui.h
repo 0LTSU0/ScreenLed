@@ -46,6 +46,8 @@ private slots:
 
     void on_algoConfigButt_clicked();
 
+    void on_actionRemote_config_triggered();
+
 private:
     Ui::MainGUI *ui;
 
