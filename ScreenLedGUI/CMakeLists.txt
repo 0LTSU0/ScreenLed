@@ -123,11 +123,6 @@ target_include_directories(ScreenLedGUI PRIVATE ${CMAKE_BINARY_DIR}/generated)
 # Add libssh
 add_subdirectory(../ThirdParty/libssh2/ ${CMAKE_CURRENT_BINARY_DIR}/libssh2)
 target_link_libraries(ScreenLedGUI PRIVATE libssh2_static)
-if(MSVC)
-    target_compile_options(libssh2_static PRIVATE /w) # silence compiler warnings
-else()
-    target_compile_options(libssh2_static PRIVATE -w)
-endif()
 
 # Add crow
 target_include_directories(ScreenLedGUI SYSTEM PRIVATE
