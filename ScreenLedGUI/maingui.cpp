@@ -341,9 +341,16 @@ void MainGUI::periodicUIUpdate()
         }
     }
 
-    QString remoteServerStatus = m_configHttpServer->isRunning() ?
-                                 " | Remote config server running" :
-                                 " | Remote config server not running";
+    QString remoteServerStatus;
+    if (m_configHttpServer)
+    {
+        remoteServerStatus = m_configHttpServer->isRunning() ?
+                                         " | Remote config server running" :
+                                         " | Remote config server not running";
+    } else {
+        remoteServerStatus = " | Remote config server not initialized";
+    }
+
 
     if (m_screenLedLib.m_screenLedLibIsRunning)
     {
@@ -392,6 +399,12 @@ void MainGUI::configUpdateFromRemote()
 
 void MainGUI::on_actionRemote_config_triggered()
 {
+    if (!m_configHttpServer)
+    {
+        (new ErrorDialog())->Error("Remote config server is not enabled or initialization has failed!");
+        return;
+    }
+
     QrCodeWindow *qrWidow = new QrCodeWindow(m_configHttpServer->getConfigURL(), nullptr); // no parent for it to be a real window
     qrWidow->setAttribute(Qt::WA_DeleteOnClose);
     qrWidow->setWindowModality(Qt::ApplicationModal);
