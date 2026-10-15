@@ -7,6 +7,7 @@
 #include "algoconfigwindow.h"
 #include "config_server/remoteConfigServer.h"
 #include "qrcodewindow.h"
+#include "Log.h"
 
 #include <QApplication>
 #include <QString>
@@ -163,7 +164,8 @@ void MainGUI::on_mainGUIAlgoSelect_currentTextChanged(const QString &arg1)
             return;
         }
     }
-    qDebug() << "WTF, the selected option in mainguialgoselect does not match any existing algotype";
+
+    GUI_ERROR() << "WTF, the selected option in mainguialgoselect does not match any existing algotype";
 }
 
 
@@ -210,12 +212,14 @@ void MainGUI::on_startButt_clicked()
 {
     switch (m_libRunStatus) {
     case runStatus::IDLE:
+        GUI_INFO() << "Start LIB";
         m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
         m_screenLedLib.start();
         ui->startButt->setText("Stop");
         m_libRunStatus = runStatus::RUNNING;
         break;
     case runStatus::RUNNING:
+        GUI_INFO() << "Stop LIB";
         m_screenLedLib.stop();
         ui->startButt->setText("Start");
         m_libRunStatus = runStatus::IDLE;
@@ -230,6 +234,7 @@ void MainGUI::on_startReceiversButt_clicked()
 {
     bool res = false;
     if (!m_receiversRunning ) {
+        GUI_INFO() << "Starting ssh receivers";
         m_receiversRunning = true;
         res = startReceivers();
         if (res) {
@@ -238,6 +243,7 @@ void MainGUI::on_startReceiversButt_clicked()
             m_receiversRunning = false;
         }
     } else {
+        GUI_INFO() << "Stopping ssh receivers";
         m_receiversRunning = false;
         res = stopReceivers();
         if (res) {
@@ -269,7 +275,7 @@ bool MainGUI::startReceivers() {
         if (m_receiverConsoleOpen && m_receiverConsole != nullptr && !m_receiverConsoleInitialFillOngoing) {
             m_receiverConsole->appendOutput(trimmed);
         }
-        qDebug() << "RCVRunner output: " << trimmed;
+        //qDebug() << "RCVRunner output: " << trimmed;
     });
 
     connect(m_rcvRunnerThread, &QThread::started, m_rcvRunner, &ReceiverRunnerSSH::start);
@@ -284,7 +290,7 @@ bool MainGUI::startReceivers() {
         if (m_receiversRunning) {
             // if m_receiversRunning is set to True when we hit this, then the rcvRunner has exited unexpectedlys since
             // when stop button is pressed, m_receiversRunning is set to false before doing any real stop activities
-            qDebug() << "Seems m_rcvRunnerThread finished unexpectedly";
+            GUI_WARN() << "Seems m_rcvRunnerThread finished unexpectedly";
             m_receiversRunning = false;
             ui->startReceiversButt->setText("Start (SSH) Receivers");
         }
@@ -392,7 +398,7 @@ void MainGUI::on_algoConfigButt_clicked()
 
 void MainGUI::configUpdateFromRemote()
 {
-    qDebug() << "configUpdateFromRemote() callback called. Pushing new config to lib";
+    GUI_INFO() << "configUpdateFromRemote() callback. Pushing new config to lib";
     m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
     populateAlgoSelect(true);
 }

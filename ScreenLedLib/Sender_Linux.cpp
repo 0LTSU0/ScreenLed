@@ -1,5 +1,5 @@
 #include <Sender_Linux.h>
-#include <QDebug>
+#include "Log.h"
 
 void Sender::updateConfig(ScreenCapConfig conf)
 {
@@ -12,7 +12,7 @@ void Sender::run()
 	m_running = true;
     if (!initSender())
     {
-        qDebug() << "Could not initialize sender";
+        LIB_ERROR() << "Could not initialize sender";
         return;
     }
 	
@@ -33,12 +33,12 @@ bool Sender::initSender()
     std::lock_guard lock(m_confMutex);
     for (const auto& client : m_conf.c_clientInfos) 
     {
-        qDebug() << "Opening UDP Port (Linux)";
+        LIB_DEBUG() << "Opening UDP Port (Linux)";
         // Create UDP socket 
         int sock = ::socket(AF_INET, SOCK_DGRAM, 0); 
         if (sock < 0) 
         { 
-            qDebug() << "Socket creation failed:" << strerror(errno); 
+            LIB_ERROR() << "Socket creation failed:" << strerror(errno);
             return false; 
         }
         sockaddr_in addr{}; 
@@ -48,7 +48,7 @@ bool Sender::initSender()
         // Convert IP address from string to binary form 
         if (inet_pton(AF_INET, client.host.c_str(), &addr.sin_addr) != 1) 
         { 
-            qDebug() << "Invalid IP address:" << QString::fromStdString(client.host); 
+            LIB_ERROR() << "Invalid IP address:" << QString::fromStdString(client.host);
             ::close(sock); 
             return false; 
         }
@@ -65,7 +65,7 @@ void Sender::deinitSender()
     { 
         for (const auto& c : m_clientSocks) 
         { 
-            qDebug() << "Closing UDP Port (Linux): " << c.sock; 
+            LIB_DEBUG() << "Closing UDP Port (Linux): " << c.sock;
             ::close(c.sock); 
         } 
     } 
@@ -98,7 +98,7 @@ void Sender::sendRgbData(rgbAnalysisResult& data)
         );
 
         if (res == -1) {
-            qDebug() << "sendto failed:" << strerror(errno);
+            LIB_ERROR() << "sendto failed:" << strerror(errno);
         }
     }
 

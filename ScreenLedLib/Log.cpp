@@ -19,7 +19,7 @@ namespace
     QMutex logMutex;
     QFile logFile;
 
-    QtMsgType consoleLevel = QtInfoMsg;
+    QtMsgType consoleLevel = QtDebugMsg;
     QtMsgType fileLevel = QtDebugMsg;
 
     constexpr qint64 maxFileSize = 5 * 1024 * 1024; // 5 MiB
@@ -66,10 +66,10 @@ namespace
             return QStringLiteral("GUI/") + name.mid(8);
 
         if (name == QStringLiteral("screenled.lib"))
-            return QStringLiteral("CORE");
+            return QStringLiteral("LIB");
 
         if (name.startsWith(QStringLiteral("screenled.lib.")))
-            return QStringLiteral("CORE/") + name.mid(9);
+            return QStringLiteral("LIB/") + name.mid(9);
 
         // Keep other categories visible, including ordinary qDebug().
         return name;
@@ -78,8 +78,8 @@ namespace
     void writeConsole(const QByteArray &line)
     {
         std::fwrite(line.constData(), 1,
-                    static_cast<size_t>(line.size()), stderr);
-        std::fflush(stderr);
+                    static_cast<size_t>(line.size()), stdout);
+        std::fflush(stdout);
     }
 
     bool openLogFile()
@@ -136,8 +136,9 @@ namespace
                 QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz"));
 
         const QString component = componentName(context.category);
-        const QString source = QString::fromUtf8(
-            context.file ? context.file : "?");
+        const QString source = QFileInfo(
+                QString::fromUtf8(context.file ? context.file : "?")
+            ).fileName();
 
         const QString line = QStringLiteral("[%1] [%2] [%3] %4:%5 %6\n")
             .arg(timestamp)
@@ -158,7 +159,7 @@ namespace
 
                 if (logFile.isOpen()) {
                     logFile.write(bytes);
-                    logFile.flush();
+                    //logFile.flush();
                 }
             }
         }

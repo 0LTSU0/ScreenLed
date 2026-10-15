@@ -1,5 +1,5 @@
 #include "receiverrunnerssh_statuslistener.h"
-#include <QDebug>
+#include "Log.h"
 
 receiverrunnerssh_statuslistener::receiverrunnerssh_statuslistener(QObject *parent)
     : QObject{parent}
@@ -20,13 +20,13 @@ void receiverrunnerssh_statuslistener::start()
     connect(m_socket, &QUdpSocket::readyRead,
             this, &receiverrunnerssh_statuslistener::readPendingDatagrams);
 
-    qDebug() << "receiverrunnerssh_statuslistener started";
+    GUI_INFO() << "receiverrunnerssh_statuslistener started";
     emit started();
 }
 
 void receiverrunnerssh_statuslistener::stop()
 {
-    qDebug() << "receiverrunnerssh_statuslistener shutting down";
+    GUI_INFO() << "receiverrunnerssh_statuslistener shutting down";
     if (m_socket) {
         m_socket->close();
     }
