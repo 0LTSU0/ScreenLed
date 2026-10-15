@@ -87,7 +87,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ScreenLedGUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-		${QR_CODE_SOURCES}
+        ${QR_CODE_SOURCES}
         qtresources.qrc
     )
 # Define target properties for Android with Qt 6 as:
@@ -104,6 +104,8 @@ else()
     else()
         add_executable(ScreenLedGUI
             ${PROJECT_SOURCES}
+            ${QR_CODE_SOURCES}
+            qtresources.qrc
         )
     endif()
 endif()

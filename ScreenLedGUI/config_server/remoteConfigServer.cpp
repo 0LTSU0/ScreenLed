@@ -15,7 +15,7 @@ std::string ConfigHttpServer::generateAuthToken()
             << std::setfill('0')
             << (rd() & 0xff);
     }
-    qDebug() << "ConfigHttpServer::generateAuthToken() generated: " << out.str();
+    qDebug() << "ConfigHttpServer::generateAuthToken() generated: " << out.str().c_str();
     return out.str();
 }
 
@@ -169,7 +169,7 @@ bool ConfigHttpServer::start()
         m_serverConf.host = nwInterfaceHelper::getIPv4ForInterface(currentScreenLedConf.c_preferredLocalNetworkInterface);
         if (m_serverConf.host.empty())
         {
-            qDebug() << "Failed to resolve ipv4 for interface " << currentScreenLedConf.c_preferredLocalNetworkInterface << " Cannot start!";
+            qDebug() << "Failed to resolve ipv4 for interface " << currentScreenLedConf.c_preferredLocalNetworkInterface.c_str() << " Cannot start!";
             return false;
         }
     }
