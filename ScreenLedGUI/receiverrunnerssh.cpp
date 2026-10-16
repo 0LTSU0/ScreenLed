@@ -1,7 +1,7 @@
 #include "receiverrunnerssh.h"
 #include <QThread>
-#include <QDebug>
 #include <QEventLoop>
+#include "Log.h"
 
 ReceiverRunnerSSH::ReceiverRunnerSSH(std::vector<clientInfo> hosts, QString nwInterfaceName, QObject *parent)
     : QObject(parent), m_clients(hosts), m_localNWInterfaceName(nwInterfaceName)
@@ -174,6 +174,7 @@ void ReceiverRunnerSSH::start()
 
     if (m_connections.empty()) {
         emit outputReady("No connections established, stopping.");
+        cleanup();
         emit finished();
         return;
     }
@@ -260,7 +261,7 @@ void ReceiverRunnerSSH::updateConnectionAliveTs(const QByteArray &msg,
                                                 const QHostAddress &addr,
                                                 quint16 port)
 {
-    qDebug() << msg << addr << port;
+    GUI_DEBUG() << "Connection alive update: " << msg << addr << port;
     for (auto& connection : m_connections)
     {
         auto client = connection.client;
@@ -273,25 +274,6 @@ void ReceiverRunnerSSH::updateConnectionAliveTs(const QByteArray &msg,
         }
     }
 }
-
-QString ReceiverRunnerSSH::getLocalIPv4()
-{
-    QNetworkInterface iface = QNetworkInterface::interfaceFromName(m_localNWInterfaceName);
-    if (!iface.isValid()) {
-        return "";
-    }
-    for (const QNetworkAddressEntry &entry : iface.addressEntries())
-    {
-        const QHostAddress &addr = entry.ip();
-        if (addr.protocol() == QAbstractSocket::IPv4Protocol)
-        {
-            qDebug() << "getLocalIPv4() returning " << addr.toString();
-            return addr.toString();
-        }
-    }
-    return "";
-}
-
 
 std::vector<std::pair<QString, std::chrono::system_clock::time_point>> ReceiverRunnerSSH::getAliveTimestamps()
 {

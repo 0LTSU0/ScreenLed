@@ -13,6 +13,7 @@
 #include <QNetworkInterface>
 
 #include "receiverrunnerssh_statuslistener.h"
+#include "config_server/ifResolver.h"
 
 #ifdef Q_OS_WIN
 #include <winsock2.h>
@@ -62,7 +63,6 @@ private:
     void updateConnectionAliveTs(const QByteArray &msg,
                                  const QHostAddress &addr,
                                  quint16 port);
-    QString getLocalIPv4();
 
     std::vector<clientInfo> m_clients;
     std::atomic<bool> m_stopFlag{false};
@@ -76,7 +76,7 @@ private:
     QThread *m_statusListenerThread = nullptr;
     QString m_statusListenerErr;
     QString m_localNWInterfaceName;
-    QString m_localIP = getLocalIPv4();
+    QString m_localIP = QString::fromStdString(nwInterfaceHelper::getIPv4ForInterface(m_localNWInterfaceName.toStdString()));
     QNetworkInterface selectCorrectInterface(const std::vector<QNetworkInterface>&);
 };
 

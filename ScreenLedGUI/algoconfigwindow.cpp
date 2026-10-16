@@ -8,7 +8,7 @@ AlgoConfigWindow::AlgoConfigWindow(QWidget *parent, QWidget *configWidget)
     , ui(new Ui::AlgoConfigWindow)
 {
     ui->setupUi(this);
-
+    setWindowTitle("Algo config");
     ui->AlgoConfigMainLayout->addWidget(configWidget);
 }
 

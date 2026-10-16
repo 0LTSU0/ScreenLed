@@ -1,8 +1,10 @@
 #include "ScreenLedLib.h"
+#include "Log.h"
 
 void ScreenLedLib::updateConfig(ScreenCapConfig conf)
 {
-	//update our config..
+    LIB_INFO() << "Got config update";
+    //update our config..
 	std::lock_guard lock(m_confMutex);
 	m_conf = conf;
 	

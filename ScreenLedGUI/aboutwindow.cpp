@@ -7,6 +7,7 @@ AboutWindow::AboutWindow(QWidget *parent)
     , ui(new Ui::AboutWindow)
 {
     ui->setupUi(this);
+    setWindowTitle("About");
     ui->versionText->setText(
         QString("ScreenLedGUI version %1").arg(APP_VERSION)
     );

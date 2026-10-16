@@ -5,11 +5,15 @@
 #include "settingswindow.h"
 #include "errordialog.h"
 #include "algoconfigwindow.h"
+#include "config_server/remoteConfigServer.h"
+#include "qrcodewindow.h"
+#include "Log.h"
 
 #include <QApplication>
 #include <QString>
 #include <QMessageBox>
 #include <QFile>
+#include <QSignalBlocker>
 
 MainGUI::MainGUI(QWidget *parent)
     : QMainWindow(parent)
@@ -17,12 +21,18 @@ MainGUI::MainGUI(QWidget *parent)
 {
     ui->setupUi(this);
     ui->statusbar->showMessage("IDLE");
+    setWindowTitle("ScreenLedGUI");
 
     populateAlgoSelect();
     populateReceiverStatusRows();
 
     connect(m_uiUpdateTimer, &QTimer::timeout, this, &MainGUI::periodicUIUpdate);
     m_uiUpdateTimer->start(1000);
+
+    if (m_screenLedConfigurator.getCurrentConfig().c_configServerConf.enabled)
+    {
+        startRemoteConfigServer();
+    }
 }
 
 MainGUI::~MainGUI()
@@ -31,7 +41,14 @@ MainGUI::~MainGUI()
     delete ui;
 }
 
-void MainGUI::populateAlgoSelect() {
+void MainGUI::populateAlgoSelect(bool blockSignals) {
+    std::unique_ptr<QSignalBlocker> blocker;
+    if (blockSignals) {
+        blocker = std::make_unique<QSignalBlocker>(
+            ui->mainGUIAlgoSelect
+        );
+    }
+
     auto currentConfig = m_screenLedConfigurator.getCurrentConfig();
     int activeIndex = 0;
     int i = 0;
@@ -134,7 +151,8 @@ void MainGUI::on_mainGUIAlgoSelect_currentTextChanged(const QString &arg1)
             return;
         }
     }
-    qDebug() << "WTF, the selected option in mainguialgoselect does not match any existing algotype";
+
+    GUI_ERROR() << "WTF, the selected option in mainguialgoselect does not match any existing algotype";
 }
 
 
@@ -166,12 +184,19 @@ void MainGUI::on_actionConfiguration_triggered()
                                                   m_screenLedConfigurator.getCurrentConfig(),
                                                   [this](ScreenCapConfig conf) {
                                                       m_screenLedConfigurator.updateCurrentConfig(conf, true);
-                                                  });
+                                                  },
+                                                  m_screenLedConfigurator.getConfigFilePath());
     settings->setAttribute(Qt::WA_DeleteOnClose);
     settings->setWindowModality(Qt::ApplicationModal);
     connect(settings, &QObject::destroyed, this, [this]() {
         // refill when setting window is closed
         populateReceiverStatusRows();
+        if (m_screenLedConfigurator.getCurrentConfig().c_configServerConf.enabled)
+        {
+            startRemoteConfigServer();
+        } else {
+            stopRemoteConfigServer();
+        }
     });
     settings->show();
 }
@@ -181,12 +206,14 @@ void MainGUI::on_startButt_clicked()
 {
     switch (m_libRunStatus) {
     case runStatus::IDLE:
+        GUI_INFO() << "Start LIB";
         m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
         m_screenLedLib.start();
         ui->startButt->setText("Stop");
         m_libRunStatus = runStatus::RUNNING;
         break;
     case runStatus::RUNNING:
+        GUI_INFO() << "Stop LIB";
         m_screenLedLib.stop();
         ui->startButt->setText("Start");
         m_libRunStatus = runStatus::IDLE;
@@ -201,6 +228,7 @@ void MainGUI::on_startReceiversButt_clicked()
 {
     bool res = false;
     if (!m_receiversRunning ) {
+        GUI_INFO() << "Starting ssh receivers";
         m_receiversRunning = true;
         res = startReceivers();
         if (res) {
@@ -209,6 +237,7 @@ void MainGUI::on_startReceiversButt_clicked()
             m_receiversRunning = false;
         }
     } else {
+        GUI_INFO() << "Stopping ssh receivers";
         m_receiversRunning = false;
         res = stopReceivers();
         if (res) {
@@ -240,7 +269,7 @@ bool MainGUI::startReceivers() {
         if (m_receiverConsoleOpen && m_receiverConsole != nullptr && !m_receiverConsoleInitialFillOngoing) {
             m_receiverConsole->appendOutput(trimmed);
         }
-        qDebug() << "RCVRunner output: " << trimmed;
+        //qDebug() << "RCVRunner output: " << trimmed;
     });
 
     connect(m_rcvRunnerThread, &QThread::started, m_rcvRunner, &ReceiverRunnerSSH::start);
@@ -255,7 +284,7 @@ bool MainGUI::startReceivers() {
         if (m_receiversRunning) {
             // if m_receiversRunning is set to True when we hit this, then the rcvRunner has exited unexpectedlys since
             // when stop button is pressed, m_receiversRunning is set to false before doing any real stop activities
-            qDebug() << "Seems m_rcvRunnerThread finished unexpectedly";
+            GUI_WARN() << "Seems m_rcvRunnerThread finished unexpectedly";
             m_receiversRunning = false;
             ui->startReceiversButt->setText("Start (SSH) Receivers");
         }
@@ -311,12 +340,25 @@ void MainGUI::periodicUIUpdate()
             updateReceiverStatusRow(connection.first, status);
         }
     }
+
+    QString remoteServerStatus;
+    if (m_configHttpServer)
+    {
+        remoteServerStatus = m_configHttpServer->isRunning() ?
+                                         " | Remote config server running" :
+                                         " | Remote config server not running";
+    } else {
+        remoteServerStatus = " | Remote config server not initialized";
+    }
+
+
     if (m_screenLedLib.m_screenLedLibIsRunning)
     {
         ui->statusbar->showMessage("Running FPS: " + QString::number(m_screenLedLib.getScreenCapFPS(), 'f', 1) +
-                                   " Avg ss to sent delay: " + QString::number(m_screenLedLib.getAvgSSToSentDelay().count(), 'f', 0) + "ms");
+                                   " Avg ss to sent delay: " + QString::number(m_screenLedLib.getAvgSSToSentDelay().count(), 'f', 0) + "ms" +
+                                   remoteServerStatus);
     } else {
-        ui->statusbar->showMessage("IDLE");
+        ui->statusbar->showMessage("IDLE" + remoteServerStatus);
     }
 }
 
@@ -348,3 +390,52 @@ void MainGUI::on_algoConfigButt_clicked()
     }
 }
 
+void MainGUI::configUpdateFromRemote()
+{
+    GUI_INFO() << "configUpdateFromRemote() callback. Pushing new config to lib";
+    m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
+    populateAlgoSelect(true);
+}
+
+void MainGUI::on_actionRemote_config_triggered()
+{
+    if (!m_configHttpServer)
+    {
+        (new ErrorDialog())->Error("Remote config server is not enabled or initialization has failed!");
+        return;
+    }
+
+    QrCodeWindow *qrWidow = new QrCodeWindow(m_configHttpServer->getConfigURL(), nullptr); // no parent for it to be a real window
+    qrWidow->setAttribute(Qt::WA_DeleteOnClose);
+    qrWidow->setWindowModality(Qt::ApplicationModal);
+    qrWidow->show();
+}
+
+void MainGUI::startRemoteConfigServer()
+{
+    if (m_configHttpServer) {
+        GUI_DEBUG() << "startRemoteConfigServer() called but server already initialized. Not doing anything";
+        return;
+    }
+    m_configHttpServer = new ConfigHttpServer(&m_screenLedConfigurator);
+    if (!m_configHttpServer->start())
+    {
+        (new ErrorDialog())->Error("Failed to start ConfigHttpServer. Remote configuration interface is unavailable.");
+    } else {
+        m_configHttpServer->addChangeListener([this]() {
+            configUpdateFromRemote();
+        });
+    }
+}
+
+void MainGUI::stopRemoteConfigServer()
+{
+    if (!m_configHttpServer)
+    {
+        GUI_DEBUG() << "stopRemoteConfigServer() called but server already not initialized. Not doing anything";
+        return;
+    }
+
+    m_configHttpServer->stop();
+    delete m_configHttpServer;
+}

@@ -2,6 +2,9 @@
 #include <iostream>
 #include <json.hpp>
 #include <fstream>
+#include <QFileInfo>
+#include <QDir>
+#include "Log.h"
 
 using json = nlohmann::json;
 
@@ -49,16 +52,21 @@ bool ScreenLedConfigurator::loadConfigs() {
         m_conf.c_clientInfos.push_back(c);
     }
 
-    //algo confs. TODO we should probably load/create json objects for these in the configs and not here
+    // config server config
+    if (conf.contains("configServerConf")) {
+        m_conf.c_configServerConf.enabled = conf["configServerConf"].contains("enabled") ?
+                                            conf["configServerConf"]["enabled"].get<bool>() :
+                                            m_conf.c_configServerConf.enabled; // default value from initialized conf
+        m_conf.c_configServerConf.authToken = conf["configServerConf"].contains("authToken") ?
+                                              conf["configServerConf"]["authToken"].get<std::string>() :
+                                              m_conf.c_configServerConf.authToken; // default value from initialized conf
+    }
+
+    //algo confs
     const auto algoFlashBoostConfigJsonKey = m_conf.c_algoFlashBoostConfig.jsonConfKey;
     if (conf.contains(algoFlashBoostConfigJsonKey))
     {
-        m_conf.c_algoFlashBoostConfig.c_flashTreshold = conf[algoFlashBoostConfigJsonKey].contains("flashTreshold") ?
-                                                            conf[algoFlashBoostConfigJsonKey]["flashTreshold"].get<int>() :
-                                                            m_conf.c_algoFlashBoostConfig.c_flashTreshold; // default value form initialized conf
-        m_conf.c_algoFlashBoostConfig.c_dimmingSpeed = conf[algoFlashBoostConfigJsonKey].contains("dimmingSpeed") ?
-                                                           conf[algoFlashBoostConfigJsonKey]["dimmingSpeed"].get<int>() :
-                                                           m_conf.c_algoFlashBoostConfig.c_dimmingSpeed; // default value form initialized conf
+        m_conf.c_algoFlashBoostConfig.fromJson(conf[algoFlashBoostConfigJsonKey]);
     }
 
     return true;
@@ -87,11 +95,20 @@ bool ScreenLedConfigurator::createConfigFile(){
         });
     }
 
-    std::ofstream file(m_configPath);
-    if (!file) {
-        std::cerr << "screenCaptureWorkerBase::createConfigFile() Failed to open config for writing." << std::endl;
+    const QFileInfo info(QString::fromStdString(m_configPath));
+    const QString directory = info.absolutePath();
+
+    if (!QDir().mkpath(directory)) {
+        LIB_ERROR() << "createConfigFile() failed to create dir " << directory;
         return false;
     }
+
+    std::ofstream file(m_configPath);
+    if (!file) {
+        LIB_ERROR() << "createConfigFile() failed to open config file for writing " << info;
+        return false;
+    }
+    LIB_INFO() << "Creating config file to " << info;
     file << jconf.dump(4);
     file.close();
     return true;
@@ -131,6 +148,10 @@ void ScreenLedConfigurator::updateCurrentConfig(ScreenCapConfig newConf, bool sa
     jconf[m_conf.c_algoFlashBoostConfig.jsonConfKey]["flashTreshold"] = m_conf.c_algoFlashBoostConfig.c_flashTreshold;
     jconf[m_conf.c_algoFlashBoostConfig.jsonConfKey]["dimmingSpeed"] = m_conf.c_algoFlashBoostConfig.c_dimmingSpeed;
 
+    // config server config
+    jconf["configServerConf"]["enabled"] = m_conf.c_configServerConf.enabled;
+    jconf["configServerConf"]["authToken"] = m_conf.c_configServerConf.authToken;
+
     std::ofstream file(m_configPath);
     if (!file) {
         std::cerr << "screenCaptureWorkerBase::updateCurrentConfig() Failed to open config json for writing. The set values will be used during this session but changes won't be saved to disk" << std::endl;
@@ -144,4 +165,9 @@ ScreenCapConfig ScreenLedConfigurator::getCurrentConfig()
 {
     std::lock_guard<std::mutex> lock(m_conf_mutex);
     return m_conf;
+}
+
+QFileInfo ScreenLedConfigurator::getConfigFilePath()
+{
+    return QFileInfo(QString::fromStdString(m_configPath));
 }

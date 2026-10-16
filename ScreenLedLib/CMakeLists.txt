@@ -36,6 +36,8 @@ add_library(ScreenLedLib STATIC
 	Mailbox.h
 	Analyzer.cpp
 	Analyzer.h
+        Log.cpp
+        Log.h
 	${OS_SPECIFIC_SOURCES}
 	${ALGO_SOURCES}
 )
@@ -55,6 +57,7 @@ if (UNIX)
 endif()
 
 target_link_libraries(ScreenLedLib PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(ScreenLedLib PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 if (WIN32)
 	target_compile_definitions(ScreenLedLib PRIVATE NOMINMAX)
 	target_link_libraries(ScreenLedLib PRIVATE ws2_32)

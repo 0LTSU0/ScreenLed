@@ -7,6 +7,7 @@
 #include <vector>
 #include <functional>
 #include "qcombobox.h"
+#include <QFileInfo>
 
 #include "Commons.h"
 
@@ -27,7 +28,7 @@ class SettingsWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit SettingsWindow(QWidget *parent = nullptr, ScreenCapConfig config = ScreenCapConfig(), std::function<void(ScreenCapConfig)> = nullptr);
+    explicit SettingsWindow(QWidget *parent = nullptr, ScreenCapConfig config = ScreenCapConfig(), std::function<void(ScreenCapConfig)> = nullptr, QFileInfo configFilePath = QFileInfo(""));
     ~SettingsWindow();
 
 private slots:
@@ -39,11 +40,14 @@ private slots:
 
     void on_AutoRunScriptSelect_clicked();
 
+    void on_OpenJsonButton_clicked();
+
 private:
     Ui::SettingsWindow *ui;
     ScreenCapConfig m_config;
     std::function<void(ScreenCapConfig)> m_updateConfigFunc;
     std::vector<ReceiverConfigRow> m_receiverConfigRows;
+    QFileInfo m_configFilePath;
 
     // funcs
     void populateSettingsWindow();

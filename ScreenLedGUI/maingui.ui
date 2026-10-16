@@ -190,6 +190,7 @@ background-color: rgb(18, 76, 120);</string>
     </property>
     <addaction name="actionConfiguration"/>
     <addaction name="actionReceiver_console"/>
+    <addaction name="actionRemote_config"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -220,6 +221,11 @@ background-color: rgb(18, 76, 120);</string>
   <action name="actionReceiver_console">
    <property name="text">
     <string>Receiver console</string>
+   </property>
+  </action>
+  <action name="actionRemote_config">
+   <property name="text">
+    <string>Remote config</string>
    </property>
   </action>
  </widget>

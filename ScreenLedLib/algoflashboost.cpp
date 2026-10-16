@@ -1,7 +1,7 @@
 #include <algoflashboost.h>
 
 #include <algorithm>
-#include <iostream>
+#include "Log.h"
 
 AlgoFlashBoost::AlgoFlashBoost() 
 {
@@ -17,7 +17,7 @@ void AlgoFlashBoost::analyzeColors(std::vector<rgbValue>& result, const ScreenCa
 
     if (rawMedians.size() != m_prevRgbVals.size())
     {
-        std::cout << "WTF rawMedians size is different than m_prevRgbVals" << std::endl;
+        LIB_WARN() << "WTF rawMedians size is different than m_prevRgbVals";
         result.assign(NUM_LED_SEGMENTS, rgbValue{});
         return;
     }
@@ -28,12 +28,12 @@ void AlgoFlashBoost::analyzeColors(std::vector<rgbValue>& result, const ScreenCa
         auto brightnessBefore = getBrightness(m_prevRgbVals.at(i));
         if (brightnessNow - brightnessBefore > conf.c_algoFlashBoostConfig.c_flashTreshold)
         {
-            std::cout << "flash on segment " << i << std::endl;
+            LIB_DEBUG() << "flash on segment " << i;
             m_framesSinceFlash.at(i) = 0;   
         }
         else if (brightnessBefore - brightnessNow > conf.c_algoFlashBoostConfig.c_flashTreshold)
         {
-            std::cout << "DEflash on segment" << i << std::endl;
+            LIB_DEBUG() << "DEflash on segment" << i;
             m_framesSinceFlash.at(i) = 255; // no matter what 255 frames is large enough fake time for the calculator to choose the raw rgb value
         }
         result.at(i) = calcBrightnessForSegment(rawMedians.at(i), m_framesSinceFlash.at(i), conf);
