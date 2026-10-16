@@ -2,13 +2,15 @@
 #include "ui_settingswindow.h"
 #include <qcombobox.h>
 #include <qscreen.h>
+#include "Log.h"
 
 #include <QDir>
 #include <QFileDialog>
 #include <QDebug>
 #include <QNetworkInterface>
+#include <QDesktopServices>
 
-SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig config, std::function<void(ScreenCapConfig)> updateConfigFunc)
+SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig config, std::function<void(ScreenCapConfig)> updateConfigFunc, QFileInfo configFilePath)
     : QWidget(parent)
     , ui(new Ui::SettingsWindow)
 {
@@ -16,6 +18,7 @@ SettingsWindow::SettingsWindow(QWidget *parent, ScreenCapConfig config, std::fun
     setWindowTitle("ScreenLed Configuration");
     m_config = config;
     m_updateConfigFunc = updateConfigFunc;
+    m_configFilePath = configFilePath;
     populateSettingsWindow();
 }
 
@@ -275,3 +278,18 @@ void SettingsWindow::populateAnalyzerDownscaleFactorSelector(int selectedVal)
     }
     ui->AnalyzerDownscaleFactorVal->setCurrentIndex(activeIndex);
 }
+
+void SettingsWindow::on_OpenJsonButton_clicked()
+{
+    if (!m_configFilePath.exists() || !m_configFilePath.isFile()) {
+        GUI_ERROR() << "File does not exist:" << m_configFilePath;
+        return;
+    }
+
+    const QUrl url = QUrl::fromLocalFile(m_configFilePath.absoluteFilePath());
+
+    if (!QDesktopServices::openUrl(url)) {
+        GUI_ERROR() << "Could not open file:" << m_configFilePath;
+    }
+}
+

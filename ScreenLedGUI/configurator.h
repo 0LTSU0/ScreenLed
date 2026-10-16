@@ -5,6 +5,7 @@
 #include <Commons.h>
 #include <mutex>
 #include <QStandardPaths>
+#include <QFileInfo>
 
 class ScreenLedConfigurator
 {
@@ -12,6 +13,7 @@ public:
     ScreenLedConfigurator();
     void updateCurrentConfig(ScreenCapConfig newConf, bool save);
     ScreenCapConfig getCurrentConfig();
+    QFileInfo getConfigFilePath();
 
 private:
     bool loadConfigs();

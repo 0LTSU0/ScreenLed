@@ -433,6 +433,13 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
+      <widget class="QPushButton" name="OpenJsonButton">
+       <property name="text">
+        <string>Open JSON</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="addReceiverButton">
        <property name="text">
         <string>Add Receiver</string>

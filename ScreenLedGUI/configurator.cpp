@@ -166,3 +166,8 @@ ScreenCapConfig ScreenLedConfigurator::getCurrentConfig()
     std::lock_guard<std::mutex> lock(m_conf_mutex);
     return m_conf;
 }
+
+QFileInfo ScreenLedConfigurator::getConfigFilePath()
+{
+    return QFileInfo(QString::fromStdString(m_configPath));
+}

@@ -184,7 +184,8 @@ void MainGUI::on_actionConfiguration_triggered()
                                                   m_screenLedConfigurator.getCurrentConfig(),
                                                   [this](ScreenCapConfig conf) {
                                                       m_screenLedConfigurator.updateCurrentConfig(conf, true);
-                                                  });
+                                                  },
+                                                  m_screenLedConfigurator.getConfigFilePath());
     settings->setAttribute(Qt::WA_DeleteOnClose);
     settings->setWindowModality(Qt::ApplicationModal);
     connect(settings, &QObject::destroyed, this, [this]() {
