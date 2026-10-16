@@ -7,6 +7,7 @@
 #include <algomean.h>
 #include <algomedian.h>
 #include <algoflashboost.h>
+#include <algoambient.h>
 
 class Analyzer : public QThread
 {
@@ -35,5 +36,6 @@ private:
 	rgbAnalysisResult m_analysisResult;
 	AlgoMean m_algoMean;
 	AlgoMedian m_algoMedian;
-	AlgoFlashBoost m_algoFlashBoost;
+    AlgoFlashBoost m_algoFlashBoost = AlgoFlashBoost();
+    AlgoAmbient m_algoAmbient = AlgoAmbient();
 };

@@ -7,17 +7,19 @@
 #include <QString>
 #include <chrono>
 #include <algoflashboost_conf.h>
+#include <algoambient_conf.h>
 
 #define NUM_LED_SEGMENTS 20 // TODO: make this adjustable
 
 enum ScreenLedAlgorithm {
     MEAN_DEFAULT,
     MEDIAN,
-    FLASH_BOOST
+    FLASH_BOOST,
+    AMBIENT
 };
 
 inline bool ScreenLedAlgorithmSupportsConfig(ScreenLedAlgorithm algo) {
-    if (algo == ScreenLedAlgorithm::FLASH_BOOST)
+    if (algo == ScreenLedAlgorithm::FLASH_BOOST || algo == ScreenLedAlgorithm::AMBIENT)
     {
         return true;
     }
@@ -57,7 +59,8 @@ struct clientInfo {
 
 inline std::map<std::string, ScreenLedAlgorithm> algoNameMap{{"Default: mean", ScreenLedAlgorithm::MEAN_DEFAULT},
                                                              {"Median", ScreenLedAlgorithm::MEDIAN},
-                                                             {"FlashBoost", ScreenLedAlgorithm::FLASH_BOOST}};
+                                                             {"FlashBoost", ScreenLedAlgorithm::FLASH_BOOST},
+                                                             {"Ambient", ScreenLedAlgorithm::AMBIENT}};
 
 inline std::map<std::string, receiverType> receiverTypeNameMap{{"Dummy", receiverType::DUMMY},
                                                                {"Raspi (ssh)", receiverType::RASPI_SSH},
@@ -98,6 +101,7 @@ struct ScreenCapConfig {
     ConfigServerConf c_configServerConf = ConfigServerConf();
 
     AlgoFlashBoost_Config c_algoFlashBoostConfig = AlgoFlashBoost_Config();
+    AlgoAmbient_Config c_algoAmbientConfig = AlgoAmbient_Config();
 };
 
 inline bool isWindows() {

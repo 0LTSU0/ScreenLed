@@ -36,7 +36,10 @@ void Analyzer::run()
 			case ScreenLedAlgorithm::FLASH_BOOST:
 				m_algoFlashBoost.analyzeColors(m_analysisResult.rgb_values, m_config, pixelbuffer);
 				break;
-			default:
+            case ScreenLedAlgorithm::AMBIENT:
+                m_algoAmbient.analyzeColors(m_analysisResult.rgb_values, m_config, pixelbuffer);
+                break;
+            default:
                 LIB_WARN() << "Unknown ScreenLedAlgorithm in analyzer. Cannot process frame";
 				was_processed = false;
 				break;

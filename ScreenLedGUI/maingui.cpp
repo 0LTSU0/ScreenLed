@@ -375,6 +375,9 @@ void MainGUI::on_algoConfigButt_clicked()
     case ScreenLedAlgorithm::FLASH_BOOST:
         configWidget = buildConfigWidget(currentConf.c_algoFlashBoostConfig);
         break;
+    case ScreenLedAlgorithm::AMBIENT:
+        configWidget = buildConfigWidget(currentConf.c_algoAmbientConfig);
+        break;
     default:
         break;
     }
