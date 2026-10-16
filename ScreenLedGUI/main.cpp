@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     const QString logPath =
         QStandardPaths::writableLocation(
             QStandardPaths::AppLocalDataLocation)
-        + "/screenled/screenled.log";
+        + "/logs/screenled.log";
     Log::init(logPath);
     GUI_INFO() << "ScreenLed starting";
 

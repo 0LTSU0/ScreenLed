@@ -31,15 +31,7 @@ MainGUI::MainGUI(QWidget *parent)
 
     if (m_screenLedConfigurator.getCurrentConfig().c_configServerConf.enabled)
     {
-        m_configHttpServer = new ConfigHttpServer(&m_screenLedConfigurator);
-        if (!m_configHttpServer->start())
-        {
-            (new ErrorDialog())->Error("Failed to start ConfigHttpServer. Remote configuration interface is unavailable.");
-        } else {
-            m_configHttpServer->addChangeListener([this]() {
-                configUpdateFromRemote();
-            });
-        }
+        startRemoteConfigServer();
     }
 }
 
@@ -134,11 +126,6 @@ void MainGUI::onExitActions() {
         on_startButt_clicked(); // if still running when exiting, stop the library first
     }
 
-    if (m_configHttpServer)
-    {
-        m_configHttpServer->stop();
-    }
-
     // Make sure currently selected algo gets saved since its on the main window rather than configuration and thus has no save button
     m_screenLedConfigurator.updateCurrentConfig(m_screenLedConfigurator.getCurrentConfig(), true);
 
@@ -203,6 +190,12 @@ void MainGUI::on_actionConfiguration_triggered()
     connect(settings, &QObject::destroyed, this, [this]() {
         // refill when setting window is closed
         populateReceiverStatusRows();
+        if (m_screenLedConfigurator.getCurrentConfig().c_configServerConf.enabled)
+        {
+            startRemoteConfigServer();
+        } else {
+            stopRemoteConfigServer();
+        }
     });
     settings->show();
 }
@@ -417,3 +410,31 @@ void MainGUI::on_actionRemote_config_triggered()
     qrWidow->show();
 }
 
+void MainGUI::startRemoteConfigServer()
+{
+    if (m_configHttpServer) {
+        GUI_DEBUG() << "startRemoteConfigServer() called but server already initialized. Not doing anything";
+        return;
+    }
+    m_configHttpServer = new ConfigHttpServer(&m_screenLedConfigurator);
+    if (!m_configHttpServer->start())
+    {
+        (new ErrorDialog())->Error("Failed to start ConfigHttpServer. Remote configuration interface is unavailable.");
+    } else {
+        m_configHttpServer->addChangeListener([this]() {
+            configUpdateFromRemote();
+        });
+    }
+}
+
+void MainGUI::stopRemoteConfigServer()
+{
+    if (!m_configHttpServer)
+    {
+        GUI_DEBUG() << "stopRemoteConfigServer() called but server already not initialized. Not doing anything";
+        return;
+    }
+
+    m_configHttpServer->stop();
+    delete m_configHttpServer;
+}

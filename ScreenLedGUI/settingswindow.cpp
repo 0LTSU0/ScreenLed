@@ -32,6 +32,7 @@ void SettingsWindow::populateSettingsWindow()
     ui->DebugSSintervalVal->setText(QString::number(m_config.c_debugSSInterval));
     ui->ScreenResX->setValue(m_config.c_screenResX);
     ui->ScreenResY->setValue(m_config.c_screenResY);
+    ui->remoteConfServerVal->setCheckState(m_config.c_configServerConf.enabled ? Qt::Checked : Qt::Unchecked);
 
     if (isWindows()) {
         // windows does not have debug preview option atm (and well on linux also relies on system libs so TODO add to this project
@@ -138,6 +139,11 @@ void SettingsWindow::saveConfig() {
     newConf.c_preferredLocalNetworkInterface = ui->nwInterfaceVal->currentData().toString().toStdString();
     newConf.c_analyzerScreenArea = static_cast<activeScreenArea>(ui->analAreaVal->currentData().toInt());
     newConf.c_analyzerDownscaleFactor = ui->AnalyzerDownscaleFactorVal->currentData().toInt();
+    newConf.c_configServerConf.enabled = ui->remoteConfServerVal->checkState() == Qt::Checked;
+    newConf.c_configServerConf.authToken = m_config.c_configServerConf.authToken; // This is not configurable at least at the moment so copy from old config
+
+    // algo configs are configurable in a separate window so just use old values here
+    newConf.c_algoFlashBoostConfig = m_config.c_algoFlashBoostConfig;
 
     if (!m_receiverConfigRows.empty()) {
         newConf.c_clientInfos.clear(); // if we have some receivers, default localhost receiver can be removed. Otherwise lets keep it

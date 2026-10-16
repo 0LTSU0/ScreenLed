@@ -5,7 +5,11 @@
 void Analyzer::updateConfig(ScreenCapConfig conf)
 {
     LIB_INFO() << "Analyzer received conf update. Selected algo is now " << conf.c_algo;
-	std::lock_guard lock(m_confMutex);
+    if (conf.c_algo == ScreenLedAlgorithm::FLASH_BOOST)
+    {
+        LIB_DEBUG() << "flashboost conf in algo update: flashTreshold " << conf.c_algoFlashBoostConfig.c_flashTreshold << " dimmingSpeed " << conf.c_algoFlashBoostConfig.c_dimmingSpeed;
+    }
+    std::lock_guard lock(m_confMutex);
 	m_config = conf;
 }
 
