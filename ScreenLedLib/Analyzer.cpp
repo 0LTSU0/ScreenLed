@@ -8,6 +8,8 @@ void Analyzer::updateConfig(ScreenCapConfig conf)
     if (conf.c_algo == ScreenLedAlgorithm::FLASH_BOOST)
     {
         LIB_DEBUG() << "flashboost conf in algo update: flashTreshold " << conf.c_algoFlashBoostConfig.c_flashTreshold << " dimmingSpeed " << conf.c_algoFlashBoostConfig.c_dimmingSpeed;
+    } else if (conf.c_algo == ScreenLedAlgorithm::AMBIENT) {
+        LIB_DEBUG() << "ambient conf in algo update: samplingseconds " << conf.c_algoAmbientConfig.c_sampleSeconds;
     }
     std::lock_guard lock(m_confMutex);
 	m_config = conf;

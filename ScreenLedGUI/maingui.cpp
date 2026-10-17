@@ -388,6 +388,7 @@ void MainGUI::on_algoConfigButt_clicked()
         confWindow->exec();
         auto config = m_screenLedConfigurator.getCurrentConfig(); // re-get in case it changed elsewhere
         config.c_algoFlashBoostConfig = currentConf.c_algoFlashBoostConfig;
+        config.c_algoAmbientConfig = currentConf.c_algoAmbientConfig;
         m_screenLedConfigurator.updateCurrentConfig(config, true);
         m_screenLedLib.updateConfig(m_screenLedConfigurator.getCurrentConfig());
     }

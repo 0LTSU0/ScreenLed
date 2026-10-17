@@ -91,7 +91,17 @@ void ConfigHttpServer::startApp()
             return crow::response(response);
         }
 
-        auto j = currentConfig.c_algoFlashBoostConfig.toJson();
+        nlohmann::json j;
+        switch (currentConfig.c_algo) {
+        case ScreenLedAlgorithm::FLASH_BOOST:
+            j = currentConfig.c_algoFlashBoostConfig.toJson();
+            break;
+        case ScreenLedAlgorithm::AMBIENT:
+            j = currentConfig.c_algoAmbientConfig.toJson();
+            break;
+        default:
+            break;
+        }
         return crow::response(to_crow(j));
     });
 

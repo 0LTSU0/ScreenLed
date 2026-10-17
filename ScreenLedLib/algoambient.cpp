@@ -1,5 +1,6 @@
 #include "algoambient.h"
 #include "Log.h"
+#include <algorithm>
 
 void AlgoAmbient::analyzeColors(std::vector<rgbValue>& result, const ScreenCapConfig& conf, const RawPixelBuffer& pixelData)
 {
@@ -7,7 +8,45 @@ void AlgoAmbient::analyzeColors(std::vector<rgbValue>& result, const ScreenCapCo
     result.assign(NUM_LED_SEGMENTS, rgbValue{});
 
     auto rawMedians = getRawMedian(pixelData, conf);
-    result = rawMedians;
+    auto timeNow = std::chrono::steady_clock::now();
+    if (std::chrono::duration_cast<std::chrono::seconds>(timeNow - m_prevMedianTimeStamp).count() >= conf.c_algoAmbientConfig.c_sampleSeconds)
+    {
+        LIB_DEBUG() << "Prev medians are older than " << conf.c_algoAmbientConfig.c_sampleSeconds << "s";
+        m_prevMedians = m_currentMedians;
+        m_prevMedianTimeStamp = timeNow;
+        m_currentMedians = rawMedians;
+    }
+
+    result = getResult(conf);
+}
+
+std::vector<rgbValue> AlgoAmbient::getResult(const ScreenCapConfig& conf)
+{
+    std::vector<rgbValue> res;
+    if (m_prevMedians.empty() || m_currentMedians.empty())
+    {
+        LIB_DEBUG() << "AlgoAmbient: prev or current rawmedians is empty. Cannot calculate result";
+        res.assign(NUM_LED_SEGMENTS, rgbValue{});
+        return res;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    double elapsed = std::chrono::duration<double>(now - m_prevMedianTimeStamp).count();
+    double t = std::clamp(elapsed / conf.c_algoAmbientConfig.c_sampleSeconds, 0.0, 1.0);
+    LIB_DEBUG() << "t=" << t;
+    for (int i=0; i<NUM_LED_SEGMENTS; i++)
+    {
+        auto diffR = m_currentMedians.at(i).r - m_prevMedians.at(i).r;
+        auto diffG = m_currentMedians.at(i).g - m_prevMedians.at(i).g;
+        auto diffB = m_currentMedians.at(i).b - m_prevMedians.at(i).b;
+
+        auto rgb = rgbValue{};
+        rgb.r = static_cast<int>(std::lround(m_prevMedians.at(i).r + diffR * t));
+        rgb.g = static_cast<int>(std::lround(m_prevMedians.at(i).g + diffG * t));
+        rgb.b = static_cast<int>(std::lround(m_prevMedians.at(i).b + diffB * t));
+        res.push_back(rgb);
+    }
+    return res;
 }
 
 int AlgoAmbient::medianOf(std::vector<int>& arr) {

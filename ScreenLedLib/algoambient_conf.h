@@ -8,18 +8,18 @@
 using json = nlohmann::json;
 
 struct AlgoAmbient_Config {
-    int c_sampleSeconds = 1;
+    double c_sampleSeconds = 1;
 
     static auto fields();
     auto toJson();
     bool fromJson(const json&);
-    const char* jsonConfKey = "algoFlashBoostConf";
+    const char* jsonConfKey = "algoAmbientConf";
 };
 
 inline auto AlgoAmbient_Config::fields() {
     return std::make_tuple(
-        FIELD_RANGE(AlgoAmbient_Config, c_sampleSeconds, "Sampling seconds", 0, 255, 1)
-        );
+        FIELD_RANGE(AlgoAmbient_Config, c_sampleSeconds, "Sampling seconds", 0, 255, 0.1)
+    );
 }
 
 // Create JSON version of this config to use with e.g. remote config server
@@ -44,7 +44,7 @@ inline bool AlgoAmbient_Config::fromJson(const json& j)
     }
     for (const auto& [key, value] : j.items())
     {
-        if (key == "flashTreshold")
+        if (key == "samplingSeconds")
         {
             if (value >= 0 && value <= 255)
             {

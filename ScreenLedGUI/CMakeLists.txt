@@ -70,12 +70,12 @@ set(PROJECT_SOURCES
     receiverrunnerssh_statuslistener.h receiverrunnerssh_statuslistener.cpp
     errordialog.h errordialog.cpp errordialog.ui
     configurator.h configurator.cpp
-	algoconfigwidget.h
+    algoconfigwidget.h
     algoconfigwindow.h algoconfigwindow.cpp algoconfigwindow.ui
-	config_server/remoteConfigServer.h config_server/remoteConfigServer.cpp
-	config_server/ifResolver.h
-	config_server/nlohmann2crow.h
-	qrcodewindow.h qrcodewindow.cpp qrcodewindow.ui
+    config_server/remoteConfigServer.h config_server/remoteConfigServer.cpp
+    config_server/ifResolver.h
+    config_server/nlohmann2crow.h
+    qrcodewindow.h qrcodewindow.cpp qrcodewindow.ui
 )
 
 set(QR_CODE_SOURCES

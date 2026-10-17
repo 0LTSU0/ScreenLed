@@ -68,6 +68,11 @@ bool ScreenLedConfigurator::loadConfigs() {
     {
         m_conf.c_algoFlashBoostConfig.fromJson(conf[algoFlashBoostConfigJsonKey]);
     }
+    const auto algoAmbientConfigJsonKey = m_conf.c_algoAmbientConfig.jsonConfKey;
+    if (conf.contains(algoAmbientConfigJsonKey))
+    {
+        m_conf.c_algoAmbientConfig.fromJson(conf[algoAmbientConfigJsonKey]);
+    }
 
     return true;
 }
@@ -147,6 +152,8 @@ void ScreenLedConfigurator::updateCurrentConfig(ScreenCapConfig newConf, bool sa
     // algo confs
     jconf[m_conf.c_algoFlashBoostConfig.jsonConfKey]["flashTreshold"] = m_conf.c_algoFlashBoostConfig.c_flashTreshold;
     jconf[m_conf.c_algoFlashBoostConfig.jsonConfKey]["dimmingSpeed"] = m_conf.c_algoFlashBoostConfig.c_dimmingSpeed;
+
+    jconf[m_conf.c_algoAmbientConfig.jsonConfKey]["samplingSeconds"] = m_conf.c_algoAmbientConfig.c_sampleSeconds;
 
     // config server config
     jconf["configServerConf"]["enabled"] = m_conf.c_configServerConf.enabled;
