@@ -192,6 +192,19 @@
     }
 
 
+    // Number of decimals in a step value, e.g. 0.05 -> 2
+    function countDecimals(n) {
+        const s = String(n);
+
+        if (s.includes("e-")) {
+            return Number(s.split("e-")[1]);
+        }
+
+        const dot = s.indexOf(".");
+        return dot === -1 ? 0 : s.length - dot - 1;
+    }
+
+
     // ------------------------------------------------------------
     // Load algorithms
     // ------------------------------------------------------------
@@ -363,7 +376,7 @@
 
         for (const field of fields) {
 
-            if (field.type !== "int") {
+            if (field.type !== "int" && field.type !== "float") {
                 console.warn(
                     "Unsupported field type:",
                     field.type
@@ -371,6 +384,12 @@
 
                 continue;
             }
+
+            const isFloat = field.type === "float";
+            const step = field.step ?? (isFloat ? 0.01 : 1);
+            const decimals = isFloat ? countDecimals(step) : 0;
+            const format = v => Number(v).toFixed(decimals);
+
 
             const fieldContainer =
                 document.createElement("div");
@@ -398,7 +417,7 @@
                 document.createElement("span");
 
             value.className = "config-value";
-            value.textContent = field.value;
+            value.textContent = format(field.value);
 
 
             header.appendChild(name);
@@ -413,21 +432,17 @@
 
             slider.min = field.min;
             slider.max = field.max;
+            slider.step = step;          // set before value so floats don't snap
             slider.value = field.value;
 
-            if (field.step !== undefined) {
-                slider.step = field.step;
-            } else {
-                slider.step = 1;
-            }
-
-            // Keep API field name.
+            // Keep API field name and type.
             slider.dataset.name = field.name;
+            slider.dataset.type = field.type;
 
 
             // Update displayed value.
             slider.addEventListener("input", () => {
-                value.textContent = slider.value;
+                value.textContent = format(slider.value);
             });
 
 
@@ -441,13 +456,13 @@
             const min =
                 document.createElement("span");
 
-            min.textContent = field.min;
+            min.textContent = format(field.min);
 
 
             const max =
                 document.createElement("span");
 
-            max.textContent = field.max;
+            max.textContent = format(field.max);
 
 
             rangeInfo.appendChild(min);
@@ -497,8 +512,12 @@
             );
 
         for (const slider of sliders) {
+            const num = Number(slider.value);
+
             data[slider.dataset.name] =
-                Number(slider.value);
+                slider.dataset.type === "int"
+                    ? Math.round(num)
+                    : num;
         }
 
 

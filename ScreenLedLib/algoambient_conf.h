@@ -18,7 +18,7 @@ struct AlgoAmbient_Config {
 
 inline auto AlgoAmbient_Config::fields() {
     return std::make_tuple(
-        FIELD_RANGE(AlgoAmbient_Config, c_sampleSeconds, "Sampling seconds", 0, 255, 0.1)
+        FIELD_RANGE(AlgoAmbient_Config, c_sampleSeconds, "Sampling seconds", 0, 60, 0.1)
     );
 }
 
@@ -30,7 +30,7 @@ inline auto AlgoAmbient_Config::toJson()
         {"value", c_sampleSeconds},
         {"type", "float"},
         {"min", 0},
-        {"max", 255}
+        {"max", 60}
     };
     json j = {samplingWindowSeconds};
     return j;

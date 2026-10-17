@@ -140,6 +140,15 @@ void ConfigHttpServer::startApp()
                 currentConfig.c_algoFlashBoostConfig = newAlgoConf;
             }
         }
+        else if (algo == ScreenLedAlgorithm::AMBIENT)
+        {
+            auto j = to_nlohmann(body);
+            auto newAlgoConf = AlgoAmbient_Config();
+            if (newAlgoConf.fromJson(j))
+            {
+                currentConfig.c_algoAmbientConfig = newAlgoConf;
+            }
+        }
 
         currentConfig.c_algo = algo;
         m_screenLedConfiguratorPtr->updateCurrentConfig(currentConfig, true);
