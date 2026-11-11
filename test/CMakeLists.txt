@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.14)
 project(screenled_tests LANGUAGES CXX)
-cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -14,6 +14,8 @@ FetchContent_Declare(
 # Important for MSVC builds
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+
+include(CTest)
 include(GoogleTest)
 
 add_executable(screenled_tests
