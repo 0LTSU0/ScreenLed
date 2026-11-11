@@ -67,7 +67,7 @@ TEST_F(MailboxTest, concurrent_producer_consumer)
         while (true) {
             RawPixelBuffer frame = mailbox.get();
             
-            std::cout << "Consumed frame" << std::endl;
+            //std::cout << "Consumed frame" << std::endl;
 
             if (frame.width == 1 && frame.height == 1) { break; }
             if (frame.width * frame.height * 3 != frame.rgb.size())
@@ -92,14 +92,14 @@ TEST_F(MailboxTest, concurrent_producer_consumer)
 
     std::thread producer([&]() {
         for (int i = 0; i < frameCount; ++i) {
-            auto frame = makeConsistentFrame(123, 1234, i);
+            auto frame = makeConsistentFrame(123, 1234, i, true);
             mailbox.put(frame);
-            std::cout << "Produced frame" << std::endl;
+            //std::cout << "Produced frame" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(16)); // roughly "60 FPS"
         }
 
         // Tell consumer to exit.
-        mailbox.put(makeConsistentFrame(1, 1, 1));
+        mailbox.put(makeConsistentFrame(1, 1, 1, true));
     });
 
     producer.join();

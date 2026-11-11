@@ -20,6 +20,7 @@ include(GoogleTest)
 
 add_executable(screenled_tests
     test_mailbox.cpp
+	test_algo_mean.cpp
 )
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
