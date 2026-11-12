@@ -155,3 +155,101 @@ TEST_F(AlgoTestMean, test_fullArea_multiColor3)
 		EXPECT_EQ(m_res.at(i).b, expected.b);
 	}
 }
+
+TEST_F(AlgoTestMean, test_centerThird_solidFrame)
+{
+	m_conf.c_analyzerScreenArea = activeScreenArea::CENTER_THIRD;
+
+	m_algo.analyzeColors(m_res, m_conf, makeConsistentFrame(1920, 1080, 255));
+	for (const auto& resSeg : m_res)
+	{
+		EXPECT_EQ(resSeg.r, 255);
+		EXPECT_EQ(resSeg.g, 255);
+		EXPECT_EQ(resSeg.b, 255);
+	}
+}
+
+TEST_F(AlgoTestMean, test_centerThird_multiColor1)
+{
+	m_conf.c_analyzerScreenArea = activeScreenArea::CENTER_THIRD;
+
+	// Center third of the frame is blue
+	std::vector<frameInstruction> inst;
+	inst.push_back(frameInstruction{ 0, testFrameHeight / 3, testFrameWidth, (testFrameHeight / 3) * 2,{ 0,0,255 } });
+
+	m_algo.analyzeColors(m_res, m_conf, createCustomFrame(testFrameWidth, testFrameHeight, inst));
+	ASSERT_EQ(m_res.size(), NUM_LED_SEGMENTS);
+	for (const auto& resSeg : m_res)
+	{
+		EXPECT_EQ(resSeg.r, 0); 
+		EXPECT_EQ(resSeg.g, 0);
+		EXPECT_EQ(resSeg.b, 255); // third of the segment is blue -> should end up 255
+	}
+}
+
+TEST_F(AlgoTestMean, test_centerThird_multiColor2)
+{
+	m_conf.c_analyzerScreenArea = activeScreenArea::CENTER_THIRD;
+
+	// Center third of the frame is blue, otherwise red
+	std::vector<frameInstruction> inst;
+	inst.push_back(frameInstruction{ 0, testFrameHeight, testFrameWidth, testFrameHeight, { 255,0,0 } });
+	inst.push_back(frameInstruction{ 0, testFrameHeight / 3, testFrameWidth, (testFrameHeight / 3) * 2,{ 0,0,255 } });
+
+	m_algo.analyzeColors(m_res, m_conf, createCustomFrame(testFrameWidth, testFrameHeight, inst));
+	ASSERT_EQ(m_res.size(), NUM_LED_SEGMENTS);
+	for (const auto& resSeg : m_res)
+	{
+		EXPECT_EQ(resSeg.r, 0); 
+		EXPECT_EQ(resSeg.g, 0);
+		EXPECT_EQ(resSeg.b, 255); // center third of the segment is blue -> should end up 255
+	}
+}
+
+TEST_F(AlgoTestMean, test_centerThird_multiColor3)
+{
+	m_conf.c_analyzerScreenArea = activeScreenArea::CENTER_THIRD;
+
+	// Red background, center third is blue, smaller green area in the middle
+	std::vector<frameInstruction> inst;
+	inst.push_back(frameInstruction{ 0, 0, testFrameWidth, testFrameHeight,{ 255,0,0 } });
+	inst.push_back(frameInstruction{ 0, testFrameHeight / 3, testFrameWidth, (testFrameHeight / 3) * 2,{ 0,0,255 } });
+	inst.push_back(frameInstruction{ testFrameWidth / 3, (testFrameHeight / 6) * 3, (testFrameWidth / 3)*2, (testFrameHeight / 8) * 5,{ 0,255,0 } });
+
+	m_algo.analyzeColors(m_res, m_conf, createCustomFrame(testFrameWidth, testFrameHeight, inst));
+	ASSERT_EQ(m_res.size(), NUM_LED_SEGMENTS);
+	
+	// only blue at the beginning
+	for (int i = 0; i < 6; i++)
+	{
+		EXPECT_EQ(m_res[i].r, 0);
+		EXPECT_EQ(m_res[i].g, 0);
+		EXPECT_EQ(m_res[i].b, 255);
+	}
+
+	// bit of green where the rectangle covers part of segment
+	EXPECT_EQ(m_res[6].r, 0);
+	EXPECT_EQ(m_res[6].g, 33);
+	EXPECT_EQ(m_res[6].b, 221);
+
+	// green + blue
+	for (int i = 7; i < 13; i++)
+	{
+		EXPECT_EQ(m_res[i].r, 0);
+		EXPECT_EQ(m_res[i].g, 99);
+		EXPECT_EQ(m_res[i].b, 155);
+	}
+
+	// bit of green where the rectangle covers part of segment
+	EXPECT_EQ(m_res[13].r, 0);
+	EXPECT_EQ(m_res[13].g, 33);
+	EXPECT_EQ(m_res[13].b, 221);
+
+	// only blue at the end
+	for (int i = 14; i < 20; i++)
+	{
+		EXPECT_EQ(m_res[i].r, 0);
+		EXPECT_EQ(m_res[i].g, 0);
+		EXPECT_EQ(m_res[i].b, 255);
+	}
+}
