@@ -1,0 +1,61 @@
+name: Test ScreenLed
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ScreenLedGUI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # Only run for issue_comment events if it's a PR comment containing "trigger gha"
+    if: >
+      github.event_name != 'issue_comment' ||
+      (github.event.issue.pull_request != null &&
+       contains(github.event.comment.body, 'trigger gha'))
+
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          #- windows-latest
+
+    steps:
+      - name: Checkout (PR comment trigger)
+        if: github.event_name == 'issue_comment'
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+          submodules: recursive
+
+      - name: Checkout (default)
+        if: github.event_name != 'issue_comment'
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          cache: true
+
+      - name: Install Linux specific things
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install -y libopencv-dev libxrandr-dev
+
+      - name: Configure CMake
+        run: cmake -S test -B build
+
+      - name: Build tests
+        run: cmake --build build --config Release
+        
+      - name: Run tests
+        run: ctest --test-dir build
